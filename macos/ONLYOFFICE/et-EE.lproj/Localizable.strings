@@ -188,10 +188,10 @@
 "ONLYOFFICE AI Tools successfully uninstalled" = "ONLYOFFICE AI Tools desinstalliti edukalt";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Digital Signature file. Try opening another file." = "ONLYOFFICE ei saa avada digitaalse allkirja faili. Proovi avada muud faili.";
+"ONLYOFFICE can not open the Digital Signature file. Try opening another file." = "WorkSuite Office ei saa avada digitaalse allkirja faili. Proovi avada muud faili.";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Private Key. Try opening another file." = "ONLYOFFICE ei saa avada privaatset võtit. Proovi avada muud faili.";
+"ONLYOFFICE can not open the Private Key. Try opening another file." = "WorkSuite Office ei saa avada privaatset võtit. Proovi avada muud faili.";
 
 /* No comment provided by engineer. */
 "ONLYOFFICE Form Document" = "ONLYOFFICE PDF vorm";

@@ -188,10 +188,10 @@
 "ONLYOFFICE AI Tools successfully uninstalled" = "ONLYOFFICE AI Tools 已成功卸载";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Digital Signature file. Try opening another file." = "ONLYOFFICE 无法打开该数字签名文件。请尝试打开另一个文件。";
+"ONLYOFFICE can not open the Digital Signature file. Try opening another file." = "WorkSuite Office无法打开该数字签名文件。请尝试打开另一个文件。";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Private Key. Try opening another file." = "ONLYOFFICE 无法打开该私钥。请尝试打开另一个文件。";
+"ONLYOFFICE can not open the Private Key. Try opening another file." = "WorkSuite Office无法打开该私钥。请尝试打开另一个文件。";
 
 /* No comment provided by engineer. */
 "ONLYOFFICE Form Document" = "ONLYOFFICE PDF 表单";

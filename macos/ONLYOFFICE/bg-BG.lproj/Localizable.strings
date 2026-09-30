@@ -185,10 +185,10 @@
 "ONLYOFFICE AI Tools successfully uninstalled" = "ONLYOFFICE AI Tools е деинсталиран успешно";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Digital Signature file. Try opening another file." = "ONLYOFFICE не може да отвори файла \"Дигитален подпис\". Опитайте да отворите друг файл.";
+"ONLYOFFICE can not open the Digital Signature file. Try opening another file." = "WorkSuite Office не може да отвори файла \"Дигитален подпис\". Опитайте да отворите друг файл.";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Private Key. Try opening another file." = "ONLYOFFICE не може да отвори „Личен ключ“.";
+"ONLYOFFICE can not open the Private Key. Try opening another file." = "WorkSuite Office не може да отвори „Личен ключ“.";
 
 /* No comment provided by engineer. */
 "ONLYOFFICE Form Document" = "PDF формуляр ONLYOFFICE";

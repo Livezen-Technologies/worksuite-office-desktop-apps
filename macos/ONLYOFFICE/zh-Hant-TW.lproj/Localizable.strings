@@ -188,7 +188,7 @@
 "ONLYOFFICE can not open the Digital Signature file. Try opening another file." = "ONLYOFFICE 無法開啟數位簽章的檔案，嘗試開啟另一個檔案。";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Private Key. Try opening another file." = "ONLYOFFICE 無法開啟私密金鑰的檔案，嘗試開啟另一個檔案。";
+"ONLYOFFICE can not open the Private Key. Try opening another file." = "WorkSuite Office無法開啟私密金鑰的檔案，嘗試開啟另一個檔案。";
 
 /* No comment provided by engineer. */
 "ONLYOFFICE Form Document" = "ONLYOFFICE PDF 表格";

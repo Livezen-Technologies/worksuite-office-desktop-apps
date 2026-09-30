@@ -38,7 +38,7 @@
 "new-spreadsheet" = "New spreadsheet";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE Form Document" = "ONLYOFFICE PDF Form";
+"ONLYOFFICE Form Document" = "WorkSuite Office Form Document";
 
 /* No comment provided by engineer. */
 "OpenOffice Document" = "OpenDocument Text File";
@@ -85,3 +85,7 @@
 /* No comment provided by engineer. */
 "XML Paper Specification" = "OpenXPS Document";
 
+"ONLYOFFICE can not open the Digital Signature file. Try opening another file." = "WorkSuite Office can not open the Digital Signature file. Try opening another file.";
+"ONLYOFFICE can not open the Private Key. Try opening another file." = "WorkSuite Office can not open the Private Key. Try opening another file.";
+"ONLYOFFICE Document Form Template" = "WorkSuite Office Document Form Template";
+"ONLYOFFICE Fillable Online Form" = "WorkSuite Office Fillable Online Form";

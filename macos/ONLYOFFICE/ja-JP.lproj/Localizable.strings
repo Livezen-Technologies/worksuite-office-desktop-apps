@@ -185,10 +185,10 @@
 "ONLYOFFICE AI Tools successfully uninstalled" = "ONLYOFFICE AI Toolsが正常にアンインストールされました";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Digital Signature file. Try opening another file." = "ONLYOFFICEでは、デジタル署名ファイルを開けません。別のファイルを開いてみてください。";
+"ONLYOFFICE can not open the Digital Signature file. Try opening another file." = "WorkSuite Officeでは、デジタル署名ファイルを開けません。別のファイルを開いてみてください。";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Private Key. Try opening another file." = "ONLYOFFICEは、非公開鍵を開けません。別のファイルを開いてみてください。";
+"ONLYOFFICE can not open the Private Key. Try opening another file." = "WorkSuite Officeは、非公開鍵を開けません。別のファイルを開いてみてください。";
 
 /* No comment provided by engineer. */
 "ONLYOFFICE Form Document" = "ONLYOFFICE PDFフォーム";

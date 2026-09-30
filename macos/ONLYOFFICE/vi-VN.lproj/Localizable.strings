@@ -188,10 +188,10 @@
 "ONLYOFFICE AI Tools successfully uninstalled" = "ONLYOFFICE AI Tools đã được gỡ cài đặt thành công";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Digital Signature file. Try opening another file." = "ONLYOFFICE không thể mở chữ ký điện tử. Hãy thử tập tin khác.";
+"ONLYOFFICE can not open the Digital Signature file. Try opening another file." = "WorkSuite Office không thể mở chữ ký điện tử. Hãy thử tập tin khác.";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Private Key. Try opening another file." = "ONLYOFFICE không thể mở mã khóa riêng. Hãy thử mở tập tin khác.";
+"ONLYOFFICE can not open the Private Key. Try opening another file." = "WorkSuite Office không thể mở mã khóa riêng. Hãy thử mở tập tin khác.";
 
 /* No comment provided by engineer. */
 "ONLYOFFICE Form Document" = "Mẫu PDF ONLYOFFICE";
