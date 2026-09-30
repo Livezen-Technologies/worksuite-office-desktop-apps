@@ -8,7 +8,7 @@
 "1UK-8n-QPP.title" = "Personnaliser la barre d'outils...";
 
 /* Class = "NSMenuItem"; title = "ONLYOFFICE"; ObjectID = "1Xt-HY-uBw"; */
-"1Xt-HY-uBw.title" = "ONLYOFFICE";
+"1Xt-HY-uBw.title" = "WorkSuite Office";
 
 /* Class = "NSMenuItem"; title = "Raise"; ObjectID = "2h7-ER-AoG"; */
 "2h7-ER-AoG.title" = "Plus haut";
@@ -32,10 +32,10 @@
 "4et-TX-a4m.title" = "Accord de licence";
 
 /* Class = "NSMenuItem"; title = "Quit ONLYOFFICE"; ObjectID = "4sb-4s-VLi"; */
-"4sb-4s-VLi.title" = "Terminer ONLYOFFICE";
+"4sb-4s-VLi.title" = "Terminer WorkSuite Office";
 
 /* Class = "NSMenuItem"; title = "About ONLYOFFICE"; ObjectID = "5kV-Vb-QxS"; */
-"5kV-Vb-QxS.title" = "Au sujet du programme ONLYOFFICE";
+"5kV-Vb-QxS.title" = "Au sujet du programme WorkSuite Office";
 
 /* Class = "NSMenuItem"; title = "Edit"; ObjectID = "5QF-Oa-p0T"; */
 "5QF-Oa-p0T.title" = "Editer";
@@ -149,7 +149,7 @@
 "FeM-D8-WVr.title" = "Substitutions";
 
 /* Class = "NSMenuItem"; title = "Product Help"; ObjectID = "FKE-Sm-Kum"; */
-"FKE-Sm-Kum.title" = "Aides ONLYOFFICE";
+"FKE-Sm-Kum.title" = "Aides WorkSuite Office";
 
 /* Class = "NSTextFieldCell"; title = "User Name"; ObjectID = "FoF-wl-Dxi"; */
 "FoF-wl-Dxi.title" = "Nom d'utilisateur";
@@ -215,7 +215,7 @@
 "ijk-EB-dga.title" = "Ligne de base";
 
 /* Class = "NSWindow"; title = "ONLYOFFICE"; ObjectID = "IQv-IB-iLA"; */
-"IQv-IB-iLA.title" = "ONLYOFFICE";
+"IQv-IB-iLA.title" = "WorkSuite Office";
 
 /* Class = "NSMenuItem"; title = "Justify"; ObjectID = "J5U-5w-g23"; */
 "J5U-5w-g23.title" = "Justifié";
@@ -236,7 +236,7 @@
 "KaW-ft-85H.title" = "Revenir à la version enregistrée";
 
 /* Class = "NSTabViewItem"; label = "ONLYOFFICE"; ObjectID = "kcg-El-49G"; */
-"kcg-El-49G.label" = "ONLYOFFICE";
+"kcg-El-49G.label" = "WorkSuite Office";
 
 /* Class = "NSMenuItem"; title = "Show All"; ObjectID = "Kd2-mp-pUS"; */
 "Kd2-mp-pUS.title" = "Montrer tous";
@@ -278,7 +278,7 @@
 "ogc-rX-tC1.title" = "Étendre";
 
 /* Class = "NSMenuItem"; title = "Hide ONLYOFFICE"; ObjectID = "Olw-nP-bQN"; */
-"Olw-nP-bQN.title" = "Masquer ONLYOFFICE";
+"Olw-nP-bQN.title" = "Masquer WorkSuite Office";
 
 /* Class = "NSMenuItem"; title = "Find Previous"; ObjectID = "OwM-mh-QMV"; */
 "OwM-mh-QMV.title" = "Rechercher précédent";
@@ -365,7 +365,7 @@
 "UEZ-Bs-lqG.title" = "Capitalize";
 
 /* Class = "NSMenu"; title = "ONLYOFFICE"; ObjectID = "uQy-DD-JDr"; */
-"uQy-DD-JDr.title" = "ONLYOFFICE";
+"uQy-DD-JDr.title" = "WorkSuite Office";
 
 /* Class = "NSMenuItem"; title = "Cut"; ObjectID = "uRl-iY-unG"; */
 "uRl-iY-unG.title" = "Couper";

@@ -8,7 +8,7 @@
 "1UK-8n-QPP.title" = "Toolbar ແບບສາມາດແກ້ໄຂໄດ້…";
 
 /* Class = "NSMenuItem"; title = "ONLYOFFICE"; ObjectID = "1Xt-HY-uBw"; */
-"1Xt-HY-uBw.title" = "ONLYOFFICE";
+"1Xt-HY-uBw.title" = "WorkSuite Office";
 
 /* Class = "NSMenuItem"; title = "Raise"; ObjectID = "2h7-ER-AoG"; */
 "2h7-ER-AoG.title" = "ທາງເທີງ";
@@ -32,10 +32,10 @@
 "4et-TX-a4m.title" = "ສັນຍາໃບອະນຸຍາດ";
 
 /* Class = "NSMenuItem"; title = "Quit ONLYOFFICE"; ObjectID = "4sb-4s-VLi"; */
-"4sb-4s-VLi.title" = "ອອກຈາກ ONLYOFFICE";
+"4sb-4s-VLi.title" = "ອອກຈາກ WorkSuite Office";
 
 /* Class = "NSMenuItem"; title = "About ONLYOFFICE"; ObjectID = "5kV-Vb-QxS"; */
-"5kV-Vb-QxS.title" = "ກ່ຽວກັບ ONLYOFFICE";
+"5kV-Vb-QxS.title" = "ກ່ຽວກັບ WorkSuite Office";
 
 /* Class = "NSMenuItem"; title = "Edit"; ObjectID = "5QF-Oa-p0T"; */
 "5QF-Oa-p0T.title" = "ແກ້ໄຂ";
@@ -215,7 +215,7 @@
 "ijk-EB-dga.title" = "ພື້ນຖານ";
 
 /* Class = "NSWindow"; title = "ONLYOFFICE"; ObjectID = "IQv-IB-iLA"; */
-"IQv-IB-iLA.title" = "ONLYOFFICE";
+"IQv-IB-iLA.title" = "WorkSuite Office";
 
 /* Class = "NSMenuItem"; title = "Justify"; ObjectID = "J5U-5w-g23"; */
 "J5U-5w-g23.title" = "ຢືນຢັນ";
@@ -278,7 +278,7 @@
 "ogc-rX-tC1.title" = "ແບບຫຼົມ";
 
 /* Class = "NSMenuItem"; title = "Hide ONLYOFFICE"; ObjectID = "Olw-nP-bQN"; */
-"Olw-nP-bQN.title" = "ເຊື່ອງ ONLYOFFICE";
+"Olw-nP-bQN.title" = "ເຊື່ອງ WorkSuite Office";
 
 /* Class = "NSMenuItem"; title = "Find Previous"; ObjectID = "OwM-mh-QMV"; */
 "OwM-mh-QMV.title" = "ຊອກຫາ ກ່ອນໜ້າ";

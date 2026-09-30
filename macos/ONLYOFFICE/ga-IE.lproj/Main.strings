@@ -8,7 +8,7 @@
 "1UK-8n-QPP.title" = "Saincheap Barra Uirlisí…";
 
 /* Class = "NSMenuItem"; title = "ONLYOFFICE"; ObjectID = "1Xt-HY-uBw"; */
-"1Xt-HY-uBw.title" = "ONLYOFFICE";
+"1Xt-HY-uBw.title" = "WorkSuite Office";
 
 /* Class = "NSMenuItem"; title = "Raise"; ObjectID = "2h7-ER-AoG"; */
 "2h7-ER-AoG.title" = "Ardaigh";
@@ -32,10 +32,10 @@
 "4et-TX-a4m.title" = "Comhaontú Ceadúnais";
 
 /* Class = "NSMenuItem"; title = "Quit ONLYOFFICE"; ObjectID = "4sb-4s-VLi"; */
-"4sb-4s-VLi.title" = "Scoir ONLYOFFICE";
+"4sb-4s-VLi.title" = "Scoir WorkSuite Office";
 
 /* Class = "NSMenuItem"; title = "About ONLYOFFICE"; ObjectID = "5kV-Vb-QxS"; */
-"5kV-Vb-QxS.title" = "Faoi ONLYOFFICE";
+"5kV-Vb-QxS.title" = "Faoi WorkSuite Office";
 
 /* Class = "NSMenuItem"; title = "Edit"; ObjectID = "5QF-Oa-p0T"; */
 "5QF-Oa-p0T.title" = "Cuir in Eagar";
@@ -215,7 +215,7 @@
 "ijk-EB-dga.title" = "Bunlíne";
 
 /* Class = "NSWindow"; title = "ONLYOFFICE"; ObjectID = "IQv-IB-iLA"; */
-"IQv-IB-iLA.title" = "ONLYOFFICE";
+"IQv-IB-iLA.title" = "WorkSuite Office";
 
 /* Class = "NSMenuItem"; title = "Justify"; ObjectID = "J5U-5w-g23"; */
 "J5U-5w-g23.title" = "Comhfhadaigh";
@@ -236,7 +236,7 @@
 "KaW-ft-85H.title" = "Téigh ar ais chuig Sábháilte";
 
 /* Class = "NSTabViewItem"; label = "ONLYOFFICE"; ObjectID = "kcg-El-49G"; */
-"kcg-El-49G.label" = "ONLYOFFICE";
+"kcg-El-49G.label" = "WorkSuite Office";
 
 /* Class = "NSMenuItem"; title = "Show All"; ObjectID = "Kd2-mp-pUS"; */
 "Kd2-mp-pUS.title" = "Taispeáin gach rud";
@@ -278,7 +278,7 @@
 "ogc-rX-tC1.title" = "Scaoilte";
 
 /* Class = "NSMenuItem"; title = "Hide ONLYOFFICE"; ObjectID = "Olw-nP-bQN"; */
-"Olw-nP-bQN.title" = "ONLYOFFICE Folaigh";
+"Olw-nP-bQN.title" = "WorkSuite Office Folaigh";
 
 /* Class = "NSMenuItem"; title = "Find Previous"; ObjectID = "OwM-mh-QMV"; */
 "OwM-mh-QMV.title" = "Faigh Roimhe Seo";
@@ -365,7 +365,7 @@
 "UEZ-Bs-lqG.title" = "Caipitligh";
 
 /* Class = "NSMenu"; title = "ONLYOFFICE"; ObjectID = "uQy-DD-JDr"; */
-"uQy-DD-JDr.title" = "ONLYOFFICE";
+"uQy-DD-JDr.title" = "WorkSuite Office";
 
 /* Class = "NSMenuItem"; title = "Cut"; ObjectID = "uRl-iY-unG"; */
 "uRl-iY-unG.title" = "Gearr";

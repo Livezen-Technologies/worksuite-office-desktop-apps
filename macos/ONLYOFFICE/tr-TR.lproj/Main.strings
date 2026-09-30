@@ -8,7 +8,7 @@
 "1UK-8n-QPP.title" = "Araç Çubuğunu Özelleştir…";
 
 /* Class = "NSMenuItem"; title = "ONLYOFFICE"; ObjectID = "1Xt-HY-uBw"; */
-"1Xt-HY-uBw.title" = "ONLYOFFICE";
+"1Xt-HY-uBw.title" = "WorkSuite Office";
 
 /* Class = "NSMenuItem"; title = "Transformations"; ObjectID = "2oI-Rn-ZJC"; */
 "2oI-Rn-ZJC.title" = "Dönüşümler";
@@ -29,10 +29,10 @@
 "4et-TX-a4m.title" = "Lisans Anlaşması";
 
 /* Class = "NSMenuItem"; title = "Quit ONLYOFFICE"; ObjectID = "4sb-4s-VLi"; */
-"4sb-4s-VLi.title" = "ONLYOFFICE’i kapat";
+"4sb-4s-VLi.title" = "WorkSuite Office’i kapat";
 
 /* Class = "NSMenuItem"; title = "About ONLYOFFICE"; ObjectID = "5kV-Vb-QxS"; */
-"5kV-Vb-QxS.title" = " ONLYOFFICE Hakkında";
+"5kV-Vb-QxS.title" = " WorkSuite Office Hakkında";
 
 /* Class = "NSMenuItem"; title = "Edit"; ObjectID = "5QF-Oa-p0T"; */
 "5QF-Oa-p0T.title" = "Düzenle";
@@ -212,7 +212,7 @@
 "ijk-EB-dga.title" = "Alt Çizgi";
 
 /* Class = "NSWindow"; title = "ONLYOFFICE"; ObjectID = "IQv-IB-iLA"; */
-"IQv-IB-iLA.title" = "ONLYOFFICE";
+"IQv-IB-iLA.title" = "WorkSuite Office";
 
 /* Class = "NSMenuItem"; title = "Justify"; ObjectID = "J5U-5w-g23"; */
 "J5U-5w-g23.title" = "Doğrula";
@@ -233,7 +233,7 @@
 "KaW-ft-85H.title" = "Kaydedilmişe Döndür";
 
 /* Class = "NSTabViewItem"; label = "ONLYOFFICE"; ObjectID = "kcg-El-49G"; */
-"kcg-El-49G.label" = "ONLYOFFICE";
+"kcg-El-49G.label" = "WorkSuite Office";
 
 /* Class = "NSMenuItem"; title = "Show All"; ObjectID = "Kd2-mp-pUS"; */
 "Kd2-mp-pUS.title" = "Tümünü Göster";
@@ -275,7 +275,7 @@
 "ogc-rX-tC1.title" = "Gevşet";
 
 /* Class = "NSMenuItem"; title = "Hide ONLYOFFICE"; ObjectID = "Olw-nP-bQN"; */
-"Olw-nP-bQN.title" = " ONLYOFFICE’i Gizle";
+"Olw-nP-bQN.title" = " WorkSuite Office’i Gizle";
 
 /* Class = "NSMenuItem"; title = "Find Previous"; ObjectID = "OwM-mh-QMV"; */
 "OwM-mh-QMV.title" = "Öncekini Bul";
@@ -362,7 +362,7 @@
 "UEZ-Bs-lqG.title" = "Büyük Harf Yap";
 
 /* Class = "NSMenu"; title = "ONLYOFFICE"; ObjectID = "uQy-DD-JDr"; */
-"uQy-DD-JDr.title" = "ONLYOFFICE";
+"uQy-DD-JDr.title" = "WorkSuite Office";
 
 /* Class = "NSMenuItem"; title = "Cut"; ObjectID = "uRl-iY-unG"; */
 "uRl-iY-unG.title" = "Kes";

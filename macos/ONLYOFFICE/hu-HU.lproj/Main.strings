@@ -8,7 +8,7 @@
 "1UK-8n-QPP.title" = "Eszköztár testreszabása…";
 
 /* Class = "NSMenuItem"; title = "ONLYOFFICE"; ObjectID = "1Xt-HY-uBw"; */
-"1Xt-HY-uBw.title" = "ONLYOFFICE";
+"1Xt-HY-uBw.title" = "WorkSuite Office";
 
 /* Class = "NSMenuItem"; title = "Raise"; ObjectID = "2h7-ER-AoG"; */
 "2h7-ER-AoG.title" = "Feljebb";
@@ -32,10 +32,10 @@
 "4et-TX-a4m.title" = "Licencszerződés";
 
 /* Class = "NSMenuItem"; title = "Quit ONLYOFFICE"; ObjectID = "4sb-4s-VLi"; */
-"4sb-4s-VLi.title" = "Kilépés az ONLYOFFICE-ból";
+"4sb-4s-VLi.title" = "Kilépés az WorkSuite Office-ból";
 
 /* Class = "NSMenuItem"; title = "About ONLYOFFICE"; ObjectID = "5kV-Vb-QxS"; */
-"5kV-Vb-QxS.title" = "Az ONLYOFFICE-ról";
+"5kV-Vb-QxS.title" = "Az WorkSuite Office-ról";
 
 /* Class = "NSMenuItem"; title = "Edit"; ObjectID = "5QF-Oa-p0T"; */
 "5QF-Oa-p0T.title" = "Szerkesztés";
@@ -215,7 +215,7 @@
 "ijk-EB-dga.title" = "Alapvonal";
 
 /* Class = "NSWindow"; title = "ONLYOFFICE"; ObjectID = "IQv-IB-iLA"; */
-"IQv-IB-iLA.title" = "ONLYOFFICE";
+"IQv-IB-iLA.title" = "WorkSuite Office";
 
 /* Class = "NSMenuItem"; title = "Justify"; ObjectID = "J5U-5w-g23"; */
 "J5U-5w-g23.title" = "Sorkizárt";
@@ -236,7 +236,7 @@
 "KaW-ft-85H.title" = "Mentett visszaállítása";
 
 /* Class = "NSTabViewItem"; label = "ONLYOFFICE"; ObjectID = "kcg-El-49G"; */
-"kcg-El-49G.label" = "ONLYOFFICE";
+"kcg-El-49G.label" = "WorkSuite Office";
 
 /* Class = "NSMenuItem"; title = "Show All"; ObjectID = "Kd2-mp-pUS"; */
 "Kd2-mp-pUS.title" = "Az összes megjelenítése";
@@ -278,7 +278,7 @@
 "ogc-rX-tC1.title" = "Kibontás";
 
 /* Class = "NSMenuItem"; title = "Hide ONLYOFFICE"; ObjectID = "Olw-nP-bQN"; */
-"Olw-nP-bQN.title" = "ONLYOFFICE elrejtése";
+"Olw-nP-bQN.title" = "WorkSuite Office elrejtése";
 
 /* Class = "NSMenuItem"; title = "Find Previous"; ObjectID = "OwM-mh-QMV"; */
 "OwM-mh-QMV.title" = "Előző keresése";
@@ -365,7 +365,7 @@
 "UEZ-Bs-lqG.title" = "Nagy kezdőbetű";
 
 /* Class = "NSMenu"; title = "ONLYOFFICE"; ObjectID = "uQy-DD-JDr"; */
-"uQy-DD-JDr.title" = "ONLYOFFICE";
+"uQy-DD-JDr.title" = "WorkSuite Office";
 
 /* Class = "NSMenuItem"; title = "Cut"; ObjectID = "uRl-iY-unG"; */
 "uRl-iY-unG.title" = "Kivágás";

@@ -32,10 +32,10 @@
 "4et-TX-a4m.title" = "لائسنس کا معاہدہ";
 
 /* Class = "NSMenuItem"; title = "Quit ONLYOFFICE"; ObjectID = "4sb-4s-VLi"; */
-"4sb-4s-VLi.title" = "ONLYOFFICE چھوڑ دیں۔";
+"4sb-4s-VLi.title" = "WorkSuite Office چھوڑ دیں۔";
 
 /* Class = "NSMenuItem"; title = "About ONLYOFFICE"; ObjectID = "5kV-Vb-QxS"; */
-"5kV-Vb-QxS.title" = "ONLYOFFICE کے بارے میں";
+"5kV-Vb-QxS.title" = "WorkSuite Office کے بارے میں";
 
 /* Class = "NSMenuItem"; title = "Edit"; ObjectID = "5QF-Oa-p0T"; */
 "5QF-Oa-p0T.title" = "ترمیم کریں۔";
@@ -278,7 +278,7 @@
 "ogc-rX-tC1.title" = "ڈھیلا کرنا";
 
 /* Class = "NSMenuItem"; title = "Hide ONLYOFFICE"; ObjectID = "Olw-nP-bQN"; */
-"Olw-nP-bQN.title" = "ONLYOFFICE چھپائیں۔";
+"Olw-nP-bQN.title" = "WorkSuite Office چھپائیں۔";
 
 /* Class = "NSMenuItem"; title = "Find Previous"; ObjectID = "OwM-mh-QMV"; */
 "OwM-mh-QMV.title" = "پچھلا تلاش کریں۔";

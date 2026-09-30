@@ -102,9 +102,9 @@
     }
 
     NSDictionary * appInfo = @{
-                               kRegHelpUrl: @"https://onlyoffice.com/desktopeditors.aspx",
-                               kHelpUrl: @"http://helpcenter.onlyoffice.com/%@ONLYOFFICE-Editors/index.aspx",
-                               kRegistrationPortalUrl: @"https://onlyoffice.com/registration.aspx?desktop=true"
+                               kRegHelpUrl: @"https://worksuite.lk",
+                               kHelpUrl: @"https://worksuite.lk",
+                               kRegistrationPortalUrl: @"https://worksuite.lk"
                                };
 
     return appInfo[key];

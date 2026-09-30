@@ -8,7 +8,7 @@
 "1UK-8n-QPP.title" = "Kohanda Tööriistariba";
 
 /* Class = "NSMenuItem"; title = "ONLYOFFICE"; ObjectID = "1Xt-HY-uBw"; */
-"1Xt-HY-uBw.title" = "ONLYOFFICE";
+"1Xt-HY-uBw.title" = "WorkSuite Office";
 
 /* Class = "NSMenuItem"; title = "Raise"; ObjectID = "2h7-ER-AoG"; */
 "2h7-ER-AoG.title" = "Ülemine";
@@ -32,10 +32,10 @@
 "4et-TX-a4m.title" = "Litsentsileping";
 
 /* Class = "NSMenuItem"; title = "Quit ONLYOFFICE"; ObjectID = "4sb-4s-VLi"; */
-"4sb-4s-VLi.title" = "Loobu ONLYOFFICE";
+"4sb-4s-VLi.title" = "Loobu WorkSuite Office";
 
 /* Class = "NSMenuItem"; title = "About ONLYOFFICE"; ObjectID = "5kV-Vb-QxS"; */
-"5kV-Vb-QxS.title" = "Rohkem ONLYOFFICE’lt";
+"5kV-Vb-QxS.title" = "Rohkem WorkSuite Office’lt";
 
 /* Class = "NSMenuItem"; title = "Edit"; ObjectID = "5QF-Oa-p0T"; */
 "5QF-Oa-p0T.title" = "Muuda";
@@ -215,7 +215,7 @@
 "ijk-EB-dga.title" = "Algtase";
 
 /* Class = "NSWindow"; title = "ONLYOFFICE"; ObjectID = "IQv-IB-iLA"; */
-"IQv-IB-iLA.title" = "ONLYOFFICE";
+"IQv-IB-iLA.title" = "WorkSuite Office";
 
 /* Class = "NSMenuItem"; title = "Justify"; ObjectID = "J5U-5w-g23"; */
 "J5U-5w-g23.title" = "Õigusta";
@@ -236,7 +236,7 @@
 "KaW-ft-85H.title" = "Naase Salvestatud juurde";
 
 /* Class = "NSTabViewItem"; label = "ONLYOFFICE"; ObjectID = "kcg-El-49G"; */
-"kcg-El-49G.label" = "ONLYOFFICE";
+"kcg-El-49G.label" = "WorkSuite Office";
 
 /* Class = "NSMenuItem"; title = "Show All"; ObjectID = "Kd2-mp-pUS"; */
 "Kd2-mp-pUS.title" = "Näita Kõike";
@@ -278,7 +278,7 @@
 "ogc-rX-tC1.title" = "Lõdvenda";
 
 /* Class = "NSMenuItem"; title = "Hide ONLYOFFICE"; ObjectID = "Olw-nP-bQN"; */
-"Olw-nP-bQN.title" = "Peida ONLYOFFICE";
+"Olw-nP-bQN.title" = "Peida WorkSuite Office";
 
 /* Class = "NSMenuItem"; title = "Find Previous"; ObjectID = "OwM-mh-QMV"; */
 "OwM-mh-QMV.title" = "Leia Eelnev";
@@ -365,7 +365,7 @@
 "UEZ-Bs-lqG.title" = "Kasuta suuri tähti";
 
 /* Class = "NSMenu"; title = "ONLYOFFICE"; ObjectID = "uQy-DD-JDr"; */
-"uQy-DD-JDr.title" = "ONLYOFFICE";
+"uQy-DD-JDr.title" = "WorkSuite Office";
 
 /* Class = "NSMenuItem"; title = "Cut"; ObjectID = "uRl-iY-unG"; */
 "uRl-iY-unG.title" = "Lõika";
