@@ -27,7 +27,7 @@ window.DialogConnect = function(params) {
     "use strict";
 
     !params && (params = {});
-    !params.provider && (params.provider = 'onlyoffice');
+    !params.provider && (params.provider = 'worksuite');
 
     let $el, $title, $body;
     var _events = { close: params.onclose };
@@ -223,7 +223,7 @@ window.DialogConnect = function(params) {
     };
 
     function _require_portal_info(portal, provider) {
-        !provider && (provider = 'onlyoffice');
+        !provider && (provider = 'worksuite');
         const _model = config.portals.checklist.find(i => i.provider == provider);
         let _url;
         if ( _model )

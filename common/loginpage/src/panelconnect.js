@@ -169,7 +169,7 @@
                 if ( !!item.icons && !!item.icons.themeLight ) {
                     const btn = provider_button_template(item.provider, item.name, item.icons);
 
-                    item.provider != 'onlyoffice' ? $box.append(btn) :
+                    item.provider != 'worksuite' ? $box.append(btn) :
                             html_empty_panel.find('#box-providers-premium-button').append(btn);
                 }
             });
@@ -479,7 +479,7 @@
                 }
 
 
-                !obj.provider && (obj.provider = 'onlyoffice');
+                !obj.provider && (obj.provider = 'worksuite');
                 if ( !config.portals.checklist.find(i => i.provider == obj.provider) ) {
                     let _p = config.portals.checklist.find(i => i.name.toLowerCase() == obj.provider.toLowerCase());
                     if ( _p )

@@ -98,7 +98,7 @@
                     c.extraLogout = [c.extraLogout];
             }
 
-            const _only_index = _clouds.findIndex(i => i.provider == 'onlyoffice');
+            const _only_index = _clouds.findIndex(i => i.provider == 'worksuite');
             if ( _only_index > 0 ) {
                 _clouds.unshift(_clouds.splice(_only_index, 1)[0]);
             }

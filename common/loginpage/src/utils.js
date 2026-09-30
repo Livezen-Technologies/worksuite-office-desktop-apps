@@ -514,8 +514,8 @@ utils.fn.needUseSvg = function () {
 utils.fn.sortProviders = function(list) {
     return (list || []).slice().sort((a, b) => {
 
-        if (a.provider === 'onlyoffice' && b.provider !== 'onlyoffice') return -1;
-        if (b.provider === 'onlyoffice' && a.provider !== 'onlyoffice') return 1;
+        if (a.provider === 'worksuite' && b.provider !== 'worksuite') return -1;
+        if (b.provider === 'worksuite' && a.provider !== 'worksuite') return 1;
 
         const aNoOrder = (a.order === undefined || a.order === null || a.order === '');
         const bNoOrder = (b.order === undefined || b.order === null || b.order === '');

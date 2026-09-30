@@ -1,14 +1,14 @@
 {
-    "provider": "onlyoffice",
-    "name" : "ONLYOFFICE",
-    "check" : {
-        "url":"/api/2.0/capabilities"
+    "provider": "worksuite",
+    "name": "WorkSuite Drive",
+    "check": {
+        "url": "/api/health"
     },
-    "editorPage" : "regex:(\/products\/files\/doceditor.aspx)|(\/doceditor)",
-    "startPage": "/Products/Files/",
-    "cryptoSupport" : "true",
+    "editorPage": "regex:\\/editor\\/\\d+",
+    "startPage": "/files",
+    "order": 1,
     "icons": {
-        "themeLight":{
+        "themeLight": {
             "connectionsList": "./assets/listicon.svg",
             "buttonLogo": "./assets/buttonlogo.svg"
         },
