@@ -1,5 +1,5 @@
 l10n.sv = {
-    welWelcome: 'Välkommen till __COMPANY_NAME__ Desktop Editors!',
+    welWelcome: 'Välkommen till __COMPANY_NAME__ Office!',
     welDescr: 'Arbeta med dokument offline eller anslut sviten till ditt moln: ownCloud, Nextcloud and more.',
     welNeedHelp: 'Behöver du hjälp? Besök vårt $1.',
     textHelpCenter: 'Hjälpcenter',

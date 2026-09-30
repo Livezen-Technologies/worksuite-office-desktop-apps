@@ -1,5 +1,5 @@
 l10n.ro = {
-    welWelcome: 'Bine ați venit la __COMPANY_NAME__ Desktop Editors!',
+    welWelcome: 'Bine ați venit la __COMPANY_NAME__ Office!',
     welDescr: 'Lucrați la documente offline sau conecta suitați suitã la cloud: ownCloud, Nextcloud and more.',
     welNeedHelp: 'Aveți nevoie de ajutor? Vizitează $1.',
     textHelpCenter: 'Centru de ajutor',

@@ -1,5 +1,5 @@
 l10n.sk = {
-    welWelcome: 'Vitajte v __COMPANY_NAME__ Desktop Editors!',
+    welWelcome: 'Vitajte v __COMPANY_NAME__ Office!',
     welDescr: 'Pracujte s dokumentmi offline alebo pripojte balík k vášmu cloudu: ownCloud, Nextcloud and more.',
     welNeedHelp: 'Potrebujete pomoc? Navštívte naše $1.',
     textHelpCenter: 'Centrum pomoci',

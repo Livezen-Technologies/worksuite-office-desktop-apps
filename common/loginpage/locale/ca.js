@@ -1,5 +1,5 @@
 l10n.ca = {
-    welWelcome: 'Benvingut/da a __COMPANY_NAME__ Desktop Editors!',
+    welWelcome: 'Benvingut/da a __COMPANY_NAME__ Office!',
     welDescr: 'Treballa sense connexió als teus documents o connecta la suite al teu núvol: ownCloud, Nextcloud and more.',
     welNeedHelp: 'Necessites ajuda? Visita el nostre $1.',
     textHelpCenter: 'Centre d\'Ajuda',

@@ -1,5 +1,5 @@
 l10n.cs = {
-    welWelcome: 'Vítejte v __COMPANY_NAME__ Desktop Editors!',
+    welWelcome: 'Vítejte v __COMPANY_NAME__ Office!',
     welDescr: 'Práce na dokumentech offline nebo propojení sady do cloudu: ownCloud, Nextcloud and more.',
     welNeedHelp: 'Potřebujete pomoct? Navštivte naše $1.',
     textHelpCenter: 'Centrum nápovědy',

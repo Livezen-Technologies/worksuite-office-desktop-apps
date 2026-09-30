@@ -2,7 +2,7 @@
     [System.Version]$Version = "0.0.0.0",
     [string]$Arch = "x64",
     [string]$Target,
-    [string]$CompanyName = "Euro-Office",
+    [string]$CompanyName = "WorkSuite",
     [string]$ProductName = "DesktopEditors",
     [string]$BuildDir,
     [string]$BrandingDir,
@@ -105,7 +105,7 @@ $InnoArgs = "/DVERSION=$Version",
 if ($BrandingDir) {
     $InnoArgs += "/DBRANDING_DIR=$BrandingDir"
 }
-if ($CompanyName -eq "Euro-Office") {
+if ($CompanyName -eq "WorkSuite") {
     $InnoArgs += "/D_EuroOffice"
 }
 switch ($Target) {

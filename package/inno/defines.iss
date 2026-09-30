@@ -1,17 +1,17 @@
-; -- Euro-Office Desktop Editors Defines --
+; -- WorkSuite Office Defines --
 
-#define sCompanyName                    "Euro-Office"
+#define sCompanyName                    "WorkSuite"
 #define sIntCompanyName                 sCompanyName
-#define sProductName                    "Desktop Editors"
+#define sProductName                    "Office"
 #define sIntProductName                 "DesktopEditors"
-#define sAppName                        str(sCompanyName)
+#define sAppName                        str(sCompanyName + " " + sProductName)
 #define sPackageName                    str(sIntCompanyName + "-" + sIntProductName)
-#define sAppPublisher                   "Ascensio System SIA"
-#define sAppPublisherURL                "https://www.onlyoffice.com/"
-#define sAppSupportURL                  "https://www.onlyoffice.com/support.aspx"
-#define sAppCopyright                   str("© " + sAppPublisher + " " + GetDateTimeString("yyyy",,) + ". All rights reserved.")
-#define sAppIconName                    "Euro-Office"
-#define sOldAppIconName                 "Euro-Office Editors"
+#define sAppPublisher                   "Livezen Technologies"
+#define sAppPublisherURL                "https://worksuite.lk/"
+#define sAppSupportURL                  "https://worksuite.lk/"
+#define sAppCopyright                   str("© Ascensio System SIA, Euro-Office contributors, " + sAppPublisher + " " + GetDateTimeString("yyyy",,))
+#define sAppIconName                    "WorkSuite Office"
+#define sOldAppIconName                 "WorkSuite Editors"
 #define sAppProtocol                    'oo-office'
 
 #define APP_PATH                        str(sIntCompanyName + "\" + sIntProductName)
@@ -25,8 +25,8 @@
 #define iconsExe                        "DesktopEditors.exe"
 #define NAME_EXE_OUT                    "editors.exe"
 
-#define ASSC_APP_NAME                   "Euro-Office"
+#define ASSC_APP_NAME                   "WorkSuite Office"
 #define ASCC_REG_PREFIX                 "ASC"
-#define ASCC_REG_REGISTERED_APP_NAME    "Euro-Office Editors"
+#define ASCC_REG_REGISTERED_APP_NAME    "WorkSuite Office"
 #define ASSOC_PROG_ID                   "ASC.Editors"
-#define ASSOC_APP_FRIENDLY_NAME         "Euro-Office Editors"
+#define ASSOC_APP_FRIENDLY_NAME         "WorkSuite Office"

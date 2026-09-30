@@ -1,4 +1,4 @@
-$PackageName = "Euro-Office Desktop Editors"
+$PackageName = "WorkSuite Office"
 $BuildDir = "build"
 $DesktopDir = "DesktopEditors"
 

@@ -1,5 +1,5 @@
 l10n.el = {
-    welWelcome: 'Καλώς ήλθατε στο __COMPANY_NAME__ Desktop Editors!',
+    welWelcome: 'Καλώς ήλθατε στο __COMPANY_NAME__ Office!',
     welDescr: 'Εργαστείτε εκτός σύνδεσης με έγγραφα ή συνδέστε τη σουίτα στο cloud σας: ownCloud, Nextcloud and more.',
     welNeedHelp: 'Χρειάζεστε βοήθεια; Επισκεφτείτε το $1 μας.',
     textHelpCenter: 'Κέντρο Βοήθειας',

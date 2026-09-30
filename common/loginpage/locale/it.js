@@ -1,5 +1,5 @@
 l10n.it_IT = {
-    welWelcome: 'Benvenuti su __COMPANY_NAME__ Desktop Editors!',
+    welWelcome: 'Benvenuti su __COMPANY_NAME__ Office!',
     welDescr: 'Lavora ai documenti offline o collega la suite al tuo cloud: ownCloud, Nextcloud and more.',
     welNeedHelp: 'Hai bisogno di aiuto? Visita il nostro $1.',
     textHelpCenter: 'Centro Assistenza',

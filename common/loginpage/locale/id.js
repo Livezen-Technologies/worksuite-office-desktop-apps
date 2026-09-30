@@ -1,5 +1,5 @@
 l10n.id = {
-    welWelcome: 'Selamat Datang di __COMPANY_NAME__ Desktop Editors!',
+    welWelcome: 'Selamat Datang di __COMPANY_NAME__ Office!',
     welDescr: 'Mengerjakan dokumen secara luring atau menghubungkannya ke cloud Anda: ownCloud, Nextcloud and more.',
     welNeedHelp: 'Butuh bantuan? Kunjungi $1 kami.',
     textHelpCenter: 'Pusat Bantuan',

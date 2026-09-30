@@ -1,5 +1,5 @@
 l10n.lt = {
-    welWelcome: 'Sveiki atvykę __COMPANY_NAME__ Desktop Editors!',
+    welWelcome: 'Sveiki atvykę __COMPANY_NAME__ Office!',
     welDescr: 'Dirbkite su dokumentais neprisijungę prie ryšio arba prisijunkite prie "cloud" sistemų: ownCloud, Nextcloud and more.',
     welNeedHelp: 'Reikia pagalbos? Apsilankykite mūsų $1.',
     textHelpCenter: 'Pagalbos centre',

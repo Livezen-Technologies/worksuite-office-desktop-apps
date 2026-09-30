@@ -1,5 +1,5 @@
 l10n.pt_BR = {
-    welWelcome: 'Bem-vindo ao __COMPANY_NAME__ Desktop Editors!',
+    welWelcome: 'Bem-vindo ao __COMPANY_NAME__ Office!',
     welDescr: 'Trabalhe em documentos offline ou conecte-se à sua nuvem: ownCloud, Nextcloud and more.',
     welNeedHelp: 'Precisa de ajuda? Visite nossa $1.',
     textHelpCenter: 'Central de Ajuda',

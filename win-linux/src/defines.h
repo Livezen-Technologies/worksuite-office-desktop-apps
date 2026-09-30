@@ -32,21 +32,21 @@
 #define reCmdLang           "--(keep)?lang[:|=](\\w{2,5})"
 
 #define APP_NAME "DesktopEditors"
-#define APP_TITLE "Euro-Office"
+#define APP_TITLE "WorkSuite Office"
 #ifdef __linux
-# define APP_DATA_PATH "/euro-office/desktopeditors"
-# define REG_GROUP_KEY "euro-office"
+# define APP_DATA_PATH "/worksuite/office"
+# define REG_GROUP_KEY "worksuite"
 # define APP_MUTEX_NAME "asc:editors"
-# define DESKTOP_FILE_NAME "eurooffice-desktopeditors"
+# define DESKTOP_FILE_NAME "worksuite-office"
 #else
-# define APP_DATA_PATH "/Euro-Office/DesktopEditors"
-# define APP_REG_NAME  "Euro-Office"
-# define REG_GROUP_KEY "Euro-Office"
-# define REG_UNINST_KEY "Euro-Office Desktop Editors"
+# define APP_DATA_PATH "/WorkSuite/DesktopEditors"
+# define APP_REG_NAME  "WorkSuite"
+# define REG_GROUP_KEY "WorkSuite"
+# define REG_UNINST_KEY "WorkSuite Office"
 # define APP_MUTEX_NAME "TEAMLAB"
 #endif
 
-#define WINDOW_NAME "Euro-Office"
+#define WINDOW_NAME "WorkSuite Office"
 #define WINDOW_TITLE WINDOW_NAME
 #define WINDOW_CLASS_NAME L"DocEditorsWindowClass"
 #define WINDOW_EDITOR_CLASS_NAME L"SingleWindowClass"
@@ -54,11 +54,11 @@
 #define APP_DEFAULT_LOCALE "en-US"
 #define APP_DEFAULT_SYSTEM_LOCALE 1
 #define APP_USER_MODEL_ID "ASC.Documents.5"
-#define APP_SIMPLE_WINDOW_TITLE "Euro-Office Editor"
+#define APP_SIMPLE_WINDOW_TITLE "WorkSuite Office"
 #define APP_PROTOCOL "oo-office"
-#define FILE_PREFIX "eurooffice_"
+#define FILE_PREFIX "worksuite_"
 
-#define URL_SITE                "https://github.com/Euro-Office"
+#define URL_SITE                "https://worksuite.lk"
 #define URL_SIGNUP              "https://onlyoffice.com/registration.aspx?desktop=true"
 
 #define GET_REGISTRY_USER(variable) \

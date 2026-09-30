@@ -29,7 +29,7 @@
 #include <QCoreApplication>
 #include "windows/cmainwindow.h"
 
-#define MAIN_ICON_SIZE QSize(85,20)
+#define MAIN_ICON_SIZE QSize(116,20)
 #define MAIN_ICON_PATH QString(":/logo.svg")
 
 class CMainWindowImpl : public CMainWindow

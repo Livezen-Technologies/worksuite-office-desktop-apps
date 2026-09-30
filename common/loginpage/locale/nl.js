@@ -1,5 +1,5 @@
 ﻿l10n.nl = {
-    welWelcome: 'Welkom bij __COMPANY_NAME__ Desktop Editors!',
+    welWelcome: 'Welkom bij __COMPANY_NAME__ Office!',
     welDescr: 'Werk offline aan documenten of sluit de suite aan op uw cloud: ownCloud, Nextcloud and more.',
     welNeedHelp: 'Hulp nodig? Bezoek ons $1.',
     textHelpCenter: 'Helpcentrum',

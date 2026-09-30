@@ -1,5 +1,5 @@
 l10n.be = {
-    welWelcome: 'Вітаем у __COMPANY_NAME__ Desktop Editors!',
+    welWelcome: 'Вітаем у __COMPANY_NAME__ Office!',
     welDescr: 'Працуйце з дакументамі ў аўтаномным рэжыме або падлучыцеся да воблака: ownCloud, Nextcloud and more.',
     welNeedHelp: 'Патрэбна дапамога? Наведайце наш $1.',
     textHelpCenter: 'Цэнтр дапамогі',

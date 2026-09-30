@@ -1,5 +1,5 @@
 l10n.sq = {
-    welWelcome: 'Mirësevini në __COMPANY_NAME__ Desktop Editors!',
+    welWelcome: 'Mirësevini në __COMPANY_NAME__ Office!',
     welDescr: 'Punoni me dokumente jashtë linje ose lidhni paketën me renë tuaj kompjuterike: ownCloud, Nextcloud and more.',
     welNeedHelp: 'Keni nevojë për ndihmë? Vizitoni $1.',
     textHelpCenter: 'Qendra e Ndihmës',

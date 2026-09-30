@@ -1,5 +1,5 @@
 l10n.bg = {
-    welWelcome: 'Добре дошли в __COMPANY_NAME__ Desktop Editors!',
+    welWelcome: 'Добре дошли в __COMPANY_NAME__ Office!',
     welDescr: 'Работете по документи офлайн или свържете пакета към вашия облак: ownCloud, Nextcloud and more.',
     welNeedHelp: 'Нуждаете се от помощ? Посетете нашия $1.',
     textHelpCenter: 'Помощен център',
