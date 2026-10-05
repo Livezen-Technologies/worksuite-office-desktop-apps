@@ -6,9 +6,9 @@
 #define sIntProductName                 "DesktopEditors"
 #define sAppName                        str(sCompanyName + " " + sProductName)
 #define sPackageName                    str(sIntCompanyName + "-" + sIntProductName)
-#define sAppPublisher                   "Livezen Technologies"
-#define sAppPublisherURL                "https://worksuite.lk/"
-#define sAppSupportURL                  "https://worksuite.lk/"
+#define sAppPublisher                   "Livezen Technologies LLC"
+#define sAppPublisherURL                "https://worksuitecloud.com/"
+#define sAppSupportURL                  "https://worksuitecloud.com/"
 #define sAppCopyright                   str("© Ascensio System SIA, Euro-Office contributors, " + sAppPublisher + " " + GetDateTimeString("yyyy",,))
 #define sAppIconName                    "WorkSuite Office"
 #define sOldAppIconName                 "WorkSuite Editors"

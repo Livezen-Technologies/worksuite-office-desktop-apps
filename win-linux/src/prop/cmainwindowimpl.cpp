@@ -34,10 +34,23 @@
 #include <QJsonDocument>
 #include <QDir>
 #include <QFile>
+#include <QFileInfo>
+#include <QUrl>
 
 #define DEFAULT_LICENSE_NAME    "GNU AGPL v3"
 #define DEFAULT_LICENSE_URL     URL_AGPL
 #define LICENSE_FILE_NAME       "/EULA.txt"
+#define THIRD_PARTY_NOTICES_FILE_NAME   "/3DPARTYLICENSE"
+#define THIRD_PARTY_NOTICES_URL "https://github.com/Livezen-Technologies/worksuite-office-desktop-apps/blob/main/package/common/license/3dparty/3DPARTYLICENSE"
+
+namespace {
+    // The installers put the notices next to the executable; fall back to the published copy
+    QString _third_party_notices_url()
+    {
+        const QString _path = QCoreApplication::applicationDirPath() + THIRD_PARTY_NOTICES_FILE_NAME;
+        return QFileInfo::exists(_path) ? QUrl::fromLocalFile(_path).toString() : QString(THIRD_PARTY_NOTICES_URL);
+    }
+}
 
 CMainWindowImpl::CMainWindowImpl(const QRect &rect) :
     CMainWindow(rect)
@@ -122,6 +135,11 @@ void CMainWindowImpl::refreshAboutVersion()
 #endif
     _json_obj["rights"]     = ABOUT_COPYRIGHT_STR;
     _json_obj["link"]       = URL_SITE;
+    _json_obj["publisher"]  = ABOUT_PUBLISHER_STR;
+    _json_obj["upstream"]   = ABOUT_UPSTREAM_STR;
+    _json_obj["license"]    = _lic_url;
+    _json_obj["source"]     = URL_SOURCE_CODE;
+    _json_obj["notices"]    = _third_party_notices_url();
 //    _json_obj["changelog"]  = "https://github.com/ONLYOFFICE/DesktopEditors/blob/master/CHANGELOG.md";
 
     QString _package = QSettings(qApp->applicationDirPath() + "/converter/package.config", QSettings::IniFormat).value("package").toString();

@@ -38,6 +38,13 @@
 #import "ASCSharedSettings.h"
 #import "ASCLicenseController.h"
 
+static NSString * const kAboutPublisherName = @"Livezen Technologies LLC";
+static NSString * const kAboutWebsiteTitle  = @"worksuitecloud.com";
+static NSString * const kAboutWebsiteUrl    = @"https://worksuitecloud.com";
+static NSString * const kAboutSourceCodeUrl = @"https://github.com/Livezen-Technologies/worksuite-office";
+static NSString * const kAboutUpstreamName  = @"ONLYOFFICE Desktop Editors";
+static NSString * const kAboutUpstreamCopyright = @"Copyright © 2026 Ascensio System SIA and contributors.";
+
 @interface ASCAboutController () {
     BOOL isCommercialVersion;
 }
@@ -55,13 +62,7 @@
 
     id <ASCExternalDelegate> externalDelegate = [[ASCExternalController shared] delegate];
     
-    NSDictionary * infoDictionary = [[NSBundle mainBundle] infoDictionary];
-    NSDictionary * localizedInfoDictionary = [[NSBundle mainBundle] localizedInfoDictionary];
-    
     NSString * locProductName   = [ASCHelper appName];
-    NSString * locCopyright     = localizedInfoDictionary[@"NSHumanReadableCopyright"];
-
-    locCopyright = locCopyright ? locCopyright : infoDictionary[@"NSHumanReadableCopyright"];
 
     if (externalDelegate && [externalDelegate respondsToSelector:@selector(onCommercialInfo)]) {
         NSString * commercialInfo = [externalDelegate onCommercialInfo];
@@ -91,14 +92,9 @@
     isCommercialVersion = eulaUrl != nil;
 
         // About View
-        // Setup license button view
-        NSMutableAttributedString * attrTitle = [[NSMutableAttributedString alloc] initWithAttributedString:[self.licenseButton attributedTitle]];
-        long len = [attrTitle length];
-        NSRange range = NSMakeRange(0, len);
-        [attrTitle addAttribute:NSForegroundColorAttributeName value:[NSColor linkColor] range:range];
-        [attrTitle fixAttributesInRange:range];
-        [self.licenseButton setAttributedTitle:attrTitle];
-        
+        [self styleLinkButton:self.licenseButton];
+        [self setupLinksRow];
+
 #ifdef _MAS
         [self.licenseButton setHidden:YES];
 #endif
@@ -107,8 +103,7 @@
         [self.appNameText setStringValue:locProductName];
         
         // Version
-        NSString * tplVersion = !isCommercialVersion ? NSLocalizedString(@"Community version %@", nil) : NSLocalizedString(@"Enterprise version %@", nil);
-        [self.versionText setStringValue:[NSString stringWithFormat:tplVersion, [infoDictionary objectForKey:@"CFBundleShortVersionString"]]];
+        [self.versionText setStringValue:[self versionString:NO]];
 
         NSClickGestureRecognizer *click = [[NSClickGestureRecognizer alloc] initWithTarget:self action:@selector(onVersionClick:)];
         [self.versionText addGestureRecognizer:click];
@@ -120,8 +115,30 @@
                                               NSLocalizedString(@"With access to pro features", nil)]];
         }
         
-        // Copyright
-        [self.copyrightText setStringValue:locCopyright];
+        // Publisher and website, above the upstream copyright
+        NSTextField * builtByText = [self labelWithString:[NSString stringWithFormat:NSLocalizedString(@"Built by %@", nil), kAboutPublisherName]];
+        NSFont * font = builtByText.font;
+        NSMutableAttributedString * builtBy = [[NSMutableAttributedString alloc] initWithString:builtByText.stringValue
+                                                                                      attributes:@{NSFontAttributeName: font}];
+        [builtBy addAttribute:NSFontAttributeName
+                        value:[NSFont boldSystemFontOfSize:font.pointSize]
+                        range:[builtBy.string rangeOfString:kAboutPublisherName]];
+        [builtByText setAttributedStringValue:builtBy];
+
+        NSButton * websiteButton = [self linkButtonWithTitle:kAboutWebsiteTitle action:@selector(onWebsiteClick:)];
+        websiteButton.font = [NSFont boldSystemFontOfSize:font.pointSize];
+        [self styleLinkButton:websiteButton];
+
+        NSStackView * publisherStack = [NSStackView stackViewWithViews:@[builtByText, websiteButton]];
+        [publisherStack setOrientation:NSUserInterfaceLayoutOrientationVertical];
+        [publisherStack setAlignment:NSLayoutAttributeCenterX];
+        [publisherStack setSpacing:0];
+
+        NSUInteger copyrightIndex = [self.infoStackView.arrangedSubviews indexOfObject:self.copyrightText];
+        [self.infoStackView insertArrangedSubview:publisherStack atIndex:copyrightIndex];
+
+        // Upstream attribution, kept as required by the AGPL
+        [self.copyrightText setStringValue:[NSString stringWithFormat:NSLocalizedString(@"Based on %@.\n%@", nil), kAboutUpstreamName, kAboutUpstreamCopyright]];
         
         // Window
         [self setTitle:[NSString stringWithFormat:NSLocalizedString(@"About %@", nil), locProductName]];
@@ -131,6 +148,133 @@
     [super viewDidAppear];
         
     [self.view.window setStyleMask:[self.view.window styleMask] & ~NSResizableWindowMask];
+
+    // Nothing is focused when the window opens; the links still get a focus
+    // ring once the user moves to them with the keyboard.
+    [self.view.window setAutorecalculatesKeyViewLoop:YES];
+    [self.view.window setInitialFirstResponder:nil];
+    [self.view.window makeFirstResponder:nil];
+}
+
+- (NSString *)versionString:(BOOL)detailed {
+    NSDictionary * infoDictionary = [[NSBundle mainBundle] infoDictionary];
+    NSString * edition = !isCommercialVersion ? NSLocalizedString(@"Community", nil) : NSLocalizedString(@"Enterprise", nil);
+    NSString * version = [infoDictionary objectForKey:@"CFBundleShortVersionString"];
+
+    if (!detailed) {
+        return [NSString stringWithFormat:NSLocalizedString(@"Version %@ (%@)", nil), version, edition];
+    }
+
+    NSString * build = [NSString stringWithFormat:@"%@.%@", version, [infoDictionary objectForKey:@"ASCBundleBuildNumber"]];
+    return [NSString stringWithFormat:NSLocalizedString(@"Version %@ (%@)\nBuild %@", nil), version, edition, build];
+}
+
+- (NSTextField *)labelWithString:(NSString *)string {
+    NSTextField * label = [[NSTextField alloc] initWithFrame:NSZeroRect];
+    [label setStringValue:string];
+    [label setFont:[NSFont systemFontOfSize:[NSFont systemFontSize]]];
+    [label setAlignment:NSTextAlignmentCenter];
+    [label setBezeled:NO];
+    [label setDrawsBackground:NO];
+    [label setEditable:NO];
+    [label setSelectable:NO];
+    [label setRefusesFirstResponder:YES];
+    return label;
+}
+
+- (NSButton *)linkButtonWithTitle:(NSString *)title action:(SEL)action {
+    NSButton * button = [[NSButton alloc] initWithFrame:NSZeroRect];
+    [button setTitle:title];
+    [button setTarget:self];
+    [button setAction:action];
+    [button setButtonType:NSMomentaryChangeButton];
+    [button setBordered:NO];
+    [button setFont:[NSFont systemFontOfSize:12]];
+    [button setFocusRingType:NSFocusRingTypeDefault];
+    [button setToolTip:title];
+    return button;
+}
+
+- (void)styleLinkButton:(NSButton *)button {
+    NSMutableAttributedString * attrTitle = [[NSMutableAttributedString alloc] initWithString:button.title
+                                                                                    attributes:@{NSFontAttributeName: button.font}];
+    NSRange range = NSMakeRange(0, attrTitle.length);
+    [attrTitle addAttribute:NSForegroundColorAttributeName value:[NSColor linkColor] range:range];
+    [attrTitle fixAttributesInRange:range];
+    [button setAttributedTitle:attrTitle];
+    [[button cell] setShowsStateBy:NSNoCellMask];
+    [[button cell] setHighlightsBy:NSNoCellMask];
+}
+
+- (NSTextField *)separatorLabel {
+    NSTextField * label = [self labelWithString:@"·"];
+    [label setTextColor:[NSColor secondaryLabelColor]];
+    return label;
+}
+
+// [License agreement] · [Source code] · [Third-party notices]
+- (void)setupLinksRow {
+    NSView * container = self.licenseButton.superview;
+    NSButton * licenseButton = self.licenseButton;
+    [licenseButton removeFromSuperview];
+    [licenseButton setFocusRingType:NSFocusRingTypeDefault];
+
+    NSButton * sourceButton = [self linkButtonWithTitle:NSLocalizedString(@"Source code", nil) action:@selector(onSourceCodeClick:)];
+    NSButton * noticesButton = [self linkButtonWithTitle:NSLocalizedString(@"Third-party notices", nil) action:@selector(onThirdPartyNoticesClick:)];
+    [self styleLinkButton:sourceButton];
+    [self styleLinkButton:noticesButton];
+
+    NSStackView * row = [NSStackView stackViewWithViews:@[licenseButton, [self separatorLabel],
+                                                          sourceButton, [self separatorLabel],
+                                                          noticesButton]];
+    [row setOrientation:NSUserInterfaceLayoutOrientationHorizontal];
+    [row setAlignment:NSLayoutAttributeCenterY];
+    [row setSpacing:6];
+    [row setTranslatesAutoresizingMaskIntoConstraints:NO];
+    [container addSubview:row];
+
+    [container addConstraints:@[
+        [NSLayoutConstraint constraintWithItem:row attribute:NSLayoutAttributeCenterX relatedBy:NSLayoutRelationEqual
+                                        toItem:container attribute:NSLayoutAttributeCenterX multiplier:1 constant:0],
+        [NSLayoutConstraint constraintWithItem:row attribute:NSLayoutAttributeTop relatedBy:NSLayoutRelationEqual
+                                        toItem:self.infoStackView attribute:NSLayoutAttributeBottom multiplier:1 constant:10],
+        [NSLayoutConstraint constraintWithItem:container attribute:NSLayoutAttributeBottom relatedBy:NSLayoutRelationEqual
+                                        toItem:row attribute:NSLayoutAttributeBottom multiplier:1 constant:20],
+        [NSLayoutConstraint constraintWithItem:row attribute:NSLayoutAttributeLeading relatedBy:NSLayoutRelationGreaterThanOrEqual
+                                        toItem:container attribute:NSLayoutAttributeLeading multiplier:1 constant:10],
+    ]];
+}
+
+- (void)openLocalPage:(NSURL *)url {
+    if (!url) {
+        return;
+    }
+
+    NSWindowController * windowController = [self.storyboard instantiateControllerWithIdentifier:@"ASCLicenseWindowControllerId"];
+    ASCLicenseController *licView = (ASCLicenseController *)windowController.contentViewController;
+    [licView setUrl:url];
+    NSWindow *licWindow = windowController.window;
+
+    NSRect parentFrame = self.view.window.frame;
+    NSRect childFrame = licWindow.frame;
+    [licWindow setFrameOrigin:NSMakePoint(NSMidX(parentFrame) - childFrame.size.width/2,
+                                          NSMidY(parentFrame) - childFrame.size.height/2)];
+    [licWindow makeKeyAndOrderFront:nil]; // Show the window first to apply the coordinates
+
+    [NSApp runModalForWindow:licWindow];
+}
+
+- (IBAction)onWebsiteClick:(id)sender {
+    [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:kAboutWebsiteUrl]];
+}
+
+- (IBAction)onSourceCodeClick:(id)sender {
+    [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:kAboutSourceCodeUrl]];
+}
+
+- (IBAction)onThirdPartyNoticesClick:(id)sender {
+    NSURL * noticesUrl = [[NSBundle mainBundle] URLForResource:@"acknowledgments" withExtension:@"html" subdirectory:@"login"];
+    [self openLocalPage:noticesUrl];
 }
 
 - (void)viewDidDisappear {
@@ -140,14 +284,7 @@
 }
 
 - (void)onVersionClick:(NSTextField *)sender {
-    NSDictionary * infoDictionary = [[NSBundle mainBundle] infoDictionary];
-
-    NSString * tplVersion = !isCommercialVersion ? NSLocalizedString(@"Community version %@ (%@-%@)", nil) :
-                                            NSLocalizedString(@"Enterprise version %@ (%@-%@)", nil);
-    [self.versionText setStringValue:[NSString stringWithFormat:tplVersion,
-                                      [infoDictionary objectForKey:@"CFBundleShortVersionString"],
-                                      [infoDictionary objectForKey:@"CFBundleVersion"],
-                                      [infoDictionary objectForKey:@"ASCBundleBuildNumber"]]];
+    [self.versionText setStringValue:[self versionString:YES]];
     
 #if _V8_VERSION
     [self.versionText setStringValue:[NSString stringWithFormat:@"%@ x86", [self.versionText stringValue]]];
@@ -163,18 +300,7 @@
     if ( !eulaUrl )
         eulaUrl = [[NSBundle mainBundle] URLForResource:@"LICENSE" withExtension:@"html" subdirectory:@"license"];
     
-    NSWindowController * windowController = [self.storyboard instantiateControllerWithIdentifier:@"ASCLicenseWindowControllerId"];
-    ASCLicenseController *licView = (ASCLicenseController *)windowController.contentViewController;
-    [licView setUrl:eulaUrl];
-    NSWindow *licWindow = windowController.window;
-    
-    NSRect parentFrame = self.view.window.frame;
-    NSRect childFrame = licWindow.frame;
-    [licWindow setFrameOrigin:NSMakePoint(NSMidX(parentFrame) - childFrame.size.width/2,
-                                          NSMidY(parentFrame) - childFrame.size.height/2)];
-    [licWindow makeKeyAndOrderFront:nil]; // Show the window first to apply the coordinates
-    
-    [NSApp runModalForWindow:licWindow];
+    [self openLocalPage:eulaUrl];
 }
 
 @end

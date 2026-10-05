@@ -7,9 +7,9 @@ PRODUCT_NAME_SHORT ?= $(subst $(empty) $(empty),,$(PRODUCT_NAME))
 COMPANY_NAME_LOW = $(shell echo $(COMPANY_NAME) | tr A-Z a-z | tr -s ' ' '-')
 PRODUCT_NAME_LOW = $(shell echo $(PRODUCT_NAME_SHORT) | tr A-Z a-z)
 
-PUBLISHER_NAME ?= Ascensio System SIA
-PUBLISHER_URL ?= https://worksuite.lk
-SUPPORT_URL ?= https://worksuite.lk
+PUBLISHER_NAME ?= Livezen Technologies LLC
+PUBLISHER_URL ?= https://worksuitecloud.com
+SUPPORT_URL ?= https://worksuitecloud.com
 SUPPORT_MAIL ?= support@worksuite.lk
 SCHEME_HANDLER ?= oo-office
 
@@ -168,6 +168,8 @@ else
 	cp -f $(BRANDING_DIR)/common/license/$(PACKAGE_EDITION)/LICENSE.txt \
 		$@/main/opt/$(DESKTOPEDITORS_PREFIX)/EULA.txt
 endif
+	cp -f $(BRANDING_DIR)/common/license/3dparty/3DPARTYLICENSE \
+		$@/main/opt/$(DESKTOPEDITORS_PREFIX)/3DPARTYLICENSE
 
 	cd $@; \
 	for path in main/$(HELP_GLOB); do \

@@ -54,10 +54,12 @@
 # define VER_PRODUCTVERSION_STR     VER_STRING_SHORT
 #endif
 
-#define VER_COMPANYNAME_STR         "Ascensio System SIA\0"
-#define VER_LEGALCOPYRIGHT_STR      "© Ascensio System SIA " TO_STR(COPYRIGHT_YEAR) ". All rights reserved.\0"
-#define VER_COMPANYDOMAIN_STR       "https://worksuite.lk\0"
-#define ABOUT_COPYRIGHT_STR         VER_LEGALCOPYRIGHT_STR
+#define VER_COMPANYNAME_STR         "Livezen Technologies LLC\0"
+#define VER_LEGALCOPYRIGHT_STR      "© " TO_STR(COPYRIGHT_YEAR) " Livezen Technologies LLC. Based on ONLYOFFICE Desktop Editors, © " TO_STR(COPYRIGHT_YEAR) " Ascensio System SIA and contributors.\0"
+#define VER_COMPANYDOMAIN_STR       "https://worksuitecloud.com\0"
+#define ABOUT_PUBLISHER_STR         "Livezen Technologies LLC"
+#define ABOUT_UPSTREAM_STR          "ONLYOFFICE Desktop Editors"
+#define ABOUT_COPYRIGHT_STR         "Copyright © " TO_STR(COPYRIGHT_YEAR) " Ascensio System SIA and contributors."
 #define VER_FILEDESCRIPTION_STR     "WorkSuite Office\0"
 #define VER_INTERNALNAME_STR        "Desktop Editors\0"
 #define VER_LEGALTRADEMARKS1_STR    "All Rights Reserved\0"

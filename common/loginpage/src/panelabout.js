@@ -51,24 +51,49 @@
         baseView.prototype.constructor.call(this, args);
     };
 
-    const version = function(commercial) {
-        return commercial === true ? utils.Lang.strVersionCommercial : utils.Lang.strVersionCommunity;
+    // "Version 9.3.1 (Community)"; the full build number goes on its own line
+    const version = function(opts) {
+        const _lang = utils.Lang;
+        const edition = opts.commercial === true ? _lang.aboutEditionCommercial : _lang.aboutEditionCommunity;
+        const short = (opts.version || '').split('.').slice(0, 3).join('.');
+        return _lang.aboutVersion.replace('$1', short).replace('$2', edition);
+    };
+
+    const build = function(opts) {
+        let _ext_ver = '';
+        if ( !!opts.arch ) _ext_ver += opts.arch;
+        if ( !!opts.pkg ) _ext_ver += ` ${opts.pkg}`;
+
+        let _build = utils.Lang.aboutBuild.replace('$1', opts.version || '');
+        if ( !!_ext_ver ) _build += ` (${_ext_ver.trim()})`;
+        return _build;
+    };
+
+    const linksRow = function(opts) {
+        const _lang = utils.Lang;
+        const _links = [];
+        const _link = (url, text, cls) => `<a class="link ${cls}" draggable="false" href="#" data-url="${url}">${text}</a>`;
+
+        if ( !!opts.license ) _links.push(_link(opts.license, _lang.aboutLicenseAgreement, 'ver-license'));
+        if ( !!opts.source ) _links.push(_link(opts.source, _lang.aboutSourceCode, 'ver-source'));
+        if ( !!opts.notices ) _links.push(_link(opts.notices, _lang.aboutThirdPartyNotices, 'ver-notices'));
+
+        return _links.join('<span class="ver-links-sep">·</span>');
     };
 
     ViewAbout.prototype = Object.create(baseView.prototype);
     ViewAbout.prototype.constructor = ViewAbout;
     ViewAbout.prototype.paneltemplate = function(args) {
         var _opts = args.opts;
+        // The license is linked from the row at the bottom when the app passes its url
+        !!_opts.license && (_opts.edition = '');
         !!_opts.active && (_opts.edition = !!_opts.edition ? _opts.edition + ' ' + _opts.active : _opts.active);
         _opts.edition = !!_opts.edition ? `<div id="idx-ver-edition" class="about-field">${_opts.edition}</div>` : '';
-        const strVersion = version(args.opts.commercial);
-
-        let _ext_ver = '';
-        if ( !!_opts.arch ) _ext_ver += _opts.arch;
-        if ( !!_opts.pkg ) _ext_ver += ` ${_opts.pkg}`;
-        if ( !!_ext_ver ) _opts.version += ` (${_ext_ver.trim()})`;
 
         var _lang = utils.Lang;
+        const _publisher = !!_opts.publisher ?
+                    `<div class="ver-publisher about-field">${_lang.aboutBuiltBy.replace('$1', `<b>${_opts.publisher}</b>`)}</div>` : '';
+        const _based_on = !!_opts.upstream ? `${_lang.aboutBasedOn.replace('$1', _opts.upstream)}<br>` : '';
         const _updates_status = `<section id="idx-update-cnt">
                                     <div class="status-field hbox">
                                         <svg class="icon" id="idx-update-status-icon">
@@ -91,7 +116,8 @@
                                 </div>
                                 <div class="vbox">
                                     <p id="idx-about-appname">${_opts.appname}</p>
-                                    <p id="idx-about-version"><span l10n>${strVersion}</span> ${_opts.version}</p>
+                                    <p id="idx-about-version">${version(_opts)}</p>
+                                    <p id="idx-about-build">${build(_opts)}</p>
                                 </div>
                             </section><p></p>
                             <div class="separator"></div>
@@ -101,8 +127,10 @@
                                 ${_opts.edition}
                                 <a class="ver-checkupdate link hidden" draggable='false' data-state='check' href="#" l10n>${_lang.checkUpdates}</a>
                                 <div class="about-field"><a class="ver-changelog link" draggable='false' target="popup" href=${_opts.changelog} l10n>${_lang.aboutChangelog}</a></div>
-                                <a class="ver-site link about-field" target="popup" href="${_opts.link}">${_opts.site}</a>
-                                <div class="ver-copyright about-field">${_opts.rights}</div> 
+                                ${_publisher}
+                                <a class="ver-site link about-field" target="popup" href="${_opts.link}"><b>${_opts.site}</b></a>
+                                <div class="ver-copyright about-field">${_based_on}${_opts.rights}</div>
+                                <div class="ver-links about-field">${linksRow(_opts)}</div>
                             </div>                    
                         </div>`+
                         // '<div class="box-license flex-fill">'+
@@ -154,6 +182,10 @@
                     this.view.args = args;
                     this.view.$menuitem && this.view.$menuitem.removeClass('extra');
                     this.view.$body = $(this.view.paneltemplate(args));
+                    this.view.$body.on('click', '.ver-links a[data-url]', e => {
+                        e.preventDefault();
+                        window.open($(e.currentTarget).data('url'));
+                    });
                     this.view.$dialog = new AboutDialog();
                 } else {
                     if ( !!args.opts && !!args.opts.edition ) {
@@ -298,7 +330,14 @@
                 CommonEvents.on('lang:changed', () => {
                     if (this.view) {
                         this.view.$dialog.titleText = utils.Lang.actAbout;
-                        $('#idx-about-version span', this.view.$body).text(version(this.view.args.opts.commercial));
+                        const opts = this.view.args.opts;
+                        $('#idx-about-version', this.view.$body).text(version(opts));
+                        $('#idx-about-build', this.view.$body).text(build(opts));
+                        $('.ver-links', this.view.$body).html(linksRow(opts));
+                        !!opts.publisher && $('.ver-publisher', this.view.$body)
+                                .html(utils.Lang.aboutBuiltBy.replace('$1', `<b>${opts.publisher}</b>`));
+                        !!opts.upstream && $('.ver-copyright', this.view.$body)
+                                .html(`${utils.Lang.aboutBasedOn.replace('$1', opts.upstream)}<br>${opts.rights}`);
                     }
                 });
 

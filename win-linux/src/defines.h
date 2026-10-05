@@ -58,7 +58,8 @@
 #define APP_PROTOCOL "oo-office"
 #define FILE_PREFIX "worksuite_"
 
-#define URL_SITE                "https://worksuite.lk"
+#define URL_SITE                "https://worksuitecloud.com"
+#define URL_SOURCE_CODE         "https://github.com/Livezen-Technologies/worksuite-office"
 #define URL_SIGNUP              "https://onlyoffice.com/registration.aspx?desktop=true"
 
 #define GET_REGISTRY_USER(variable) \
