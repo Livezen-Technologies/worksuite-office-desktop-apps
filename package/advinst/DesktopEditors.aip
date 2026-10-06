@@ -48,6 +48,7 @@
     <ROW Property="ProductVersion" Value="0.0.0.0" Options="32"/>
     <ROW Property="ProgID" Value="[|ExtPfx].Editors" ValueLocId="-"/>
     <ROW Property="Protocol" Value="oo-office" ValueLocId="-"/>
+    <ROW Property="ProtocolWorkSuite" Value="worksuiteoffice" ValueLocId="-"/>
     <ROW Property="REGISTER_CSV" Value="1" Type="4" ValueLocId="-"/>
     <ROW Property="REGISTER_DJVU" Value="1" Type="4" ValueLocId="-"/>
     <ROW Property="REGISTER_DOC" Value="1" Type="4" ValueLocId="-"/>
@@ -392,6 +393,7 @@
     <ROW Component="c_reg_fa_progid_app__xps" ComponentId="{5FB7AB27-1714-409D-AB8D-862B569828BC}" Directory_="APPDIR" Attributes="260" Condition="VersionNT = 1000" KeyPath="reg_fa_progid_app_icon__xps"/>
     <ROW Component="c_reg_progid" ComponentId="{9D33C055-B150-47B2-AB67-51C8FECB3260}" Directory_="APPDIR" Attributes="260" KeyPath="reg_progid"/>
     <ROW Component="c_reg_protocol" ComponentId="{C28686D3-D274-4005-93D2-EC95B27607E3}" Directory_="APPDIR" Attributes="260" Condition="REGISTER_PROTOCOL = 1" KeyPath="reg_protocol"/>
+    <ROW Component="c_reg_protocol_worksuite" ComponentId="{F0F84D90-B76A-47B4-99F4-83E00C468918}" Directory_="APPDIR" Attributes="260" Condition="REGISTER_PROTOCOL = 1" KeyPath="reg_protocol_worksuite"/>
     <ROW Component="c_reg_sw_app" ComponentId="{86375F1D-EF9C-44F1-B331-7545DA000717}" Directory_="APPDIR" Attributes="260" KeyPath="reg_sw_company"/>
     <ROW Component="c_reg_sw_app_ignoreassocmsg" ComponentId="{432F3706-2A40-4FC8-B304-2F0856EAEDAC}" Directory_="APPDIR" Attributes="260" Condition="NOASSOCHECK = 1" KeyPath="reg_sw_app_ignoreassocmsg"/>
     <ROW Component="c_reg_sw_registeredapps" ComponentId="{2637A7F2-DBD3-45D4-AE10-ADD61BFC4414}" Directory_="APPDIR" Attributes="260" KeyPath="reg_sw_registeredapps"/>
@@ -1337,6 +1339,7 @@
     <ROW Feature_="Registry" Component_="c_reg_fa_progid__xps"/>
     <ROW Feature_="Registry" Component_="c_reg_progid"/>
     <ROW Feature_="Registry" Component_="c_reg_protocol"/>
+    <ROW Feature_="Registry" Component_="c_reg_protocol_worksuite"/>
     <ROW Feature_="Registry" Component_="c_reg_sw_app"/>
     <ROW Feature_="Registry" Component_="c_reg_sw_registeredapps"/>
     <ROW Feature_="Registry" Component_="c_reg_ua_cap__protocol"/>
@@ -2471,6 +2474,15 @@
     <ROW Registry="reg_protocol_shell_open_command_k" Root="0" Key="[Protocol]\shell\open\command" Name="\"/>
     <ROW Registry="reg_protocol_shell_open_k" Root="0" Key="[Protocol]\shell\open" Name="\"/>
     <ROW Registry="reg_protocol_url_protocol" Root="0" Key="[Protocol]" Name="URL Protocol" Component_="c_reg_protocol"/>
+    <ROW Registry="reg_protocol_worksuite" Root="0" Key="[ProtocolWorkSuite]" Value="URL:[ProtocolWorkSuite]" Component_="c_reg_protocol_worksuite"/>
+    <ROW Registry="reg_protocol_worksuite_icon" Root="0" Key="[ProtocolWorkSuite]\DefaultIcon" Value="[#DesktopEditors.exe],0" Component_="c_reg_protocol_worksuite"/>
+    <ROW Registry="reg_protocol_worksuite_icon_k" Root="0" Key="[ProtocolWorkSuite]\DefaultIcon" Name="\"/>
+    <ROW Registry="reg_protocol_worksuite_k" Root="0" Key="[ProtocolWorkSuite]" Name="\"/>
+    <ROW Registry="reg_protocol_worksuite_shell_k" Root="0" Key="[ProtocolWorkSuite]\shell" Name="\"/>
+    <ROW Registry="reg_protocol_worksuite_shell_open_command" Root="0" Key="[ProtocolWorkSuite]\shell\open\command" Value="&quot;[#DesktopEditors.exe]&quot; &quot;%1&quot;" Component_="c_reg_protocol_worksuite"/>
+    <ROW Registry="reg_protocol_worksuite_shell_open_command_k" Root="0" Key="[ProtocolWorkSuite]\shell\open\command" Name="\"/>
+    <ROW Registry="reg_protocol_worksuite_shell_open_k" Root="0" Key="[ProtocolWorkSuite]\shell\open" Name="\"/>
+    <ROW Registry="reg_protocol_worksuite_url_protocol" Root="0" Key="[ProtocolWorkSuite]" Name="URL Protocol" Component_="c_reg_protocol_worksuite"/>
     <ROW Registry="reg_sw" Root="-1" Key="Software" Name="\"/>
     <ROW Registry="reg_sw_app" Root="-1" Key="Software\[CompanyPath]\[DesktopPath]" Name="*"/>
     <ROW Registry="reg_sw_app_apppath" Root="-1" Key="Software\[CompanyPath]\[DesktopPath]" Name="AppPath" Value="[APPDIR]" Component_="c_reg_sw_app"/>
