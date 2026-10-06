@@ -107,6 +107,8 @@ $(document).ready(function() {
     if ( !!window.ControllerTemplates )
         window.app.controller.templates = (new ControllerTemplates).init();
     window.app.controller.recent = (new ControllerRecent).init();
+    // WorkSuite Drive, above the files on this computer
+    !!window.ControllerWorkSuite && (window.app.controller.worksuite = (new ControllerWorkSuite).init());
     window.app.controller.folders = (new ControllerFolders).init();
     window.app.controller.about = (new ControllerAbout).init();
     window.app.controller.settings = (new ControllerSettings).init();

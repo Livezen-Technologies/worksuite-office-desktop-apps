@@ -28,6 +28,7 @@
 #include "cfilechecker.h"
 #include "OfficeFileFormats.h"
 #include "cproviders.h"
+#include "cworksuite.h"
 #ifndef __OS_WIN_XP
 # include "components/cnotification.h"
 #endif
@@ -277,6 +278,15 @@ bool CAscApplicationManagerWrapper::processCommonEvent(NSEditorApi::CAscCefMenuE
                                         {"style","#title-doc-name{display:none}"}};
                     sendCommandTo(ptr, L"style:change", Utils::stringifyJson(json).toStdWString());
                 }
+            }
+            return true;
+        } else
+        if ( cmd.compare(L"worksuite:secret") == 0 || cmd.compare(L"worksuite:desktop") == 0 ) {
+            // WorkSuite sign-ins, for the start page only: never for a web page in a tab
+            if ( m_pMainWindow && event->get_SenderId() == m_pMainWindow->startPanelId() ) {
+                const QString answer = cmd.compare(L"worksuite:secret") == 0 ?
+                            CWorkSuite::handleSecret(QString::fromStdWString(pData->get_Param())) : CWorkSuite::desktopAccounts();
+                sendCommandTo(SEND_TO_ALL_START_PAGE, cmd, answer.toStdWString());
             }
             return true;
         } else
@@ -988,6 +998,11 @@ void CAscApplicationManagerWrapper::handleInputCmd(const std::vector<wstring>& v
 
             continue;
         } else
+        if ( arg.rfind(L"" WORKSUITE_PROTOCOL ":", 0) == 0 ) {
+            // a sign-in coming back from the browser, or "Open in WorkSuite Office"
+            vec_window_actions.push_back(arg);
+            continue;
+        } else
         if ( arg.rfind(app_action_open, 0) == 0 ) {
             std::wstring deep_link = arg;
             Utils::replaceAll(deep_link, L"%7C", L"|");
@@ -1111,6 +1126,13 @@ void CAscApplicationManagerWrapper::handleInputCmd(const std::vector<wstring>& v
 
 void CAscApplicationManagerWrapper::handleDeeplinkActions(const std::vector<std::wstring>& actions)
 {
+    for (const auto& a: actions) {
+        if ( a.rfind(L"" WORKSUITE_PROTOCOL ":", 0) == 0 ) {
+            gotoMainWindow();
+            m_pMainWindow->handleWindowAction(L"worksuite|" + a);
+        }
+    }
+
     std::wstring app_scheme = GetExternalSchemeName();
     if ( !app_scheme.empty() ) {
         const std::wstring app_action_panel = app_scheme + L"//action|panel|";

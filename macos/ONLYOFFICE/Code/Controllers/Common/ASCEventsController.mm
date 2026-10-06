@@ -510,6 +510,15 @@ public:
                         NSLog(@"[Start page] Command: \"%@\", params: \"%@\"", [NSString stringWithstdwstring:cmd], [NSString stringWithstdwstring:param]);
 #endif
 
+                        if (cmd.compare(L"worksuite:secret") == 0 || cmd.compare(L"worksuite:desktop") == 0) {
+                            [[NSNotificationCenter defaultCenter] postNotificationName:CEFEventNameWorkSuiteSecret
+                                                                                object:nil
+                                                                              userInfo:@{
+                                                                                         @"viewId" : @(senderId),
+                                                                                         @"command": [NSString stringWithstdwstring:cmd],
+                                                                                         @"param"  : [NSString stringWithstdwstring:param]
+                                                                                         }];
+                        } else
                         if (cmd.compare(L"portal:open") == 0 || cmd.find(L"auth:outer") != std::wstring::npos) {
                             NSDictionary * json = [[NSString stringWithstdwstring:param] dictionary];
                             NSString * portal = json[@"portal"];

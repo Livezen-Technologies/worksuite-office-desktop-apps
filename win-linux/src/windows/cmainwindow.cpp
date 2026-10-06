@@ -1692,6 +1692,10 @@ void CMainWindow::handleWindowAction(const std::wstring& action)
 
             if ( !_panel_to_select.empty() )
                 AscAppManager::sendCommandTo(0, L"panel:select", _panel_to_select);
+        } else
+        if ( action.rfind(L"worksuite|") == 0 ) {
+            // worksuiteoffice:// links are the start page's to handle (WorkSuite section)
+            AscAppManager::sendCommandTo(SEND_TO_ALL_START_PAGE, L"worksuite:link", action.substr(std::wstring(L"worksuite|").size()));
         }
     }
 }

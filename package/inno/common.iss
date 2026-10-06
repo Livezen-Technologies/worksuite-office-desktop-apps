@@ -267,6 +267,12 @@ Root: HKLM; Subkey: "SOFTWARE\Classes\{#sAppProtocol}\DefaultIcon"; ValueType: "
 Root: HKLM; Subkey: "SOFTWARE\Classes\{#sAppProtocol}\Shell\Open\Command"; ValueType: "string"; ValueData: """{app}\{#iconsExe}"" ""%1""";
 #endif
 
+; WorkSuite sign-in coming back from the browser, and "Open in WorkSuite Office" links
+Root: HKLM; Subkey: "SOFTWARE\Classes\{#sWorkSuiteProtocol}"; ValueType: "string"; ValueData: "URL:{#sAppName} WorkSuite Protocol"; Flags: uninsdeletekey;
+Root: HKLM; Subkey: "SOFTWARE\Classes\{#sWorkSuiteProtocol}"; ValueType: "string"; ValueName: "URL Protocol"; ValueData: "";
+Root: HKLM; Subkey: "SOFTWARE\Classes\{#sWorkSuiteProtocol}\DefaultIcon"; ValueType: "string"; ValueData: "{app}\{#iconsExe},0";
+Root: HKLM; Subkey: "SOFTWARE\Classes\{#sWorkSuiteProtocol}\Shell\Open\Command"; ValueType: "string"; ValueData: """{app}\{#iconsExe}"" ""%1""";
+
 [UninstallDelete]
 Type: filesandordirs; Name: {commonappdata}\{#APP_PATH}\*;  AfterInstall: RefreshEnvironment;
 Type: filesandordirs; Name: "{app}\..\{#UPD_PATH}";

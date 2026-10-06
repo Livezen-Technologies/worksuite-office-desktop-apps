@@ -83,7 +83,7 @@
 
                         <div id="box-recent">
                             <div class="file-list-title">
-                                <h3 l10n>${_lang.listRecentFileTitle}</h3>
+                                <h3 l10n>${_lang.listLocalTitle}</h3>
                             </div>
                             <div class="file-list-head text-normal">
                                 <div class="col-name" l10n>${_lang.colFileName}</div>

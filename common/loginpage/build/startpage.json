@@ -78,6 +78,8 @@
                     ,"../deploy/noconnect.js"
                     ,"../src/paneltemplates.js"
                     ,"../src/panelrecent.js"
+                    ,"../src/worksuite.js"
+                    ,"../src/panelworksuite.js"
                     ,"../src/panelfolders.js"
                     ,"../src/panelconnect.js"
                     ,"../src/panelabout.js"
