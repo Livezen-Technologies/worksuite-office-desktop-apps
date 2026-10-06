@@ -275,6 +275,39 @@
     };
 
     /* ------------------------------------------------------------------ *
+     * the WorkSuite app, in the sidebar under Templates
+     * ------------------------------------------------------------------ */
+
+    // WorkSuite's app icon. Not an "icon" of the sidebar's set: those are drawn in one colour, and swapped for
+    // pictures at some display scales (replaceIcons(), panels.js).
+    const APP_LOGO = `
+        <svg class="ws-app-logo" viewBox="72 72 880 880" aria-hidden="true">
+            <defs><linearGradient id="ws-app-logo-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4766E8"/><stop offset="1" stop-color="#2434A0"/></linearGradient></defs>
+            <rect x="72" y="72" width="880" height="880" rx="200" fill="url(#ws-app-logo-bg)"/>
+            <path d="M302 365 395 660 512 437 628 660 722 365" fill="none" stroke="#fff" stroke-width="70" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>`;
+
+    /* Opens WorkSuite Desktop, or WorkSuite in the browser (WorkSuite.openApp). Its action starts with "custom",
+       which the sidebar leaves alone: it opens no panel here. */
+    function addAppItem() {
+        const _lang = utils.Lang;
+        const $templates = $('.tool-menu > .menu-item > a[action=templates]').parent();
+        if (!$templates.length || $('.tool-menu a[action=custom-worksuite-app]').length) return;
+
+        $(`<li class="menu-item ws-app-item">
+                <a action="custom-worksuite-app" title="${_lang.wsAppTip}">
+                    <div class="icon-box">${APP_LOGO}</div>
+                    <span class="text">${_lang.wsApp}</span>
+                    <svg class="ws-app-out" viewBox="0 0 16 16" aria-hidden="true"><path d="M6.5 3.5h6v6M12.5 3.5l-9 9"/></svg>
+                </a>
+            </li>`).insertAfter($templates)
+            .find('a').on('click', e => {
+                e.preventDefault();
+                WorkSuite.openApp();
+            });
+    }
+
+    /* ------------------------------------------------------------------ *
      * the section
      * ------------------------------------------------------------------ */
 
@@ -289,6 +322,8 @@
 
     ControllerWorkSuite.prototype.init = function () {
         const _lang = utils.Lang;
+        addAppItem();
+
         const $container = $('.action-panel.recents #box-container');
         if (!$container.length) return this;
 

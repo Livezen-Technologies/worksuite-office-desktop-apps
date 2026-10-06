@@ -510,7 +510,7 @@ public:
                         NSLog(@"[Start page] Command: \"%@\", params: \"%@\"", [NSString stringWithstdwstring:cmd], [NSString stringWithstdwstring:param]);
 #endif
 
-                        if (cmd.compare(L"worksuite:secret") == 0 || cmd.compare(L"worksuite:desktop") == 0) {
+                        if (cmd.compare(L"worksuite:secret") == 0 || cmd.compare(L"worksuite:desktop") == 0 || cmd.compare(L"worksuite:app") == 0) {
                             [[NSNotificationCenter defaultCenter] postNotificationName:CEFEventNameWorkSuiteSecret
                                                                                 object:nil
                                                                               userInfo:@{
