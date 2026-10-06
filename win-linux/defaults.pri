@@ -109,7 +109,7 @@ HEADERS += \
     $$PWD/src/clangater.h \
     $$PWD/src/cprintdata.h \
     $$PWD/src/cproviders.h \
-    $$PWD/src/csecretstore.h \
+    $$PWD/src/cworksuite.h \
     $$PWD/src/cscalingwrapper.h \
     $$PWD/src/ctabundockevent.h \
     $$PWD/src/ccefeventsgate.h \
@@ -151,7 +151,7 @@ SOURCES += \
     $$PWD/src/clangater.cpp \
     $$PWD/src/cprintdata.cpp \
     $$PWD/src/cproviders.cpp \
-    $$PWD/src/csecretstore.cpp \
+    $$PWD/src/cworksuite.cpp \
     $$PWD/src/cscalingwrapper.cpp \
     $$PWD/src/ctabundockevent.cpp \
     $$PWD/src/ccefeventsgate.cpp \

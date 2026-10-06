@@ -34,6 +34,8 @@
     function DialogSignIn(params) {
         params = params || {};
         const _lang = utils.Lang;
+        // "Continue as" chosen on the home screen: start with WorkSuite Desktop straight away
+        this.desktopAccount = params.desktopAccount || null;
 
         Dialog.call(this, Object.assign(params, {
             dialogClass: 'dlg-worksuite-signin',
@@ -43,6 +45,7 @@
                 <div class="ws-dlg">
                     <div class="ws-dlg-start">
                         <p class="text-description">${_lang.wsSignInDescr}</p>
+                        <div class="ws-dlg-desktop"></div>
                         <div class="ws-dlg-accounts"></div>
                         <button class="btn btn--landing ws-dlg-signin">${_lang.wsSignInButton}</button>
                         <p class="ws-dlg-server text-secondary"></p>
@@ -54,10 +57,11 @@
                     </div>
                     <div class="ws-dlg-wait" style="display:none">
                         <div class="ws-spinner"></div>
-                        <p class="text-normal">${_lang.wsWaitBrowser}</p>
+                        <p class="text-normal ws-dlg-wait-text"></p>
                         <p class="text-secondary ws-dlg-wait-server"></p>
                         <div class="ws-dlg-buttons">
                             <button class="btn ws-dlg-again">${_lang.wsOpenAgain}</button>
+                            <button class="btn ws-dlg-browser">${_lang.wsUseBrowser}</button>
                             <button class="btn ws-dlg-cancel">${_lang.wsCancel}</button>
                         </div>
                     </div>
@@ -89,17 +93,50 @@
                 .appendTo($accounts);
         });
 
+        const waiting = (target, viaDesktop) => {
+            $el.find('.ws-dlg-start').hide();
+            $el.find('.ws-dlg-wait-text').text(viaDesktop ? _lang.wsWaitDesktop : _lang.wsWaitBrowser);
+            $el.find('.ws-dlg-wait-server').text(hostOf(target));
+            $el.find('.ws-dlg-again').toggle(!viaDesktop);
+            $el.find('.ws-dlg-browser').toggle(!!viaDesktop);
+            $el.find('.ws-dlg-wait').show();
+        };
+
         const start = async target => {
             error('');
             try {
                 server = await WorkSuite.signIn(target);
-                $el.find('.ws-dlg-start').hide();
-                $el.find('.ws-dlg-wait-server').text(hostOf(server));
-                $el.find('.ws-dlg-wait').show();
+                waiting(server, false);
             } catch (e) {
                 error(e.message);
             }
         };
+
+        // signed in to WorkSuite Desktop on this computer: one click, no browser
+        const startDesktop = async account => {
+            error('');
+            try {
+                server = await WorkSuite.signInWithDesktop(account);
+                waiting(server, true);
+            } catch (e) {
+                error(e.message);
+            }
+        };
+
+        const live = WorkSuite.accounts().filter(a => !a.signedOut).map(a => a.id);
+        WorkSuite.desktopAccounts().then(list => {
+            if (!this.$el) return;
+            list = list.filter(d => !live.includes(d.server + '|' + d.user.id));
+            list.forEach(d => {
+                const org = [d.user.organization, hostOf(d.server)].filter(Boolean).join(' · ');
+                $(`<button class="btn btn--landing ws-dlg-continue"><span class="ws-continue-name">${esc(_lang.wsContinueAs.replace('$1', d.user.name))}</span>
+                     <span class="ws-continue-org">${esc(org)}</span><span class="ws-continue-via">${esc(_lang.wsViaDesktop)}</span></button>`)
+                    .on('click', () => startDesktop(d))
+                    .appendTo($el.find('.ws-dlg-desktop'));
+            });
+            // WorkSuite Desktop's accounts come first; the browser stays one click away
+            if (list.length) $el.find('.ws-dlg-signin').removeClass('btn--landing');
+        });
 
         $el.find('.ws-dlg-signin').on('click', async () => {
             const $url = $el.find('.ws-dlg-url');
@@ -128,7 +165,7 @@
         });
 
         $el.find('.ws-dlg-url').on('keypress', e => { if (e.which === 13) $el.find('.ws-dlg-signin').click(); });
-        $el.find('.ws-dlg-again').on('click', () => start(server));
+        $el.find('.ws-dlg-again, .ws-dlg-browser').on('click', () => start(server));
         $el.find('.ws-dlg-cancel').on('click', () => { WorkSuite.cancelSignIn(); this.close(); });
 
         this.done = () => this.$el && this.close();
@@ -140,6 +177,8 @@
         };
         WorkSuite.on('signedin', this.done);
         WorkSuite.on('error', this.failed);
+
+        if (this.desktopAccount) startDesktop(this.desktopAccount);
     };
 
     DialogSignIn.prototype.close = function (opts) {
@@ -262,6 +301,7 @@
                 </div>
                 <div class="ws-signedout">
                     <p class="text-normal">${_lang.wsSignedOutDescr}</p>
+                    <div class="ws-desktop"></div>
                     <button class="btn btn--landing ws-signin">${_lang.wsSignInTitle}</button>
                 </div>
                 <div class="ws-signedin">
@@ -333,10 +373,30 @@
         return this;
     };
 
-    ControllerWorkSuite.prototype.signIn = function () {
+    ControllerWorkSuite.prototype.signIn = function (desktopAccount) {
         if (this.dialog) return;
-        this.dialog = new DialogSignIn({ onclose: () => { this.dialog = null; } });
+        this.dialog = new DialogSignIn({ desktopAccount: desktopAccount || null, onclose: () => { this.dialog = null; } });
         this.dialog.show();
+    };
+
+    /* Signed out, but WorkSuite Desktop is signed in on this computer: "Continue as <name>", one click */
+    ControllerWorkSuite.prototype.renderDesktop = function () {
+        const _lang = utils.Lang;
+        const $box = this.$el.find('.ws-desktop').empty();
+        const live = WorkSuite.accounts().filter(a => !a.signedOut).map(a => a.id);
+
+        WorkSuite.desktopAccounts().then(list => {
+            const d = list.find(x => !live.includes(x.server + '|' + x.user.id));
+            this.$el.find('.ws-signin').toggleClass('btn--landing', !d);
+            if (!d) return;
+
+            const org = [d.user.organization, hostOf(d.server)].filter(Boolean).join(' · ');
+            $(`<button class="btn btn--landing ws-continue" title="${esc(_lang.wsViaDesktop)}">
+                  <span class="ws-continue-name">${esc(_lang.wsContinueAs.replace('$1', d.user.name))}</span>
+                  <span class="ws-continue-org">${esc(org)}</span></button>`)
+                .on('click', () => this.signIn(d))
+                .appendTo($box.empty());
+        });
     };
 
     /* who is signed in, and the section's two faces */
@@ -350,6 +410,7 @@
         this.$el.find('.ws-signedout').toggle(!live);
         this.$el.find('.ws-signedin').toggle(!!live);
         this.renderAccount();
+        if (!live) this.renderDesktop();
 
         if (live) this.load();
     };

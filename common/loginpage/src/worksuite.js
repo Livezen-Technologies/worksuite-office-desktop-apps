@@ -379,6 +379,61 @@
         return server;
     }
 
+    /*
+     * Through WorkSuite Desktop, when it is signed in on this computer: no browser. WorkSuite
+     * Desktop asks the person to confirm, gets a code for WorkSuite Office with its own session
+     * (/api/auth/apps/handoff) and sends it to worksuiteoffice://auth/callback, which finishes
+     * exactly like a browser sign-in. The verifier never leaves this page.
+     */
+    async function signInWithDesktop(desktopAccount) {
+        const server = normalizeServer(desktopAccount.server);
+        const pair = await pkce();
+        const state = random(24);
+
+        writeJson(localStorage, LS_PENDING, { server: server, verifier: pair.verifier, state: state, at: Date.now(), via: 'desktop' });
+
+        const query = 'client=' + CLIENT + '&server=' + encodeURIComponent(server) +
+                      '&uid=' + encodeURIComponent(desktopAccount.user.id) +
+                      '&challenge=' + encodeURIComponent(pair.challenge) + '&state=' + encodeURIComponent(state);
+        window.open('worksuite://office/signin?' + query);
+        fire('pending', server);
+        return server;
+    }
+
+    let desktopWaiting = [];
+
+    /* The accounts WorkSuite Desktop says it is signed in to here: names and addresses, never tokens */
+    function desktopAccounts() {
+        if (!window.sdk || !window.sdk.command) return Promise.resolve([]);
+
+        return new Promise(resolve => {
+            const handler = text => finish(parseDesktopAccounts(text));
+            const timer = setTimeout(() => finish([]), 3000);
+            const finish = list => {
+                clearTimeout(timer);
+                desktopWaiting = desktopWaiting.filter(f => f !== handler);
+                resolve(list);
+            };
+            desktopWaiting.push(handler);
+            window.sdk.command('worksuite:desktop', '');
+        });
+    }
+
+    function parseDesktopAccounts(text) {
+        let doc = null;
+        try { doc = JSON.parse(text); } catch (e) { return []; }
+
+        return (doc && Array.isArray(doc.accounts) ? doc.accounts : []).map(a => {
+            const server = a && typeof a.server === 'string' && /^https:\/\//i.test(a.server) ? normalizeServer(a.server) : null;
+            const user = (a && a.user) || {};
+            if (!server || user.id === undefined || user.id === null || !user.name) return null;
+            return {
+                server: server,
+                user: { id: user.id, name: String(user.name), email: String(user.email || ''), organization: String(user.organization || '') },
+            };
+        }).filter(Boolean);
+    }
+
     function cancelSignIn() {
         writeJson(localStorage, LS_PENDING, undefined);
         fire('pending', null);
@@ -596,6 +651,9 @@
             } else
             if (cmd === 'worksuite:link') {
                 onLink(param);
+            } else
+            if (cmd === 'worksuite:desktop') {
+                desktopWaiting.slice().forEach(f => f(param));
             }
         });
     }
@@ -609,6 +667,8 @@
         active: active,
         setActive: setActive,
         signIn: signIn,
+        signInWithDesktop: signInWithDesktop,
+        desktopAccounts: desktopAccounts,
         cancelSignIn: cancelSignIn,
         pendingSignIn: pendingSignIn,
         signOut: signOut,

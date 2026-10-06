@@ -23,7 +23,9 @@
  *
 */
 
-#include "csecretstore.h"
+#include "cworksuite.h"
+#include <QDir>
+#include <QFile>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QRegularExpression>
@@ -32,8 +34,6 @@
 # include <windows.h>
 # include <wincred.h>
 #else
-# include <QDir>
-# include <QFile>
 # include <QSaveFile>
 # include "utils.h"
 #endif
@@ -82,7 +82,7 @@ namespace {
 #endif
 }
 
-bool CSecretStore::set(const QString& key, const QString& value)
+bool CWorkSuite::setSecret(const QString& key, const QString& value)
 {
     if ( !validKey(key) ) return false;
 
@@ -107,7 +107,7 @@ bool CSecretStore::set(const QString& key, const QString& value)
 #endif
 }
 
-QString CSecretStore::get(const QString& key)
+QString CWorkSuite::secret(const QString& key)
 {
     if ( !validKey(key) ) return QString();
 
@@ -125,7 +125,7 @@ QString CSecretStore::get(const QString& key)
 #endif
 }
 
-bool CSecretStore::remove(const QString& key)
+bool CWorkSuite::removeSecret(const QString& key)
 {
     if ( !validKey(key) ) return false;
 
@@ -140,7 +140,7 @@ bool CSecretStore::remove(const QString& key)
 #endif
 }
 
-QString CSecretStore::handle(const QString& json)
+QString CWorkSuite::handleSecret(const QString& json)
 {
     const QJsonObject in = QJsonDocument::fromJson(json.toUtf8()).object();
     const QString op = in["op"].toString(),
@@ -148,16 +148,33 @@ QString CSecretStore::handle(const QString& json)
 
     QJsonObject out{{"req", in["req"]}, {"ok", false}};
     if ( op == "get" ) {
-        const QString value = get(key);
+        const QString value = secret(key);
         out["ok"] = !value.isEmpty();
         out["value"] = value;
     } else
     if ( op == "set" ) {
-        out["ok"] = set(key, in["value"].toString());
+        out["ok"] = setSecret(key, in["value"].toString());
     } else
     if ( op == "delete" ) {
-        out["ok"] = remove(key);
+        out["ok"] = removeSecret(key);
     }
 
     return QString::fromUtf8(QJsonDocument(out).toJson(QJsonDocument::Compact));
+}
+
+QString CWorkSuite::desktopAccounts()
+{
+#ifdef Q_OS_WIN
+    const QString app_data = qEnvironmentVariable("APPDATA");
+#else
+    QString app_data = qEnvironmentVariable("XDG_CONFIG_HOME");
+    if ( app_data.isEmpty() )
+        app_data = QDir::homePath() + "/.config";
+#endif
+    QFile file(app_data + "/WorkSuite/desktop-accounts.json");
+    if ( app_data.isEmpty() || !file.open(QIODevice::ReadOnly) || file.size() > 256 * 1024 )
+        return "{}";
+
+    const QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+    return doc.isObject() ? QString::fromUtf8(doc.toJson(QJsonDocument::Compact)) : "{}";
 }

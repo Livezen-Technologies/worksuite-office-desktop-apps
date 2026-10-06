@@ -1171,6 +1171,24 @@ static BOOL workSuiteKeychainDelete(NSString * key) {
     [self onWorkSuiteLinks];
 }
 
+/// What WorkSuite Desktop says it is signed in to on this Mac (names and addresses, never tokens), or {}.
+/// It keeps ~/Library/Application Support/WorkSuite/desktop-accounts.json.
+- (NSString *)workSuiteDesktopAccounts {
+    NSString * support = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES).firstObject;
+    NSString * path = [support stringByAppendingPathComponent:@"WorkSuite/desktop-accounts.json"];
+    NSDictionary * attributes = [[NSFileManager defaultManager] attributesOfItemAtPath:path error:nil];
+    if (!attributes || [attributes fileSize] > 256 * 1024)
+        return @"{}";
+
+    NSData * data = [NSData dataWithContentsOfFile:path];
+    id json = data ? [NSJSONSerialization JSONObjectWithData:data options:0 error:nil] : nil;
+    if (![json isKindOfClass:[NSDictionary class]])
+        return @"{}";
+
+    NSData * compact = [NSJSONSerialization dataWithJSONObject:json options:0 error:nil];
+    return compact ? [[NSString alloc] initWithData:compact encoding:NSUTF8StringEncoding] : @"{}";
+}
+
 - (void)sendToStartPage:(NSString *)command param:(NSString *)param {
     NSEditorApi::CAscExecCommandJS * pCommand = new NSEditorApi::CAscExecCommandJS;
     pCommand->put_Command([command stdwstring]);
@@ -1198,11 +1216,17 @@ static BOOL workSuiteKeychainDelete(NSString * key) {
     }
 }
 
-/// The start page keeping WorkSuite sign-ins in the Keychain. Never answered for a web page in a tab.
+/// The start page's WorkSuite section: sign-ins kept in the Keychain ("worksuite:secret") and the accounts
+/// WorkSuite Desktop is signed in to ("worksuite:desktop"). Never answered for a web page in a tab.
 - (void)onCEFWorkSuiteSecret:(NSNotification *)notification {
     NSDictionary * info = notification.userInfo;
     if (!info || !self.cefStartPageView || [info[@"viewId"] integerValue] != self.cefStartPageView.uuid)
         return;
+
+    if ([info[@"command"] isEqualToString:@"worksuite:desktop"]) {
+        [self sendToStartPage:@"worksuite:desktop" param:[self workSuiteDesktopAccounts]];
+        return;
+    }
 
     NSDictionary * json = [info[@"param"] dictionary];
     NSString * op = json[@"op"], * key = json[@"key"];

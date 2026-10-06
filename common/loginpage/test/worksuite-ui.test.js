@@ -27,6 +27,12 @@ w.eval(fs.readFileSync(LP + 'src/worksuite.js', 'utf8'));
 w.eval(fs.readFileSync(LP + 'src/panelworksuite.js', 'utf8'));
 const $ = w.jQuery;
 
+// WorkSuite Desktop is signed in on this computer
+w.sdk.command = (cmd, p) => {
+  commands.push([cmd, p]);
+  if (cmd === 'worksuite:desktop') setTimeout(() => handlers.on_native_message.forEach(f => f('worksuite:desktop',
+    JSON.stringify({ accounts: [{ server: 'https://app.worksuite.lk', user: { id: 9, name: 'Hasarinda Manjula', organization: 'Livezen Technologies Pvt Ltd' } }] }))), 0);
+};
 const c = new w.ControllerWorkSuite().init();
 assert.strictEqual($('#box-worksuite').index(), 0, 'WorkSuite comes before the files on this computer');
 assert.ok($('.ws-signedout').css('display') !== 'none', 'signed out: offers sign-in');
@@ -37,6 +43,19 @@ $('.ws-dlg-other').trigger('click');
 assert.ok($('.ws-dlg-custom').css('display') !== 'none', 'a different server only when asked');
 
 (async () => {
+  await new Promise(r => setTimeout(r, 20));
+  const $continue = $('.ws-signedout .ws-continue');
+  assert.strictEqual($continue.length, 1, 'signed out, WorkSuite Desktop signed in: Continue as');
+  assert.ok($continue.text().includes('Continue as Hasarinda Manjula'));
+  assert.ok($continue.text().includes('Livezen Technologies Pvt Ltd · app.worksuite.lk'));
+  assert.ok(!$('.ws-signin').hasClass('btn--landing'), 'the browser sign-in becomes the second choice');
+  $('.dlg-worksuite-signin').remove(); c.dialog = null;
+  $continue.trigger('click');
+  await new Promise(r => setTimeout(r, 20));
+  assert.ok(opened.some(u => u.startsWith('worksuite://office/signin?client=worksuite-office&server=https%3A%2F%2Fapp.worksuite.lk&uid=9&')), 'one click asks WorkSuite Desktop');
+  assert.ok($('.dlg-worksuite-signin .ws-dlg-wait-text').text() === 'wsWaitDesktop');
+  $('.dlg-worksuite-signin').remove(); c.dialog = null;
+
   // signed-in account straight in storage, as after a sign-in
   w.localStorage.setItem('ws:accounts', JSON.stringify([{ id: 'https://s|3', server: 'https://s', user: { id: 3, name: 'Samali', organization: 'Livezen' }, signedOut: false }]));
   w.localStorage.setItem('ws:cache:https://s|3:recent', JSON.stringify({ items: [{ kind: 'file', id: 5, name: 'Cached.xlsx', ext: 'xlsx', location: '', owner: '', modified: '' }] }));

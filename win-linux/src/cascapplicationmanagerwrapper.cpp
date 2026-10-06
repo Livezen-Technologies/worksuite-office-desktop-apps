@@ -28,7 +28,7 @@
 #include "cfilechecker.h"
 #include "OfficeFileFormats.h"
 #include "cproviders.h"
-#include "csecretstore.h"
+#include "cworksuite.h"
 #ifndef __OS_WIN_XP
 # include "components/cnotification.h"
 #endif
@@ -281,11 +281,12 @@ bool CAscApplicationManagerWrapper::processCommonEvent(NSEditorApi::CAscCefMenuE
             }
             return true;
         } else
-        if ( cmd.compare(L"worksuite:secret") == 0 ) {
+        if ( cmd.compare(L"worksuite:secret") == 0 || cmd.compare(L"worksuite:desktop") == 0 ) {
             // WorkSuite sign-ins, for the start page only: never for a web page in a tab
             if ( m_pMainWindow && event->get_SenderId() == m_pMainWindow->startPanelId() ) {
-                sendCommandTo(SEND_TO_ALL_START_PAGE, L"worksuite:secret",
-                                CSecretStore::handle(QString::fromStdWString(pData->get_Param())).toStdWString());
+                const QString answer = cmd.compare(L"worksuite:secret") == 0 ?
+                            CWorkSuite::handleSecret(QString::fromStdWString(pData->get_Param())) : CWorkSuite::desktopAccounts();
+                sendCommandTo(SEND_TO_ALL_START_PAGE, cmd, answer.toStdWString());
             }
             return true;
         } else

@@ -21,6 +21,13 @@ w.sdk = {
   on: (t, fn) => (handlers[t] = handlers[t] || []).push(fn),
   command: (cmd, param) => {
     commands.push([cmd, param]);
+    if (cmd === 'worksuite:desktop') {
+      const file = JSON.stringify({ version: 1, accounts: [
+        { server: 'https://app.worksuite.test', user: { id: 3, name: 'Samali', email: 's@x', organization: 'Livezen' } },
+        { server: 'http://plain.example', user: { id: 4, name: 'Not https' } },
+        { server: 'https://app.worksuite.test', user: { id: 5 } } ] });
+      setTimeout(() => handlers.on_native_message.forEach(f => f('worksuite:desktop', file)), 0);
+    }
     if (cmd === 'worksuite:secret') {
       const m = JSON.parse(param);
       let reply = { req: m.req, ok: false };
@@ -43,7 +50,7 @@ const server = (req) => {
     assert.strictEqual(body.client, 'worksuite-office');
     const pend = JSON.parse(w.localStorage.getItem('ws:pending') || 'null');
     // PKCE: the challenge the browser got is SHA-256(verifier)
-    const challenge = new URL(opened[0]).searchParams.get('challenge');
+    const challenge = new URL(opened[opened.length - 1]).searchParams.get('challenge');
     assert.strictEqual(crypto.createHash('sha256').update(body.code_verifier).digest('base64url'), challenge);
     return [200, { status: 'success', data: { user: { id: 3, name: 'Samali', email: 's@x', organization: 'Livezen' }, tokens: { access_token: 'A1', refresh_token: 'R1', expires_in: 3600 } } }];
   }
@@ -127,6 +134,21 @@ for (const s of ['', 'abc', 'x'.repeat(43), 'y'.repeat(128)])
   assert.ok(commands.some(c => c[0] === 'portal:logout' && JSON.parse(c[1]).domain === 'https://app.worksuite.test'));
   const logout = requests.find(r => r.url.endsWith('/api/auth/logout'));
   assert.strictEqual(JSON.parse(logout.body).refresh_token, 'R2');
+
+  // WorkSuite Desktop on this computer: its accounts (https, named), then a sign-in through it, no browser page
+  const desktop = await WS.desktopAccounts();
+  assert.strictEqual(JSON.stringify(desktop.map(d => [d.server, d.user.id, d.user.organization])), JSON.stringify([['https://app.worksuite.test', 3, 'Livezen']]));
+  const viaDesktop = new Promise(r => WS.on('signedin', r));
+  await WS.signInWithDesktop(desktop[0]);
+  const link = new URL(opened[opened.length - 1]);
+  assert.strictEqual(link.protocol + '//' + link.host + link.pathname, 'worksuite://office/signin');
+  assert.strictEqual(link.searchParams.get('client'), 'worksuite-office');
+  assert.strictEqual(link.searchParams.get('server'), 'https://app.worksuite.test');
+  assert.strictEqual(link.searchParams.get('uid'), '3');
+  assert.ok(/^[A-Za-z0-9_-]{43}$/.test(link.searchParams.get('challenge')));
+  assert.ok(!link.search.includes('verifier'), 'the verifier never leaves this page');
+  handlers.on_native_message.forEach(f => f('worksuite:link', 'worksuiteoffice://auth/callback?code=desktopcode&state=' + link.searchParams.get('state')));
+  assert.strictEqual((await viaDesktop).id, 'https://app.worksuite.test|3');
 
   console.log('ALL OK');
 })().catch(e => { console.error('FAIL', e); process.exit(1); });
