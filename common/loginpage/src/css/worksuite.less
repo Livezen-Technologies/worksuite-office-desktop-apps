@@ -358,3 +358,35 @@
     }
   }
 }
+
+// The WorkSuite app in the sidebar (addAppItem(), panelworksuite.js): its own colours, and an arrow for "opens elsewhere"
+.tool-menu > li.menu-item.ws-app-item {
+  .ws-app-logo {
+    width: 24px;
+    height: 24px;
+    display: block;
+  }
+
+  .ws-app-out {
+    flex: none;
+    width: 12px;
+    height: 12px;
+    margin-left: auto;
+    fill: none;
+    stroke: var(--icon-normal);
+    stroke-width: 1.5px;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.6;
+
+    .rtl & {
+      margin-left: 0;
+      margin-right: auto;
+      transform: scaleX(-1);
+    }
+  }
+
+  &:hover .ws-app-out {
+    opacity: 1;
+  }
+}

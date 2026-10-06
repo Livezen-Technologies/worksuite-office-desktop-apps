@@ -1189,6 +1189,23 @@ static BOOL workSuiteKeychainDelete(NSString * key) {
     return compact ? [[NSString alloc] initWithData:compact encoding:NSUTF8StringEncoding] : @"{}";
 }
 
+/// The sidebar's WorkSuite item: WorkSuite Desktop on its Home when an app on this Mac opens worksuite:// links,
+/// otherwise WorkSuite in the browser, at the https address the start page gives ({"web": "…"}).
+- (void)openWorkSuiteApp:(NSString *)param {
+    NSWorkspace * workspace = [NSWorkspace sharedWorkspace];
+    NSURL * home = [NSURL URLWithString:@"worksuite://home"];
+    NSURL * desktop = [workspace URLForApplicationToOpenURL:home];
+    if (desktop && [[NSFileManager defaultManager] fileExistsAtPath:desktop.path]) {
+        [workspace openURL:home];
+        return;
+    }
+
+    id web = [param dictionary][@"web"];
+    NSURL * url = [web isKindOfClass:[NSString class]] ? [NSURL URLWithString:web] : nil;
+    if (url && [url.scheme.lowercaseString isEqualToString:@"https"] && url.host.length > 0)
+        [workspace openURL:url];
+}
+
 - (void)sendToStartPage:(NSString *)command param:(NSString *)param {
     NSEditorApi::CAscExecCommandJS * pCommand = new NSEditorApi::CAscExecCommandJS;
     pCommand->put_Command([command stdwstring]);
@@ -1216,8 +1233,9 @@ static BOOL workSuiteKeychainDelete(NSString * key) {
     }
 }
 
-/// The start page's WorkSuite section: sign-ins kept in the Keychain ("worksuite:secret") and the accounts
-/// WorkSuite Desktop is signed in to ("worksuite:desktop"). Never answered for a web page in a tab.
+/// The start page's WorkSuite section: sign-ins kept in the Keychain ("worksuite:secret"), the accounts
+/// WorkSuite Desktop is signed in to ("worksuite:desktop") and the sidebar's WorkSuite item ("worksuite:app").
+/// Never answered for a web page in a tab.
 - (void)onCEFWorkSuiteSecret:(NSNotification *)notification {
     NSDictionary * info = notification.userInfo;
     if (!info || !self.cefStartPageView || [info[@"viewId"] integerValue] != self.cefStartPageView.uuid)
@@ -1225,6 +1243,11 @@ static BOOL workSuiteKeychainDelete(NSString * key) {
 
     if ([info[@"command"] isEqualToString:@"worksuite:desktop"]) {
         [self sendToStartPage:@"worksuite:desktop" param:[self workSuiteDesktopAccounts]];
+        return;
+    }
+
+    if ([info[@"command"] isEqualToString:@"worksuite:app"]) {
+        [self openWorkSuiteApp:info[@"param"]];
         return;
     }
 

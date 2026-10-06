@@ -663,6 +663,19 @@
         window.open(account.server + (path || '/files'));
     }
 
+    /*
+     * The sidebar's WorkSuite item. The app decides ("worksuite:app"): WorkSuite Desktop on its
+     * Home (worksuite://home) when something here opens worksuite:// links, otherwise this
+     * address in the browser — the server of the account in use, or WorkSuite's.
+     */
+    function openApp() {
+        const account = active();
+        const web = (account ? account.server : DEFAULT_SERVER) + '/';
+
+        if (window.sdk && window.sdk.command) window.sdk.command('worksuite:app', JSON.stringify({ web: web }));
+        else window.open(web);
+    }
+
     /* ------------------------------------------------------------------ *
      * links from the app: worksuiteoffice://auth/callback, worksuiteoffice://open
      * ------------------------------------------------------------------ */
@@ -731,6 +744,7 @@
         star: star,
         requestEdit: requestEdit,
         openInBrowser: openInBrowser,
+        openApp: openApp,
         typeOf: typeOf,
         extOf: extOf,
         /* for tests */

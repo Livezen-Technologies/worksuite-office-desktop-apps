@@ -9,7 +9,10 @@ const fs = require('fs');
 const crypto = require('crypto');
 const assert = require('assert');
 const LP = require('path').join(__dirname, '../');
-const dom = new JSDOM(`<!doctype html><body><div id="placeholder"></div>
+const dom = new JSDOM(`<!doctype html><body><div id="placeholder"><div class="main-column col-left tool-menu">
+    <li class="menu-item"><a action="recents"><span class="text">Home</span></a></li>
+    <li class="menu-item"><a action="templates"><span class="text">Templates</span></a></li>
+    <li class="menu-item separator"></li></div></div>
   <div class="action-panel recents"><div id="box-container"><div id="box-recent"></div></div></div></body>`,
   { url: 'http://localhost/index.html', runScripts: 'outside-only', pretendToBeVisual: true });
 const w = dom.window;
@@ -35,6 +38,16 @@ w.sdk.command = (cmd, p) => {
 };
 const c = new w.ControllerWorkSuite().init();
 assert.strictEqual($('#box-worksuite').index(), 0, 'WorkSuite comes before the files on this computer');
+
+// the WorkSuite app in the sidebar, right under Templates, with its own icon; the app decides where a click goes
+const $app = $('.tool-menu a[action=custom-worksuite-app]');
+assert.strictEqual($app.length, 1);
+assert.strictEqual($('.tool-menu a[action=templates]').parent().next().find('a').attr('action'), 'custom-worksuite-app');
+assert.ok($app.find('svg.ws-app-logo').length === 1 && $app.find('svg.icon').length === 0, "WorkSuite's icon, not one of the sidebar's set");
+assert.strictEqual($app.find('.text').text(), 'wsApp');
+assert.strictEqual($app.attr('title'), 'wsAppTip');
+$app.trigger('click');
+assert.deepStrictEqual(commands[commands.length - 1], ['worksuite:app', JSON.stringify({ web: 'https://app.worksuite.lk/' })]);
 assert.ok($('.ws-signedout').css('display') !== 'none', 'signed out: offers sign-in');
 $('.ws-signin').trigger('click');
 assert.strictEqual($('.dlg-worksuite-signin').length, 1);

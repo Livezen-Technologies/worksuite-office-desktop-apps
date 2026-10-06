@@ -105,6 +105,8 @@ l10n.en = {
     wsShareInBrowser: 'Share or manage in WorkSuite',
     wsAddAccount: 'Add another account',
     wsOpenWeb: 'Open WorkSuite Drive in the browser',
+    wsApp: 'WorkSuite',
+    wsAppTip: 'Open WorkSuite',
     wsSignOut: 'Sign out $1',
     wsSignedOutShort: 'signed out',
     wsLoading: 'Loading…',

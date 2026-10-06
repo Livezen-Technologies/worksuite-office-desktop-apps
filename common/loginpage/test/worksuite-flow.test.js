@@ -160,5 +160,17 @@ for (const s of ['', 'abc', 'x'.repeat(43), 'y'.repeat(128)])
   handlers.on_native_message.forEach(f => f('worksuite:link', 'worksuiteoffice://auth/callback?code=desktopcode&state=' + link.searchParams.get('state')));
   assert.strictEqual((await viaDesktop).id, 'https://app.worksuite.test|3');
 
+  // the sidebar's WorkSuite item: the app chooses WorkSuite Desktop or the browser; the browser gets the account's server
+  WS.openApp();
+  assert.deepStrictEqual(commands[commands.length - 1], ['worksuite:app', JSON.stringify({ web: 'https://app.worksuite.test/' })]);
+  w.localStorage.removeItem('ws:accounts');
+  WS.openApp();
+  assert.deepStrictEqual(commands[commands.length - 1], ['worksuite:app', JSON.stringify({ web: 'https://app.worksuite.lk/' })], "no account: WorkSuite's own server");
+  const bridge = w.sdk.command;
+  w.sdk.command = undefined;
+  WS.openApp();
+  assert.strictEqual(opened[opened.length - 1], 'https://app.worksuite.lk/', 'no app to ask: the browser');
+  w.sdk.command = bridge;
+
   console.log('ALL OK');
 })().catch(e => { console.error('FAIL', e); process.exit(1); });

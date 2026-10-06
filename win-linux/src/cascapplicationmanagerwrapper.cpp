@@ -290,6 +290,12 @@ bool CAscApplicationManagerWrapper::processCommonEvent(NSEditorApi::CAscCefMenuE
             }
             return true;
         } else
+        if ( cmd.compare(L"worksuite:app") == 0 ) {
+            // the start page's WorkSuite item in the sidebar: WorkSuite Desktop, or WorkSuite in the browser
+            if ( m_pMainWindow && event->get_SenderId() == m_pMainWindow->startPanelId() )
+                CWorkSuite::openApp(QString::fromStdWString(pData->get_Param()));
+            return true;
+        } else
         if ( cmd.compare(L"provider:list") == 0 ) {
             CProviders::instance().init(QString::fromStdWString(pData->get_Param()));
         } else

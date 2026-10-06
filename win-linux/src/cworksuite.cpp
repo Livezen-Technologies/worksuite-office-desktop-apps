@@ -26,16 +26,21 @@
 #include "cworksuite.h"
 #include <QDir>
 #include <QFile>
+#include <QFileInfo>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QRegularExpression>
+#include <QUrl>
+#include "utils.h"
 
 #ifdef Q_OS_WIN
 # include <windows.h>
 # include <wincred.h>
 #else
+# include <QProcess>
+# include <QProcessEnvironment>
 # include <QSaveFile>
-# include "utils.h"
+# include <QStandardPaths>
 #endif
 
 #define SECRET_SERVICE "WorkSuite Office"
@@ -80,6 +85,53 @@ namespace {
         return (QString(SECRET_SERVICE "/") + key).toStdWString();
     }
 #endif
+
+    /* Whether WorkSuite Desktop is installed: its installer registers worksuite:// links */
+    bool desktopAppInstalled()
+    {
+#ifdef Q_OS_WIN
+        // the user's registration or the machine's (HKEY_CLASSES_ROOT has both), as long as its program is still there
+        HKEY key = nullptr;
+        if ( RegOpenKeyExW(HKEY_CLASSES_ROOT, L"worksuite\\shell\\open\\command", 0, KEY_QUERY_VALUE, &key) != ERROR_SUCCESS )
+            return false;
+
+        wchar_t command[2048] = {};
+        DWORD size = sizeof(command) - sizeof(wchar_t), type = 0;
+        const LONG result = RegQueryValueExW(key, nullptr, nullptr, &type, reinterpret_cast<LPBYTE>(command), &size);
+        RegCloseKey(key);
+        if ( result != ERROR_SUCCESS || (type != REG_SZ && type != REG_EXPAND_SZ) )
+            return false;
+
+        // "C:\...\WorkSuite.exe" "%1"
+        QString program = QString::fromWCharArray(command).trimmed();
+        program = program.startsWith('"') ? program.mid(1, program.indexOf('"', 1) - 1) : program.section(' ', 0, 0);
+        if ( type == REG_EXPAND_SZ ) {
+            wchar_t expanded[2048] = {};
+            const std::wstring raw = program.toStdWString();
+            if ( ExpandEnvironmentStringsW(raw.c_str(), expanded, 2048) > 0 )
+                program = QString::fromWCharArray(expanded);
+        }
+        return !program.isEmpty() && QFileInfo::exists(program);
+#else
+        // the desktop file xdg-mime names for worksuite: links, where applications are installed
+        QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+        env.remove("LD_LIBRARY_PATH");      // the app's own libraries, not for system tools (as Utils::openUrl)
+
+        QProcess xdg;
+        xdg.setProcessEnvironment(env);
+        xdg.start("xdg-mime", {"query", "default", "x-scheme-handler/worksuite"});
+        if ( !xdg.waitForFinished(3000) ) {
+            xdg.kill();
+            xdg.waitForFinished(1000);
+            return false;
+        }
+        if ( xdg.exitStatus() != QProcess::NormalExit || xdg.exitCode() != 0 )
+            return false;
+
+        const QString desktop_file = QString::fromUtf8(xdg.readAllStandardOutput()).trimmed();
+        return !desktop_file.isEmpty() && !QStandardPaths::locate(QStandardPaths::ApplicationsLocation, desktop_file).isEmpty();
+#endif
+    }
 }
 
 bool CWorkSuite::setSecret(const QString& key, const QString& value)
@@ -177,4 +229,26 @@ QString CWorkSuite::desktopAccounts()
 
     const QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
     return doc.isObject() ? QString::fromUtf8(doc.toJson(QJsonDocument::Compact)) : "{}";
+}
+
+void CWorkSuite::openApp(const QString& json)
+{
+    if ( desktopAppInstalled() ) {
+        Utils::openUrl("worksuite://home");
+        return;
+    }
+
+    // a server's address only, rebuilt from its parts: Utils::openUrl hands it to a shell on Linux
+    static const QRegularExpression host_re("^[A-Za-z0-9.-]{1,253}$");
+    const QUrl web(QJsonDocument::fromJson(json.toUtf8()).object().value("web").toString());
+    const QString host = web.host(QUrl::FullyEncoded);      // an international name as xn--…
+    if ( !web.isValid() || web.scheme() != "https" || !host_re.match(host).hasMatch() )
+        return;
+
+    QUrl home;
+    home.setScheme("https");
+    home.setHost(host);
+    home.setPort(web.port());
+    home.setPath("/");
+    Utils::openUrl(home.toString());
 }

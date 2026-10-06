@@ -54,6 +54,10 @@ namespace CWorkSuite
 
     /* "worksuite:desktop": the file WorkSuite Desktop keeps, as JSON, or {} */
     QString desktopAccounts();
+
+    /* "worksuite:app", {"web":"https://…"}: WorkSuite Desktop on its Home (worksuite://home) when it is
+     * installed — something here opens worksuite:// links — otherwise that address in the browser */
+    void openApp(const QString& json);
 }
 
 #endif // CWORKSUITE_H
