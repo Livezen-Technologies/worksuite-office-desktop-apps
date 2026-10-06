@@ -689,14 +689,12 @@
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 	<key>SUFeedURL</key>
-	<string>https://worksuite.lk/office/mac/appcast.xml</string>
-	<key>SUPublicEDKey</key>
-	<string>N2LfKoNN6LkD5qNMjt+lEh6LYrQMEFNCEXQ3Kk6nTlM=</string>
+	<string>https://download.worksuitecloud.com/api/v1/apps/lk.worksuite.office/channels/stable/appcast.xml?arch=x64</string>
 	<key>SUScheduledCheckInterval</key>
 	<integer>86400</integer>
 	<key>CFBundleDisplayName</key>
 	<string>WorkSuite Office</string>
 	<key>SUEnableAutomaticChecks</key>
-	<false/>
+	<true/>
 </dict>
 </plist>
