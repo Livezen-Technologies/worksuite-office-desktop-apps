@@ -659,6 +659,7 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>oo-office</string>
+				<string>worksuiteoffice</string>
 			</array>
 		</dict>
 	</array>

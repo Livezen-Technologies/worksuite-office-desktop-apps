@@ -27,7 +27,9 @@ window.DialogConnect = function(params) {
     "use strict";
 
     !params && (params = {});
-    !params.provider && (params.provider = 'worksuite');
+    // WorkSuite is not a cloud opened in a tab any more: it signs in from the home screen
+    if ( !params.provider || !config.portals.checklist.find(i => i.provider == params.provider) )
+        params.provider = config.portals.checklist.length ? config.portals.checklist[0].provider : '';
 
     let $el, $title, $body;
     var _events = { close: params.onclose };
@@ -53,7 +55,7 @@ window.DialogConnect = function(params) {
                                 <div style="height:12px;"></div>
                                 <div class="lr-flex">
                                     <!--<a class="text-sub link newportal" target="popup" href="javascript:void(0)">${utils.Lang.linkCreatePortal}</a>-->
-                                    <span />
+                                    ${window.DialogWorkSuiteSignIn ? `<a class="text-sub link ws-instead" href="#">${utils.Lang.wsSignInTitle}</a>` : '<span />'}
                                     <div class="lr-flex">
                                         <img class="img-loader">
                                         <button id="btn-next" l10n class="btn btn--landing">${utils.Lang.btnConnect}</button>
@@ -223,7 +225,7 @@ window.DialogConnect = function(params) {
     };
 
     function _require_portal_info(portal, provider) {
-        !provider && (provider = 'worksuite');
+        !provider && (provider = params.provider);
         const _model = config.portals.checklist.find(i => i.provider == provider);
         let _url;
         if ( _model )
@@ -327,6 +329,11 @@ window.DialogConnect = function(params) {
             let $portal = $body.find('#auth-portal');
             if ( !!params.portal ) $portal.val(utils.skipUrlProtocol(params.portal));
             $body.find('#btn-next').on('click', _on_click_connect);
+            $body.find('.ws-instead').on('click', e => {
+                e.preventDefault();
+                _close();
+                window.app && window.app.controller.worksuite ? window.app.controller.worksuite.signIn() : (new DialogWorkSuiteSignIn()).show();
+            });
 
             _bind_events();
             $el.get(0).showModal();

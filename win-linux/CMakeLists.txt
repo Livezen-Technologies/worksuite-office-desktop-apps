@@ -168,6 +168,7 @@ set(COMMON_HEADERS
     src/clangater.h
     src/cprintdata.h
     src/cproviders.h
+    src/csecretstore.h
     src/cscalingwrapper.h
     src/ctabundockevent.h
     src/ccefeventsgate.h
@@ -211,6 +212,7 @@ set(COMMON_SOURCES
     src/clangater.cpp
     src/cprintdata.cpp
     src/cproviders.cpp
+    src/csecretstore.cpp
     src/cscalingwrapper.cpp
     src/ctabundockevent.cpp
     src/ccefeventsgate.cpp

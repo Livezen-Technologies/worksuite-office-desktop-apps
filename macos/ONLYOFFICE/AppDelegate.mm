@@ -175,6 +175,13 @@
     NSMutableArray<NSURL *> * openLinks = @[].mutableCopy;
     
     [urls enumerateObjectsUsingBlock:^(NSURL * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        if ([obj.scheme isEqualToString:kSchemeWorkSuite]) {
+            // For the start page's WorkSuite section, which may not have loaded yet
+            NSMutableArray<NSString *> * links = [([[ASCSharedSettings sharedInstance] settingByKey:kSettingsWorkSuiteLinks] ?: @[]) mutableCopy];
+            [links addObject:obj.absoluteString];
+            [[ASCSharedSettings sharedInstance] setSetting:links forKey:kSettingsWorkSuiteLinks];
+            [[NSNotificationCenter defaultCenter] postNotificationName:ASCEventNameWorkSuiteLinks object:nil userInfo:nil];
+        } else
         if ([obj.scheme isEqualToString:kSchemeApp]) {
             NSString * strLink = [obj.absoluteString stringByRemovingPercentEncoding];
             

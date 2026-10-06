@@ -68,6 +68,8 @@ static NSString * const uiThemeNight                      = @"theme-night";
 
 // Custom schemes
 static NSString * const kSchemeApp                          = @"oo-office";
+/// WorkSuite sign-in coming back from the browser, and "Open in WorkSuite Office" links
+static NSString * const kSchemeWorkSuite                    = @"worksuiteoffice";
 
 // Analitics
 static NSString * const ASCAnalyticsCategoryApplication     = @"Application";
@@ -93,6 +95,7 @@ static NSString * const ASCEventNameMainWindowSetFrame      = @"UI_mainWindowSet
 static NSString * const ASCEventNameEditorWindowMoving      = @"UI_editorWindowMoving";
 static NSString * const ASCEventNameMainWindowLoaded        = @"UI_mainWindowLoaded";
 static NSString * const ASCEventNameOpenAppLinks            = @"UI_openAppLinks";
+static NSString * const ASCEventNameWorkSuiteLinks          = @"UI_workSuiteLinks";
 static NSString * const ASCEventNameChangedUITheme          = @"UI_changedUITheme";
 static NSString * const ASCEventNameChangedSystemTheme      = @"UI_changedSystemTheme";
 static NSString * const ASCEventNameRecoveryFiles           = @"UI_recoveryFiles";
@@ -135,6 +138,7 @@ static NSString * const CEFEventNamePortalSSO               = @"CEF_portalSSO";
 static NSString * const CEFEventNameFileInFinder            = @"CEF_fileOpenInFinder";
 static NSString * const CEFEventNameFilesCheck              = @"CEF_filesCheck";
 static NSString * const CEFEventNameStartPageReady          = @"CEF_startPageReady";
+static NSString * const CEFEventNameWorkSuiteSecret         = @"CEF_workSuiteSecret";
 static NSString * const CEFEventNameSaveBeforSign           = @"CEF_saveBeforeSign";
 static NSString * const CEFEventNameOpenSSLCertificate      = @"CEF_openSSLCertificate";
 static NSString * const CEFEventNameEditorDocumentReady     = @"CEF_editorDocumentReady";

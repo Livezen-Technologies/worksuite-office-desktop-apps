@@ -97,6 +97,8 @@ window.PortalsStore = (function() {
             info = [info];
         } 
 
+        info = info.filter(i => i.provider != 'worksuite');
+
         for (let i in info) {
             var index = contain(portals, info[i]);
             !(index < 0) && portals.splice(index, 1);
@@ -129,6 +131,15 @@ window.PortalsStore = (function() {
 
     function portals() {
         let _out_arr = !!localStorage.portals ? JSON.parse(localStorage.portals) : [];
+
+        // WorkSuite is signed in from the home screen now (WorkSuite section), never
+        // opened as a website in a tab: forget the web Drive "clouds" kept before.
+        const _ws = _out_arr.filter(p => p.provider == 'worksuite');
+        if ( _ws.length ) {
+            _out_arr = _out_arr.filter(p => p.provider != 'worksuite');
+            localStorage.setItem('portals', JSON.stringify(_out_arr));
+        }
+
         return _out_arr.length ? _out_arr.reverse() : _out_arr;
     };
 

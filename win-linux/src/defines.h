@@ -56,6 +56,7 @@
 #define APP_USER_MODEL_ID "ASC.Documents.5"
 #define APP_SIMPLE_WINDOW_TITLE "WorkSuite Office"
 #define APP_PROTOCOL "oo-office"
+#define WORKSUITE_PROTOCOL "worksuiteoffice"
 #define FILE_PREFIX "worksuite_"
 
 #define URL_SITE                "https://worksuitecloud.com"

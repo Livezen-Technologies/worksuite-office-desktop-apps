@@ -61,6 +61,7 @@
 #import "ASCPresentationReporter.h"
 #import "ASCLicenseController.h"
 #import <Carbon/Carbon.h>
+#import <Security/Security.h>
 #import <QuartzCore/QuartzCore.h>
 
 
@@ -72,7 +73,49 @@
 @property (nonatomic) BOOL waitingForClose;
 @property (nonatomic, assign) id <ASCExternalDelegate> externalDelegate;
 @property (nonatomic) ASCTouchBarController *touchBarController;
+@property (nonatomic) BOOL startPageReady;
 @end
+
+#pragma mark - WorkSuite sign-ins in the Keychain
+
+/// Refresh tokens for the start page's WorkSuite section, one generic password per account
+static NSString * const kWorkSuiteKeychainService = @"WorkSuite Office";
+
+static NSMutableDictionary * workSuiteKeychainQuery(NSString * key) {
+    return [@{
+        (__bridge id)kSecClass:       (__bridge id)kSecClassGenericPassword,
+        (__bridge id)kSecAttrService: kWorkSuiteKeychainService,
+        (__bridge id)kSecAttrAccount: key
+    } mutableCopy];
+}
+
+static BOOL workSuiteKeychainSet(NSString * key, NSString * value) {
+    NSData * data = [value dataUsingEncoding:NSUTF8StringEncoding];
+    NSMutableDictionary * query = workSuiteKeychainQuery(key);
+    OSStatus status = SecItemUpdate((__bridge CFDictionaryRef)query, (__bridge CFDictionaryRef)@{(__bridge id)kSecValueData: data});
+    if (status == errSecItemNotFound) {
+        query[(__bridge id)kSecValueData] = data;
+        query[(__bridge id)kSecAttrAccessible] = (__bridge id)kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly;
+        status = SecItemAdd((__bridge CFDictionaryRef)query, NULL);
+    }
+    return status == errSecSuccess;
+}
+
+static NSString * workSuiteKeychainGet(NSString * key) {
+    NSMutableDictionary * query = workSuiteKeychainQuery(key);
+    query[(__bridge id)kSecReturnData] = @YES;
+    query[(__bridge id)kSecMatchLimit] = (__bridge id)kSecMatchLimitOne;
+    CFTypeRef result = NULL;
+    if (SecItemCopyMatching((__bridge CFDictionaryRef)query, &result) != errSecSuccess || !result)
+        return nil;
+    NSData * data = (__bridge_transfer NSData *)result;
+    return [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+}
+
+static BOOL workSuiteKeychainDelete(NSString * key) {
+    OSStatus status = SecItemDelete((__bridge CFDictionaryRef)workSuiteKeychainQuery(key));
+    return status == errSecSuccess || status == errSecItemNotFound;
+}
 
 @implementation ASCCommonViewController
 
@@ -106,6 +149,8 @@
     addObserverFor(CEFEventNamePortalSSO, @selector(onCEFPortalSSO:));
     addObserverFor(CEFEventNameFilesCheck, @selector(onCEFFilesCheck:));
     addObserverFor(CEFEventNameStartPageReady, @selector(onCEFStartPageReady:));
+    addObserverFor(ASCEventNameWorkSuiteLinks, @selector(onWorkSuiteLinks));
+    addObserverFor(CEFEventNameWorkSuiteSecret, @selector(onCEFWorkSuiteSecret:));
     addObserverFor(CEFEventNameEditorAppReady, @selector(onCEFEditorAppReady:));
     addObserverFor(CEFEventNameEditorAppActionRequest, @selector(onCEFEditorAppActionRequest:));
     addObserverFor(CEFEventNameEditorOpenFolder, @selector(onCEFEditorOpenFolder:));
@@ -1121,6 +1166,61 @@
     [self.cefStartPageView apply:pEvent];
     
     [self onOpenAppLink];
+
+    self.startPageReady = YES;
+    [self onWorkSuiteLinks];
+}
+
+- (void)sendToStartPage:(NSString *)command param:(NSString *)param {
+    NSEditorApi::CAscExecCommandJS * pCommand = new NSEditorApi::CAscExecCommandJS;
+    pCommand->put_Command([command stdwstring]);
+    pCommand->put_Param([param stdwstring]);
+
+    NSEditorApi::CAscMenuEvent* pEvent = new NSEditorApi::CAscMenuEvent(ASC_MENU_EVENT_TYPE_CEF_EXECUTE_COMMAND_JS);
+    pEvent->m_pData = pCommand;
+
+    [self.cefStartPageView apply:pEvent];
+}
+
+/// worksuiteoffice:// links (a sign-in coming back from the browser, "Open in WorkSuite Office"), once the start page can take them
+- (void)onWorkSuiteLinks {
+    if (!self.startPageReady)
+        return;
+
+    if (NSArray<NSString *> * links = [[ASCSharedSettings sharedInstance] settingByKey:kSettingsWorkSuiteLinks]) {
+        [[ASCSharedSettings sharedInstance] setSetting:nil forKey:kSettingsWorkSuiteLinks];
+
+        for (NSString * link in links) {
+            [self sendToStartPage:@"worksuite:link" param:link];
+        }
+
+        [self.view.window makeKeyAndOrderFront:nil];
+    }
+}
+
+/// The start page keeping WorkSuite sign-ins in the Keychain. Never answered for a web page in a tab.
+- (void)onCEFWorkSuiteSecret:(NSNotification *)notification {
+    NSDictionary * info = notification.userInfo;
+    if (!info || !self.cefStartPageView || [info[@"viewId"] integerValue] != self.cefStartPageView.uuid)
+        return;
+
+    NSDictionary * json = [info[@"param"] dictionary];
+    NSString * op = json[@"op"], * key = json[@"key"];
+    if (![op isKindOfClass:[NSString class]] || ![key isKindOfClass:[NSString class]] || key.length == 0 || key.length > 200)
+        return;
+
+    NSMutableDictionary * reply = [@{@"req": json[@"req"] ?: @"", @"ok": @NO} mutableCopy];
+    if ([op isEqualToString:@"get"]) {
+        NSString * value = workSuiteKeychainGet(key);
+        reply[@"ok"] = @(value.length > 0);
+        reply[@"value"] = value ?: @"";
+    } else if ([op isEqualToString:@"set"] && [json[@"value"] isKindOfClass:[NSString class]]) {
+        reply[@"ok"] = @(workSuiteKeychainSet(key, json[@"value"]));
+    } else if ([op isEqualToString:@"delete"]) {
+        reply[@"ok"] = @(workSuiteKeychainDelete(key));
+    }
+
+    [self sendToStartPage:@"worksuite:secret" param:[reply jsonString]];
 }
 
 - (void)onCEFEditorAppReady:(NSNotification *)notification {

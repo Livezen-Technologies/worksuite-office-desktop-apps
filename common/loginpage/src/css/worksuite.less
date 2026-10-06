@@ -1,0 +1,307 @@
+// The WorkSuite section of the home screen and its dialogs (panelworksuite.js)
+
+#box-worksuite {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 8px;
+
+  .ws-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-right: 16px;
+    flex-wrap: wrap;
+
+    .rtl & {
+      padding-left: 16px;
+    }
+  }
+
+  .ws-spacer {
+    flex: 1;
+  }
+
+  .ws-tools {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .ws-search {
+      width: 220px;
+    }
+  }
+
+  .ws-account-btn {
+    width: auto;
+    height: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: normal;
+
+    &:hover {
+      background-color: var(--highlight-button-hover);
+    }
+
+    .caret {
+      border-top: 4px solid var(--icon-normal);
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+    }
+  }
+
+  .ws-signedout {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0 16px 16px;
+    flex-wrap: wrap;
+
+    p {
+      margin: 0;
+    }
+  }
+
+  .ws-bar {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 0 16px 8px;
+  }
+
+  .ws-tabs, .ws-filters {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+
+    button {
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-normal);
+      border-radius: 4px;
+      padding: 3px 10px;
+      cursor: pointer;
+      font: inherit;
+
+      &:hover {
+        background-color: var(--highlight-button-hover);
+      }
+
+      &.selected {
+        background-color: var(--highlight-button-pressed);
+        border-color: var(--border-regular-control);
+      }
+    }
+  }
+
+  .ws-filters button {
+    border-radius: 12px;
+    font-size: 11px;
+  }
+
+  .ws-crumbs {
+    padding: 0 16px 8px;
+  }
+
+  .ws-grid {
+    grid-template-columns: minmax(220px, 50fr) minmax(140px, 25fr) minmax(100px, 15fr) 110px 24px;
+    padding-right: 16px;
+
+    .rtl & {
+      padding-left: 16px;
+    }
+
+    @media (max-width: 1037px) {
+      grid-template-columns: minmax(220px, 1fr) 110px 24px;
+
+      .col-location, .col-owner {
+        display: none;
+      }
+    }
+  }
+
+  .file-list-head {
+    top: 0;
+    position: static;
+  }
+
+  .file-list-body .row {
+    cursor: pointer;
+
+    .col-location, .col-owner {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--text-secondary);
+    }
+
+    .col-date {
+      justify-content: flex-end;
+    }
+
+    .col-name .name {
+      margin: 0 0 0 8px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+
+      .rtl & {
+        margin: 0 8px 0 0;
+      }
+    }
+  }
+
+  .ws-list {
+    max-height: 360px;
+    overflow-y: auto;
+  }
+
+  .ws-badge {
+    margin: 0 8px;
+    padding: 0 6px;
+    border-radius: 8px;
+    font-size: 10px;
+    border: 1px solid var(--border-regular-control);
+    color: var(--text-secondary);
+  }
+
+  .ws-state {
+    padding: 8px 16px 0;
+    margin: 0;
+
+    &.msg-error {
+      color: var(--text-negative);
+    }
+  }
+}
+
+.ws-crumbs {
+  a {
+    color: var(--text-link);
+    text-decoration: none;
+  }
+
+  .sep {
+    margin: 0 6px;
+    color: var(--text-secondary);
+  }
+}
+
+.ws-popup.dropdown-menu {
+  display: block;
+  position: fixed;
+  z-index: 1000;
+
+  a.checked {
+    font-weight: bold;
+  }
+}
+
+.ws-spinner {
+  width: 24px;
+  height: 24px;
+  margin: 8px auto;
+  border-radius: 50%;
+  border: 3px solid var(--border-regular-control);
+  border-top-color: var(--text-normal);
+  animation: ws-spin 0.9s linear infinite;
+}
+
+@keyframes ws-spin {
+  to { transform: rotate(360deg); }
+}
+
+.dlg-worksuite-signin, .dlg-worksuite-new {
+  .ws-dlg {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    p {
+      margin: 0;
+    }
+
+    .btn {
+      width: 100%;
+    }
+
+    .tbox {
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .msg-error {
+      display: none;
+      color: var(--text-negative);
+    }
+  }
+
+  .ws-dlg-accounts {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .ws-dlg-continue {
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 6px 12px;
+
+    .ws-continue-org {
+      font-size: 11px;
+    }
+  }
+
+  .ws-dlg-other {
+    align-self: flex-start;
+    color: var(--text-link);
+  }
+
+  .ws-dlg-wait {
+    text-align: center;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .ws-dlg-buttons {
+    display: flex;
+    gap: 8px;
+  }
+
+  .ws-picker {
+    border: 1px solid var(--border-regular-control);
+    border-radius: 4px;
+    padding: 8px;
+
+    .ws-crumbs {
+      padding-bottom: 6px;
+    }
+  }
+
+  .ws-picker-list {
+    height: 180px;
+    overflow-y: auto;
+  }
+
+  .ws-picker-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    cursor: pointer;
+
+    &:hover {
+      background-color: var(--highlight-button-hover);
+    }
+
+    .icon {
+      width: 20px;
+      height: 20px;
+    }
+  }
+}

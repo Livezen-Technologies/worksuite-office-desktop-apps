@@ -23,26 +23,30 @@
  *
 */
 
-//
-//  ASCSharedSettings.h
-//  ONLYOFFICE
-//
-//  Created by Alexander Yuzhin on 12/15/15.
-//  Copyright © 2015 Ascensio System SIA. All rights reserved.
-//
+#ifndef CSECRETSTORE_H
+#define CSECRETSTORE_H
 
-#import <Foundation/Foundation.h>
+#include <QString>
 
-static NSString * const kSettingsCurrentTab         = @"asc.onlyoffice.currentTab";
-static NSString * const kSettingsLastOpenDirectory  = @"asc.onlyoffice.lastOpenDirectory";
-static NSString * const kSettingsHasExtraFeatures   = @"asc.onlyoffice.hasExtraFeatures";
-static NSString * const kSettingsOpenAppLinks       = @"asc.onlyoffice.openAppLinks";
-static NSString * const kSettingsWorkSuiteLinks     = @"asc.worksuite.links";
-static NSString * const kSettingsColorScheme        = @"asc.onlyoffice.colorScheme";
+/*
+ * Small secrets kept for the user by the operating system: WorkSuite sign-ins
+ * (refresh tokens) for the start page's WorkSuite section.
+ *
+ * Windows: Windows Credential Manager (generic credentials, this user only).
+ * Linux:   a file in the app's data folder that only this user can read; no
+ *          secret service is required at build or run time.
+ *
+ * The start page reaches it through the "worksuite:secret" command
+ * (see CAscApplicationManagerWrapper::processCommonEvent).
+ */
+namespace CSecretStore
+{
+    bool set(const QString& key, const QString& value);
+    QString get(const QString& key);
+    bool remove(const QString& key);
 
-@interface ASCSharedSettings : NSObject
-+ (instancetype)sharedInstance;
+    /* {"op":"get|set|delete","key":"…","value":"…","req":"…"} in, {"req","ok","value"} out */
+    QString handle(const QString& json);
+}
 
-- (void)setSetting:(id)setting forKey:(id <NSCopying>)aKey;
-- (id)settingByKey:(id)key;
-@end
+#endif // CSECRETSTORE_H
