@@ -15,6 +15,9 @@
     const FORMAT_ICONS = ['csv','djvu','doc','docm','docx','docxf','dotm','dotx','epub','fb2','fodp','fods','fodt','html','md','odp','ods','odt','otp','ots','ott',
                           'pdf','potm','potx','pps','ppsm','ppsx','ppt','pptm','pptx','rtf','txt','xls','xlsb','xlsm','xlsx','xltm','xltx'];
 
+    // How many times a list asks the server for more pictures while it is shown (three are drawn each time).
+    const PICTURE_ROUNDS = 12;
+
     function hostOf(server) { return String(server || '').replace(/^https?:\/\//, ''); }
 
     function when(value) {
@@ -281,6 +284,7 @@
         this.folder = null;
         this.query = '';
         this.seq = 0;
+        this.thumbs = {};
     };
 
     ControllerWorkSuite.prototype.init = function () {
@@ -348,6 +352,14 @@
             { caption: _lang.wsNewSpreadsheet, action: () => this.create('cell') },
             { caption: _lang.wsNewPresentation, action: () => this.create('slide') },
         ]));
+        // A picture that does not load (gone, no longer shared) gives its row the file-type icon back.
+        this.$el.find('.ws-list')[0].addEventListener('error', e => {
+            if (!e.target.classList || !e.target.classList.contains('ws-thumb')) return;
+            const item = this.items && this.items[$(e.target).closest('.row').data('index')];
+            if (item) delete this.thumbs[item.id];
+            $(e.target).parent().removeClass('has-thumb');
+            $(e.target).remove();
+        }, true);
         this.$el.find('.ws-list')
             .on('click', '.row', e => this.activate($(e.currentTarget).data('index')))
             .on('contextmenu', '.row', e => { e.preventDefault(); this.context($(e.currentTarget).data('index'), e); })
@@ -456,6 +468,7 @@
 
         // what we saw last time, straight away; then what the server says now
         const cached = WorkSuite.cached(account, this.view, opts);
+        this.thumbs = WorkSuite.cachedThumbs(account);
         this.data = cached;
         this.render();
         this.state(cached ? '' : utils.Lang.wsLoading);
@@ -466,10 +479,54 @@
             this.data = fresh;
             this.render();
             this.state(this.visible().length ? '' : (this.view === 'search' ? utils.Lang.wsNothingFound : utils.Lang.wsEmpty));
+            this.pictures(account, seq);
         } catch (e) {
             if (seq !== this.seq || e.signedOut) return;
             this.state(cached ? utils.Lang.wsOffline : e.message, !cached);
         }
+    };
+
+    /*
+     * Pictures of the documents in the list instead of their file-type icons. The server answers the ones it
+     * has, and draws a few more each time it is asked, top rows first; the rest are asked for again, a few
+     * rounds, while this list is the one shown. A list without pictures is still a list: failures are quiet.
+     */
+    ControllerWorkSuite.prototype.pictures = async function (account, seq) {
+        let ids = ((this.data && this.data.items) || []).filter(i => i.kind === 'file').map(i => i.id).slice(0, 100);
+
+        for (let round = 0; ids.length && round < PICTURE_ROUNDS; round++) {
+            let answer;
+            try {
+                answer = await WorkSuite.thumbs(account, ids, true);
+            } catch (e) {
+                return;
+            }
+            if (seq !== this.seq) return;
+
+            const changed = Object.keys(answer.thumbs).filter(id => (answer.thumbs[id] || null) !== (this.thumbs[id] || null));
+            changed.forEach(id => { if (answer.thumbs[id]) this.thumbs[id] = answer.thumbs[id]; else delete this.thumbs[id]; });
+            if (changed.length) this.paint(changed);
+
+            // only what is still to be drawn; what the server tried and could not keeps its icon
+            ids = answer.pending.filter(id => ids.includes(id));
+        }
+    };
+
+    /* the icon (or picture) of these rows, again, without drawing the whole list */
+    ControllerWorkSuite.prototype.paint = function (ids) {
+        this.$el.find('.ws-list .row').each((i, row) => {
+            const item = this.items && this.items[$(row).data('index')];
+            if (item && item.kind === 'file' && ids.includes(String(item.id)))
+                $(row).find('.col-name > .icon').replaceWith(this.icon(item));
+        });
+    };
+
+    ControllerWorkSuite.prototype.icon = function (item) {
+        const icon = item.kind === 'folder' ? 'folder-small' : (FORMAT_ICONS.includes(item.ext) ? item.ext : 'neutral');
+        const fallback = !isSvgIcons ? `<i class="icon ${item.kind === 'folder' ? 'img-el folder' : 'img-format ' + esc(item.ext)}"></i>` : '';
+        const thumb = item.kind === 'file' && this.thumbs[item.id];
+        return `<div class="icon${thumb ? ' has-thumb' : ''}"><svg class="icon"><use xlink:href="#${icon}"></use></svg>${fallback}` +
+               (thumb ? `<img class="ws-thumb" src="${esc(thumb)}" alt="" draggable="false">` : '') + '</div>';
     };
 
     ControllerWorkSuite.prototype.visible = function () {
@@ -491,8 +548,6 @@
 
         this.items = this.visible();
         this.$el.find('.ws-list').html(this.items.map((item, index) => {
-            const icon = item.kind === 'folder' ? 'folder-small' : (FORMAT_ICONS.includes(item.ext) ? item.ext : 'neutral');
-            const fallback = !isSvgIcons ? `<i class="icon ${item.kind === 'folder' ? 'img-el folder' : 'img-format ' + esc(item.ext)}"></i>` : '';
             const dot = item.name.lastIndexOf('.');
             const base = item.kind === 'file' && dot > 0 ? item.name.substring(0, dot) : item.name;
             const ext = item.kind === 'file' && dot > 0 ? item.name.substring(dot) : '';
@@ -500,7 +555,7 @@
             return `
                 <div class="row text-normal ws-grid" data-index="${index}">
                     <div class="col-name" title="${esc(item.name)}">
-                        <div class="icon"><svg class="icon"><use xlink:href="#${icon}"></use></svg>${fallback}</div>
+                        ${this.icon(item)}
                         <p class="name">${esc(base)}<span class="ext">${esc(ext)}</span></p>${readonly}
                     </div>
                     <div class="col-location" title="${esc(item.location)}">${esc(item.location)}</div>

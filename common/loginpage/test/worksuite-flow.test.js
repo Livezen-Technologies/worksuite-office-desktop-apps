@@ -72,6 +72,10 @@ const server = (req) => {
     return [200, { status: 'success', data: { code: 'EDITORCODE', expires_in: 120, callback: null } }];
   }
   if (u.pathname.startsWith('/api/drive/opened/')) return [200, { status: 'success', data: {} }];
+  if (u.pathname === '/api/files/office/thumbs') {
+    assert.strictEqual(req.headers.Authorization, 'Bearer A2');
+    return [200, { status: 'success', data: { thumbs: { 7: 'https://app.worksuite.test/media/t7?v=1', 9: 'http://elsewhere.test/x.jpg' }, pending: [] } }];
+  }
   if (u.pathname === '/api/auth/logout') return [200, { status: 'success', data: {} }];
   return [404, { status: 'error', message: 'nope ' + u.pathname }];
 };
@@ -108,6 +112,12 @@ for (const s of ['', 'abc', 'x'.repeat(43), 'y'.repeat(128)])
   assert.strictEqual(JSON.stringify(res.items.map(i => i.id)), '[7,9]');
   assert.strictEqual(secrets['worksuite:https://app.worksuite.test|3'], 'R2');
   assert.ok(WS.cached(account, 'recent').items.length === 2, 'cached for next time');
+
+  // pictures: with the account's token; an address on the server or https only; kept to show next time
+  const pics = await WS.thumbs(account, [7, 9], true);
+  assert.strictEqual(JSON.stringify(JSON.parse(requests[requests.length - 1].body)), '{"ids":[7,9],"make":true}');
+  assert.strictEqual(JSON.stringify(pics), JSON.stringify({ thumbs: { 7: 'https://app.worksuite.test/media/t7?v=1', 9: null }, pending: [] }));
+  assert.strictEqual(JSON.stringify(WS.cachedThumbs(account)), JSON.stringify({ 7: 'https://app.worksuite.test/media/t7?v=1' }));
 
   // open: an editor-tab code, then open:recent with the session page and next=/editor/<id>
   await WS.open(account, res.items[1]);

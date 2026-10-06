@@ -20,6 +20,10 @@
  * REQUESTS go through the app (AscSimpleRequest), which is not subject to the
  * browser's cross-origin rules that would stop this file:// page.
  *
+ * PICTURES of documents come from the server (/api/files/office/thumbs) as signed
+ * addresses the page shows as images; the ones seen in the last four hours are
+ * kept beside the lists, so a cached list shows them straight away too.
+ *
  * OPENING a Drive file asks the server for a one-time code for the editor tab
  * and opens <server>/desktop/office/session#…&next=/editor/<id> in a WorkSuite
  * Office editor tab. The document is edited through WorkSuite's document service
@@ -559,6 +563,48 @@
         return view === 'search' ? null : readJson(localStorage, cacheKey(account, view, opts || {}), null);
     }
 
+    /* ------------------------------------------------------------------ *
+     * pictures of documents
+     * ------------------------------------------------------------------ */
+
+    // A picture's address (the server's signed /media link) is good for five hours at least; kept for four.
+    const THUMB_TTL = 4 * 3600 * 1000;
+
+    function thumbsKey(account) { return LS_CACHE + account.id + ':thumbs'; }
+
+    /* Only an address on the account's own server, or https: the page loads it as an image, nothing more. */
+    function pictureUrl(account, url) {
+        return typeof url === 'string' && (url.indexOf(account.server + '/') === 0 || /^https:\/\//i.test(url)) ? url : null;
+    }
+
+    /* The pictures last seen for this account, id → address, while they are still good: the cached list shows them. */
+    function cachedThumbs(account) {
+        const all = readJson(localStorage, thumbsKey(account), {}) || {}, out = {}, now = Date.now();
+        Object.keys(all).forEach(id => { if (all[id] && now - all[id].at < THUMB_TTL) out[id] = all[id].url; });
+        return out;
+    }
+
+    /*
+     * Pictures for these files (POST /api/files/office/thumbs): { thumbs: {id: address or null}, pending: [ids] }.
+     * Only files the person may preview are answered. With `make` the server draws a few that have none, top
+     * rows first; `pending` are the ones still to ask for.
+     */
+    async function thumbs(account, ids, make) {
+        const data = await api(account, 'POST', '/api/files/office/thumbs', { ids: ids.slice(0, 100), make: !!make });
+        const got = {}, now = Date.now();
+        const all = readJson(localStorage, thumbsKey(account), {}) || {};
+
+        Object.keys((data && data.thumbs) || {}).forEach(id => {
+            got[id] = pictureUrl(account, data.thumbs[id]);
+            if (got[id]) all[id] = { url: got[id], at: now };
+            else delete all[id];
+        });
+        Object.keys(all).forEach(id => { if (!all[id] || now - all[id].at >= THUMB_TTL) delete all[id]; });
+        writeJson(localStorage, thumbsKey(account), all);
+
+        return { thumbs: got, pending: Array.isArray(data && data.pending) ? data.pending : [] };
+    }
+
     async function open(account, file) {
         const pair = await pkce();
         const handed = await api(account, 'POST', '/api/auth/apps/handoff',
@@ -676,6 +722,8 @@
         normalizeServer: normalizeServer,
         list: list,
         cached: cached,
+        thumbs: thumbs,
+        cachedThumbs: cachedThumbs,
         open: open,
         create: create,
         folders: folders,

@@ -164,6 +164,39 @@
         margin: 0 8px 0 0;
       }
     }
+
+    // a picture of the document's first page in place of its file-type icon (pictures(), panelworksuite.js)
+    .col-name {
+      height: 40px;
+    }
+
+    .col-name > .icon {
+      flex: none;
+      width: 30px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      svg.icon {
+        width: 24px;
+        height: 32px;
+      }
+
+      &.has-thumb {
+        svg.icon, i.icon {
+          display: none;
+        }
+      }
+
+      .ws-thumb {
+        max-width: 30px;
+        max-height: 40px;
+        object-fit: contain;
+        border-radius: 2px;
+        box-shadow: 0 0 0 1px var(--border-regular-control);
+      }
+    }
   }
 
   .ws-list {

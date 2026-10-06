@@ -1,6 +1,6 @@
 /*
  * panelworksuite.js on the home screen: signed-out offer, sign-in dialog,
- * cached list first, escaping, view-only badge, type filters.
+ * cached list first, escaping, view-only badge, type filters, pictures of documents.
  *
  * Run: npm i --no-save jsdom@24 && node test/worksuite-ui.test.js  (from common/loginpage)
  */
@@ -69,7 +69,7 @@ assert.ok($('.ws-dlg-custom').css('display') !== 'none', 'a different server onl
   assert.ok($('.ws-list .row').text().includes('Cached'), 'the stored list shows first');
   await new Promise(r => setTimeout(r, 50));
   const html = $('.ws-list').html();
-  assert.strictEqual($('.ws-list img').length, 0, 'file names are escaped'); assert.ok($('.ws-list .name').text().includes('<img src=x'));
+  assert.strictEqual($('.ws-list img:not(.ws-thumb), .ws-list [onerror]').length, 0, 'file names are escaped'); assert.ok($('.ws-list .name').text().includes('<img src=x'));
   assert.ok($('.ws-list .row').text().includes('A&B'));
   assert.ok($('.ws-badge').length === 1, 'view-only is marked');
   assert.ok($('.ws-account-btn').text().includes('Livezen'));
@@ -79,5 +79,45 @@ assert.ok($('.ws-dlg-custom').css('display') !== 'none', 'a different server onl
   assert.strictEqual($('.ws-list .row').length, 0);
   $('.ws-filters button[data-filter="word"]').trigger('click');
   assert.strictEqual($('.ws-list .row').length, 1);
+  $('.ws-filters button[data-filter="all"]').trigger('click');
+
+  // pictures of documents: the ones seen in the last four hours straight away, with the cached list
+  w.localStorage.setItem('ws:cache:https://s|3:thumbs', JSON.stringify({
+    7: { url: 'https://s/media/seen?v=1', at: Date.now() }, 8: { url: 'https://s/media/stale?v=1', at: Date.now() - 5 * 3600e3 } }));
+  w.localStorage.setItem('ws:cache:https://s|3:starred', JSON.stringify({ items: [
+    { kind: 'file', id: 7, name: 'Plan.docx', ext: 'docx' }, { kind: 'file', id: 8, name: 'Deck.pptx', ext: 'pptx' }] }));
+  const asked = [];
+  w.AscSimpleRequest.createRequest = o => {
+    const reply = data => setTimeout(() => o.complete({ responseStatus: 200, responseText: JSON.stringify({ status: 'success', data: data }) }), 0);
+    if (o.url.endsWith('/api/files/office/thumbs')) {
+      const body = JSON.parse(o.body);
+      asked.push(body);
+      // three at a time on the server: the first answer leaves Deck to draw, the second has it
+      return reply(asked.length === 1 ?
+        { thumbs: { 7: 'https://s/media/t7?v=1', 8: null, 9: 'javascript:alert(1)' }, pending: [8] } :
+        { thumbs: { 8: 'https://s/media/t8?v=2' }, pending: [] });
+    }
+    return reply({ files: [{ id: 7, name: 'Plan.docx', extension: 'docx' }, { id: 8, name: 'Deck.pptx', extension: 'pptx' }, { id: 9, name: 'Scan.pdf', extension: 'pdf' }] });
+  };
+  const thumbOf = name => $('.ws-list .row').filter((i, r) => $(r).find('.name').text() === name).find('img.ws-thumb').attr('src');
+
+  $('.ws-tabs button[data-view="starred"]').trigger('click');
+  assert.strictEqual(thumbOf('Plan.docx'), 'https://s/media/seen?v=1', 'a picture seen recently shows with the cached list');
+  assert.strictEqual(thumbOf('Deck.pptx'), undefined, 'one older than four hours is not used: its address may have run out');
+  assert.ok($('.ws-list .row:first .col-name > .icon').hasClass('has-thumb'));
+
+  await new Promise(r => setTimeout(r, 60));
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(asked)), [{ ids: [7, 8, 9], make: true }, { ids: [8], make: true }], 'then the server: top rows first, again for what it had still to draw');
+  assert.strictEqual(thumbOf('Plan.docx'), 'https://s/media/t7?v=1');
+  assert.strictEqual(thumbOf('Deck.pptx'), 'https://s/media/t8?v=2', 'drawn on the second round');
+  assert.strictEqual(thumbOf('Scan.pdf'), undefined, 'only an address on the server, or https');
+  assert.deepStrictEqual(Object.keys(JSON.parse(w.localStorage.getItem('ws:cache:https://s|3:thumbs'))).sort(), ['7', '8'], 'kept for the next time');
+
+  // a picture that does not load: the file-type icon again
+  const img = $('.ws-list img.ws-thumb')[0];
+  img.dispatchEvent(new w.Event('error'));
+  assert.strictEqual(thumbOf('Plan.docx'), undefined);
+  assert.ok(!$('.ws-list .row:first .col-name > .icon').hasClass('has-thumb'));
+  assert.strictEqual($('.ws-list .row:first svg.icon use').attr('xlink:href'), '#docx');
   console.log('UI OK');
 })().catch(e => { console.error('FAIL', e); process.exit(1); });
