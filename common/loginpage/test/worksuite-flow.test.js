@@ -16,6 +16,7 @@ w.crypto.subtle = undefined; // force the JS SHA-256 fallback path once
 Object.defineProperty(w, 'crypto', { value: { getRandomValues: a => crypto.randomFillSync(a), subtle: undefined } });
 
 const commands = [], opened = [], secrets = {}, requests = [];
+let desktopInstalled = true;
 let handlers = {};
 w.sdk = {
   on: (t, fn) => (handlers[t] = handlers[t] || []).push(fn),
@@ -27,6 +28,13 @@ w.sdk = {
         { server: 'http://plain.example', user: { id: 4, name: 'Not https' } },
         { server: 'https://app.worksuite.test', user: { id: 5 } } ] });
       setTimeout(() => handlers.on_native_message.forEach(f => f('worksuite:desktop', file)), 0);
+    }
+    if (cmd === 'worksuite:open') {
+      // the app opens the address (the browser, or WorkSuite Desktop for worksuite:) and says whether it could
+      const m = JSON.parse(param);
+      const noApp = m.url.startsWith('worksuite:') && !desktopInstalled;
+      if (!noApp) opened.push(m.url);
+      setTimeout(() => handlers.on_native_message.forEach(f => f('worksuite:open', JSON.stringify({ req: m.req, ok: !noApp, reason: noApp ? 'no-app' : '' }))), 0);
     }
     if (cmd === 'worksuite:secret') {
       const m = JSON.parse(param);
@@ -93,6 +101,7 @@ for (const s of ['', 'abc', 'x'.repeat(43), 'y'.repeat(128)])
   await WS.signIn('app.worksuite.test');
   const page = new URL(opened[0]);
   assert.strictEqual(page.origin + page.pathname, 'https://app.worksuite.test/desktop/office');
+  assert.ok(commands.some(c => c[0] === 'worksuite:open'), 'the app opens the browser, not window.open');
   const state = page.searchParams.get('state');
 
   // a callback with another state is refused
@@ -148,6 +157,12 @@ for (const s of ['', 'abc', 'x'.repeat(43), 'y'.repeat(128)])
   // WorkSuite Desktop on this computer: its accounts (https, named), then a sign-in through it, no browser page
   const desktop = await WS.desktopAccounts();
   assert.strictEqual(JSON.stringify(desktop.map(d => [d.server, d.user.id, d.user.organization])), JSON.stringify([['https://app.worksuite.test', 3, 'Livezen']]));
+  // nothing here opens worksuite: links: a clear error, and no sign-in left waiting
+  desktopInstalled = false;
+  await assert.rejects(WS.signInWithDesktop(desktop[0]), /wsErrNoDesktop/);
+  assert.strictEqual(WS.pendingSignIn(), null);
+  desktopInstalled = true;
+
   const viaDesktop = new Promise(r => WS.on('signedin', r));
   await WS.signInWithDesktop(desktop[0]);
   const link = new URL(opened[opened.length - 1]);

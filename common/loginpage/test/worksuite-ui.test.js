@@ -30,11 +30,17 @@ w.eval(fs.readFileSync(LP + 'src/worksuite.js', 'utf8'));
 w.eval(fs.readFileSync(LP + 'src/panelworksuite.js', 'utf8'));
 const $ = w.jQuery;
 
-// WorkSuite Desktop is signed in on this computer
+// WorkSuite Desktop is signed in on this computer; the app opens links and says whether it could
+let desktopInstalled = true;
 w.sdk.command = (cmd, p) => {
   commands.push([cmd, p]);
   if (cmd === 'worksuite:desktop') setTimeout(() => handlers.on_native_message.forEach(f => f('worksuite:desktop',
     JSON.stringify({ accounts: [{ server: 'https://app.worksuite.lk', user: { id: 9, name: 'Hasarinda Manjula', organization: 'Livezen Technologies Pvt Ltd' } }] }))), 0);
+  if (cmd === 'worksuite:open') {
+    const m = JSON.parse(p), noApp = m.url.startsWith('worksuite:') && !desktopInstalled;
+    if (!noApp) opened.push(m.url);
+    setTimeout(() => handlers.on_native_message.forEach(f => f('worksuite:open', JSON.stringify({ req: m.req, ok: !noApp, reason: noApp ? 'no-app' : '' }))), 0);
+  }
 };
 const c = new w.ControllerWorkSuite().init();
 assert.strictEqual($('#box-worksuite').index(), 0, 'WorkSuite comes before the files on this computer');
@@ -67,7 +73,37 @@ assert.ok($('.ws-dlg-custom').css('display') !== 'none', 'a different server onl
   await new Promise(r => setTimeout(r, 20));
   assert.ok(opened.some(u => u.startsWith('worksuite://office/signin?client=worksuite-office&server=https%3A%2F%2Fapp.worksuite.lk&uid=9&')), 'one click asks WorkSuite Desktop');
   assert.ok($('.dlg-worksuite-signin .ws-dlg-wait-text').text() === 'wsWaitDesktop');
-  $('.dlg-worksuite-signin').remove(); c.dialog = null;
+  assert.ok(w.WorkSuite.pendingSignIn(), 'waiting for WorkSuite Desktop');
+
+  // WorkSuite Desktop does not answer: no spinner forever, a message, Try again and the browser
+  w.DialogWorkSuiteSignIn.waits.desktop = 30;
+  $('.dlg-worksuite-signin .ws-dlg-retry').trigger('click');
+  await new Promise(r => setTimeout(r, 80));
+  assert.strictEqual($('.dlg-worksuite-signin .ws-dlg-wait-text').text(), 'wsDesktopTimeout');
+  assert.strictEqual($('.dlg-worksuite-signin .ws-spinner').css('display'), 'none');
+  assert.ok($('.dlg-worksuite-signin .ws-dlg-retry').css('display') !== 'none' && $('.dlg-worksuite-signin .ws-dlg-browser').css('display') !== 'none');
+  assert.strictEqual(w.WorkSuite.pendingSignIn(), null, 'the timed-out sign-in is dropped');
+  w.DialogWorkSuiteSignIn.waits.desktop = 60000;
+  $('.dlg-worksuite-signin .ws-dlg-retry').trigger('click');
+  await new Promise(r => setTimeout(r, 20));
+  assert.strictEqual($('.dlg-worksuite-signin .ws-dlg-wait-text').text(), 'wsWaitDesktop', 'Try again asks WorkSuite Desktop again');
+  assert.ok($('.dlg-worksuite-signin .ws-spinner').css('display') !== 'none');
+
+  // Cancel (and the close button, and Esc, which close the dialog the same way) ends the sign-in
+  $('.dlg-worksuite-signin .ws-dlg-cancel').trigger('click');
+  assert.strictEqual($('.dlg-worksuite-signin').length, 0);
+  assert.strictEqual(w.WorkSuite.pendingSignIn(), null, 'closing cancels the sign-in');
+  assert.strictEqual(c.dialog, null);
+
+  // WorkSuite Desktop not installed: the dialog says so, back on its first view
+  desktopInstalled = false;
+  $continue.trigger('click');
+  await new Promise(r => setTimeout(r, 20));
+  assert.strictEqual($('.dlg-worksuite-signin .ws-dlg-error').text(), 'wsErrNoDesktop');
+  assert.ok($('.dlg-worksuite-signin .ws-dlg-start').css('display') !== 'none' && $('.dlg-worksuite-signin .ws-dlg-wait').css('display') === 'none');
+  desktopInstalled = true;
+  $('.dlg-worksuite-signin .tool.close').trigger('click');
+  assert.strictEqual($('.dlg-worksuite-signin').length, 0);
 
   // signed-in account straight in storage, as after a sign-in
   w.localStorage.setItem('ws:accounts', JSON.stringify([{ id: 'https://s|3', server: 'https://s', user: { id: 3, name: 'Samali', organization: 'Livezen' }, signedOut: false }]));

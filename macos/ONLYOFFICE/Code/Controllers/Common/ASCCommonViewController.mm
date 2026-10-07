@@ -1206,6 +1206,30 @@ static BOOL workSuiteKeychainDelete(NSString * key) {
         [workspace openURL:url];
 }
 
+/// "worksuite:open", {"url": "…", "req": "…"}: a sign-in, in the browser (an https page) or in WorkSuite Desktop
+/// (worksuite://office/signin), opened by macOS rather than by the page's popup handling, which drops a link opened
+/// after an await and cannot say whether anything opened it. Answers {"req", "ok", "reason"}: "no-app" when
+/// nothing on this Mac opens worksuite:// links.
+- (NSString *)openWorkSuiteLink:(NSString *)param {
+    NSDictionary * json = [param dictionary];
+    id req = json[@"req"], link = json[@"url"];
+    NSMutableDictionary * reply = [@{@"req": [req isKindOfClass:[NSString class]] ? req : @"", @"ok": @NO, @"reason": @""} mutableCopy];
+
+    NSURL * url = [link isKindOfClass:[NSString class]] ? [NSURL URLWithString:link] : nil;
+    NSString * scheme = url.scheme.lowercaseString;
+    BOOL web = [scheme isEqualToString:@"https"] && url.host.length > 0;
+    BOOL desktop = [scheme isEqualToString:@"worksuite"] && [url.host isEqualToString:@"office"] && [url.path isEqualToString:@"/signin"];
+
+    if (web || desktop) {
+        NSWorkspace * workspace = [NSWorkspace sharedWorkspace];
+        if (desktop && ![workspace URLForApplicationToOpenURL:url])
+            reply[@"reason"] = @"no-app";
+        else
+            reply[@"ok"] = @([workspace openURL:url]);
+    }
+    return [reply jsonString];
+}
+
 - (void)sendToStartPage:(NSString *)command param:(NSString *)param {
     NSEditorApi::CAscExecCommandJS * pCommand = new NSEditorApi::CAscExecCommandJS;
     pCommand->put_Command([command stdwstring]);
@@ -1248,6 +1272,11 @@ static BOOL workSuiteKeychainDelete(NSString * key) {
 
     if ([info[@"command"] isEqualToString:@"worksuite:app"]) {
         [self openWorkSuiteApp:info[@"param"]];
+        return;
+    }
+
+    if ([info[@"command"] isEqualToString:@"worksuite:open"]) {
+        [self sendToStartPage:@"worksuite:open" param:[self openWorkSuiteLink:info[@"param"]]];
         return;
     }
 

@@ -63,6 +63,7 @@
                         <p class="text-normal ws-dlg-wait-text"></p>
                         <p class="text-secondary ws-dlg-wait-server"></p>
                         <div class="ws-dlg-buttons">
+                            <button class="btn btn--landing ws-dlg-retry">${_lang.wsTryAgain}</button>
                             <button class="btn ws-dlg-again">${_lang.wsOpenAgain}</button>
                             <button class="btn ws-dlg-browser">${_lang.wsUseBrowser}</button>
                             <button class="btn ws-dlg-cancel">${_lang.wsCancel}</button>
@@ -74,6 +75,9 @@
 
     DialogSignIn.prototype = Object.create(Dialog.prototype);
     DialogSignIn.prototype.constructor = DialogSignIn;
+
+    // WorkSuite Desktop answers in seconds; a browser sign-in can take a while (two-step verification)
+    DialogSignIn.waits = { desktop: 60 * 1000, browser: 5 * 60 * 1000 };
 
     DialogSignIn.prototype.show = function (width) {
         Dialog.prototype.show.call(this, width);
@@ -96,13 +100,39 @@
                 .appendTo($accounts);
         });
 
+        let lastDesktop = null;
+
         const waiting = (target, viaDesktop) => {
+            clearTimeout(this.timer);
             $el.find('.ws-dlg-start').hide();
+            $el.find('.ws-spinner').show();
             $el.find('.ws-dlg-wait-text').text(viaDesktop ? _lang.wsWaitDesktop : _lang.wsWaitBrowser);
             $el.find('.ws-dlg-wait-server').text(hostOf(target));
+            $el.find('.ws-dlg-retry').hide();
             $el.find('.ws-dlg-again').toggle(!viaDesktop);
             $el.find('.ws-dlg-browser').toggle(!!viaDesktop);
             $el.find('.ws-dlg-wait').show();
+
+            // never a spinner forever: say what to do, with a way to try again
+            this.timer = setTimeout(() => {
+                if (!this.$el) return;
+                $el.find('.ws-spinner').hide();
+                if (viaDesktop) {
+                    WorkSuite.cancelSignIn();
+                    $el.find('.ws-dlg-wait-text').text(_lang.wsDesktopTimeout);
+                    $el.find('.ws-dlg-retry').show();
+                } else {
+                    // the sign-in stays open (ten minutes), so finishing it in the browser still works
+                    $el.find('.ws-dlg-wait-text').text(_lang.wsBrowserTimeout);
+                }
+            }, viaDesktop ? DialogSignIn.waits.desktop : DialogSignIn.waits.browser);
+        };
+
+        const backToStart = msg => {
+            clearTimeout(this.timer);
+            $el.find('.ws-dlg-wait').hide();
+            $el.find('.ws-dlg-start').show();
+            error(msg);
         };
 
         const start = async target => {
@@ -111,18 +141,19 @@
                 server = await WorkSuite.signIn(target);
                 waiting(server, false);
             } catch (e) {
-                error(e.message);
+                backToStart(e.message);
             }
         };
 
         // signed in to WorkSuite Desktop on this computer: one click, no browser
         const startDesktop = async account => {
             error('');
+            lastDesktop = account;
             try {
                 server = await WorkSuite.signInWithDesktop(account);
                 waiting(server, true);
             } catch (e) {
-                error(e.message);
+                backToStart(e.message);
             }
         };
 
@@ -169,22 +200,22 @@
 
         $el.find('.ws-dlg-url').on('keypress', e => { if (e.which === 13) $el.find('.ws-dlg-signin').click(); });
         $el.find('.ws-dlg-again, .ws-dlg-browser').on('click', () => start(server));
-        $el.find('.ws-dlg-cancel').on('click', () => { WorkSuite.cancelSignIn(); this.close(); });
+        $el.find('.ws-dlg-retry').on('click', () => lastDesktop && startDesktop(lastDesktop));
+        $el.find('.ws-dlg-cancel').on('click', () => this.close());
 
-        this.done = () => this.$el && this.close();
-        this.failed = e => {
-            if (!this.$el) return;
-            $el.find('.ws-dlg-wait').hide();
-            $el.find('.ws-dlg-start').show();
-            error(e.message);
-        };
+        this.done = () => { this.signedIn = true; this.$el && this.close(); };
+        this.failed = e => this.$el && backToStart(e.message);
         WorkSuite.on('signedin', this.done);
         WorkSuite.on('error', this.failed);
 
         if (this.desktopAccount) startDesktop(this.desktopAccount);
     };
 
+    // Cancel, the close button and Esc all end a sign-in that is still waiting
     DialogSignIn.prototype.close = function (opts) {
+        if (!this.$el) return;
+        clearTimeout(this.timer);
+        if (!this.signedIn && WorkSuite.pendingSignIn()) WorkSuite.cancelSignIn();
         WorkSuite.off('signedin', this.done);
         WorkSuite.off('error', this.failed);
         Dialog.prototype.close.call(this, opts);

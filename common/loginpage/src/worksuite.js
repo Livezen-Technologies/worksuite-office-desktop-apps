@@ -378,7 +378,11 @@
 
         const query = 'challenge=' + encodeURIComponent(pair.challenge) + '&state=' + encodeURIComponent(state) +
                       '&device=' + encodeURIComponent(deviceName());
-        window.open(server + '/desktop/office?' + query);
+        const opened = await openExternal(server + '/desktop/office?' + query);
+        if (!opened.ok) {
+            writeJson(localStorage, LS_PENDING, undefined);
+            throw new Error(utils.Lang.wsErrBrowser);
+        }
         fire('pending', server);
         return server;
     }
@@ -399,9 +403,41 @@
         const query = 'client=' + CLIENT + '&server=' + encodeURIComponent(server) +
                       '&uid=' + encodeURIComponent(desktopAccount.user.id) +
                       '&challenge=' + encodeURIComponent(pair.challenge) + '&state=' + encodeURIComponent(state);
-        window.open('worksuite://office/signin?' + query);
+        const opened = await openExternal('worksuite://office/signin?' + query);
+        if (!opened.ok) {
+            writeJson(localStorage, LS_PENDING, undefined);
+            throw new Error(opened.reason === 'no-app' ? utils.Lang.wsErrNoDesktop : utils.Lang.wsErrBrowser);
+        }
         fire('pending', server);
         return server;
+    }
+
+    /*
+     * Opens a sign-in address outside the app: the browser for https, WorkSuite Desktop for
+     * worksuite://. The app opens it ("worksuite:open"), not window.open: that would go through the
+     * page's popup handling, which drops a link opened after an await, and could not say whether
+     * anything opened it. Resolves {ok, reason}; reason "no-app" when nothing here opens worksuite:.
+     */
+    let openWaiting = {};
+
+    function openExternal(url) {
+        if (!window.sdk || !window.sdk.command) {
+            window.open(url);
+            return Promise.resolve({ ok: true });
+        }
+
+        return new Promise(resolve => {
+            const req = random(12);
+            const timer = setTimeout(() => {
+                delete openWaiting[req];
+                resolve({ ok: false, reason: 'timeout' });
+            }, 10000);
+            openWaiting[req] = reply => {
+                clearTimeout(timer);
+                resolve({ ok: !!reply.ok, reason: reply.reason || '' });
+            };
+            window.sdk.command('worksuite:open', JSON.stringify({ url: url, req: req }));
+        });
     }
 
     let desktopWaiting = [];
@@ -713,6 +749,15 @@
             } else
             if (cmd === 'worksuite:desktop') {
                 desktopWaiting.slice().forEach(f => f(param));
+            } else
+            if (cmd === 'worksuite:open') {
+                let reply = null;
+                try { reply = JSON.parse(param); } catch (e) { return; }
+                const waiting = reply && openWaiting[reply.req];
+                if (waiting) {
+                    delete openWaiting[reply.req];
+                    waiting(reply);
+                }
             }
         });
     }

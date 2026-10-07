@@ -58,6 +58,12 @@ namespace CWorkSuite
     /* "worksuite:app", {"web":"https://…"}: WorkSuite Desktop on its Home (worksuite://home) when it is
      * installed — something here opens worksuite:// links — otherwise that address in the browser */
     void openApp(const QString& json);
+
+    /* "worksuite:open", {"url":"…","req":"…"}: a sign-in, in the browser (an https page) or in WorkSuite
+     * Desktop (worksuite://office/signin), opened by the system rather than by the page's popup handling,
+     * which drops a link opened after an await. {"req","ok","reason"} out: "no-app" when nothing here
+     * opens worksuite:// links */
+    QString openLink(const QString& json);
 }
 
 #endif // CWORKSUITE_H

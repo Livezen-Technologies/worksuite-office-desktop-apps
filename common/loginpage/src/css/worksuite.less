@@ -259,11 +259,24 @@
   to { transform: rotate(360deg); }
 }
 
+// A plain button in WorkSuite's parts of the home screen: the theme's button colours. The start page's
+// base style gives a button the inverse text colour and no background, for the coloured kinds only.
+.ws-btn-secondary() {
+  background-color: @background-button;
+  color: @text-normal;
+}
+
+#box-worksuite .ws-signedout .btn:not(.btn--landing):not(.btn--primary) {
+  .ws-btn-secondary();
+}
+
 .dlg-worksuite-signin, .dlg-worksuite-new {
   .ws-dlg {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    // the dialog's own text colour is the browser's black: give the body the theme's
+    color: @text-normal;
 
     p {
       margin: 0;
@@ -271,6 +284,15 @@
 
     .btn {
       width: 100%;
+
+      &:not(.btn--landing):not(.btn--primary) {
+        .ws-btn-secondary();
+      }
+    }
+
+    .text-secondary {
+      color: @text-secondary;
+      font-size: 12px;
     }
 
     .tbox {
@@ -314,15 +336,42 @@
     color: var(--text-link);
   }
 
-  .ws-dlg-wait {
-    text-align: center;
+  // jQuery's show() leaves these to the stylesheet's display, so they stay columns with gaps
+  .ws-dlg-start, .ws-dlg-wait {
+    display: flex;
     flex-direction: column;
     gap: 10px;
   }
 
+  .ws-dlg-wait {
+    text-align: center;
+
+    .ws-spinner {
+      margin: 4px auto;
+    }
+  }
+
+  .ws-dlg-wait-server {
+    margin: -4px 0 8px;
+  }
+
+  .ws-dlg-server {
+    margin-top: -4px;
+  }
+
+  // side by side when they fit, one under the other when they don't; a label never wraps
   .ws-dlg-buttons {
     display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 8px;
+
+    .btn {
+      width: auto;
+      flex: 1 1 auto;
+      padding: 0 16px;
+      white-space: nowrap;
+    }
   }
 
   .ws-picker {
