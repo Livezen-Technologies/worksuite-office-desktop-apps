@@ -31,6 +31,9 @@
 #include <QJsonObject>
 #include <QRegularExpression>
 #include <QUrl>
+#ifdef Q_OS_WIN
+# include <QDesktopServices>
+#endif
 #include "utils.h"
 
 #ifdef Q_OS_WIN
@@ -251,4 +254,35 @@ void CWorkSuite::openApp(const QString& json)
     home.setPort(web.port());
     home.setPath("/");
     Utils::openUrl(home.toString());
+}
+
+QString CWorkSuite::openLink(const QString& json)
+{
+    const QJsonObject in = QJsonDocument::fromJson(json.toUtf8()).object();
+    QJsonObject reply{{"req", in.value("req").toString()}, {"ok", false}, {"reason", ""}};
+
+    const QUrl url(in.value("url").toString(), QUrl::StrictMode);
+    static const QRegularExpression host_re("^[A-Za-z0-9.-]{1,253}$");
+    const bool web = url.isValid() && url.scheme() == "https" && host_re.match(url.host(QUrl::FullyEncoded)).hasMatch();
+    const bool desktop = url.isValid() && url.scheme() == "worksuite" && url.host() == "office" && url.path() == "/signin";
+
+    if ( desktop && !desktopAppInstalled() ) {
+        reply["reason"] = "no-app";
+    } else
+    if ( web || desktop ) {
+        const QString link = url.toString(QUrl::FullyEncoded);
+#ifdef Q_OS_WIN
+        reply["ok"] = QDesktopServices::openUrl(QUrl(link));
+#else
+        // xdg-open with the address as its argument: no shell (Utils::openUrl uses one), not the app's libraries
+        QProcess xdg;
+        QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+        env.remove("LD_LIBRARY_PATH");
+        xdg.setProcessEnvironment(env);
+        xdg.setProgram("xdg-open");
+        xdg.setArguments({link});
+        reply["ok"] = xdg.startDetached();
+#endif
+    }
+    return QString::fromUtf8(QJsonDocument(reply).toJson(QJsonDocument::Compact));
 }
