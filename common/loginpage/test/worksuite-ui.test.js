@@ -159,6 +159,25 @@ assert.ok($('.ws-dlg-custom').css('display') !== 'none', 'a different server onl
   assert.strictEqual($('.ws-list .row').length, 1);
   $('.ws-filters button[data-filter="all"]').trigger('click');
 
+  // a long list: ten rows, then "Show all (n)" — the start page scrolls as one, the list has no scroll of its own
+  const saved = c.data;
+  c.data = { items: Array.from({ length: 23 }, (x, i) => ({ kind: 'file', id: 100 + i, name: 'Doc' + i + '.docx', ext: 'docx', location: '', owner: '', modified: '' })) };
+  c.expanded = false;
+  c.render();
+  assert.strictEqual($('.ws-list .row').length, 10);
+  assert.notStrictEqual($('.ws-more').css('display'), 'none');
+  assert.strictEqual($('.ws-more').text(), 'wsShowAll');
+  $('.ws-more').trigger('click');
+  assert.strictEqual($('.ws-list .row').length, 23, 'Show all shows every row');
+  assert.strictEqual($('.ws-more').text(), 'wsShowFewer');
+  $('.ws-more').trigger('click');
+  assert.strictEqual($('.ws-list .row').length, 10, 'Show fewer folds it again');
+  c.data = { items: c.data.items.slice(0, 4) };
+  c.render();
+  assert.strictEqual($('.ws-more').css('display'), 'none', 'no button for a short list');
+  c.data = saved;
+  c.render();
+
   // pictures of documents: the ones seen in the last four hours straight away, with the cached list
   w.localStorage.setItem('ws:cache:https://s|3:thumbs', JSON.stringify({
     7: { url: 'https://s/media/seen?v=1', at: Date.now() }, 8: { url: 'https://s/media/stale?v=1', at: Date.now() - 5 * 3600e3 } }));

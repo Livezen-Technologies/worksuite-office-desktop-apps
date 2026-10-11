@@ -119,6 +119,8 @@ l10n.en = {
     wsLoading: 'Loading…',
     wsEmpty: 'There are no documents here yet.',
     wsNothingFound: 'Nothing found.',
+    wsShowAll: 'Show all ($1)',
+    wsShowFewer: 'Show fewer',
     wsOffline: 'Offline · showing the list from your last visit',
     wsErrNetwork: 'WorkSuite could not be reached. Check your connection.',
     wsErrServer: 'WorkSuite could not do that. Try again.',
