@@ -31,25 +31,96 @@
     }
   }
 
+  // the account switcher beside the title: an outlined chip in the theme's colours. Without its own
+  // background the start page's base button style leaves Chromium's white fill under the inverse text.
   .ws-account-btn {
     width: auto;
-    height: auto;
+    max-width: 460px;
+    height: 30px;
+    min-width: 0;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 2px 8px;
-    border-radius: 4px;
+    gap: 8px;
+    padding: 0 10px 0 12px;
+    border: 1px solid var(--border-regular-control);
+    border-radius: 15px;
+    background-color: transparent;
+    color: @text-normal;
+    font-size: 12px;
     font-weight: normal;
+    white-space: nowrap;
+    transition: background-color .15s ease, border-color .15s ease;
+
+    .rtl & {
+      padding: 0 12px 0 10px;
+    }
+
+    > span:first-child {
+      font-weight: bold;
+      flex: none;
+    }
+
+    .text-secondary {
+      color: @text-secondary;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
 
     &:hover {
       background-color: var(--highlight-button-hover);
     }
 
+    &:active {
+      background-color: var(--highlight-button-pressed);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--background-accent-button);
+      outline-offset: 2px;
+    }
+
     .caret {
+      flex: none;
+      width: 0;
+      height: 0;
       border-top: 4px solid var(--icon-normal);
       border-left: 4px solid transparent;
       border-right: 4px solid transparent;
     }
+  }
+
+  // "New": the header's one coloured action, as tall as the search box beside it
+  .ws-tools .ws-new {
+    height: 32px;
+    padding: 0 18px;
+    border: 0 none;
+    border-radius: 6px;
+    background-color: var(--background-accent-button);
+    color: var(--text-contrast-background);
+    font-size: 13px;
+    font-weight: 600;
+
+    &:hover:not(:disabled) {
+      border-color: transparent;
+      background-color: var(--highlight-accent-button-hover);
+    }
+
+    &:active:not(:disabled) {
+      border-color: transparent;
+      background-color: var(--highlight-accent-button-pressed);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--background-accent-button);
+      outline-offset: 2px;
+    }
+  }
+
+  .ws-tools .ws-search {
+    height: 32px;
+    box-sizing: border-box;
+    border-radius: 6px;
   }
 
   .ws-signedout {
