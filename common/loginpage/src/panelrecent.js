@@ -291,6 +291,11 @@
             let _check_block = {};
 
             for (let item of _files) {
+                // "On this computer": a document opened from a server (a WorkSuite Drive file, a cloud
+                // portal's) is recorded with the server's address as its place; it is listed with its
+                // server (WorkSuite Drive's Recent), not here
+                if (/^https?:\/\//i.test(item.path)) continue;
+
                 var model = new FileModel(item);
                 model.set('hash', item.path.hashCode());
 
@@ -309,7 +314,8 @@
                 Object.assign(this.check_list, _check_block);
             }
 
-            if (_new_items_count === ITEMS_LOAD_RANGE) {
+            // more to load when this block was full, whether or not all of it is listed here
+            if (_raw_block.length === ITEMS_LOAD_RANGE) {
                 setTimeout(e => {
                     this.recentIndex += ITEMS_LOAD_RANGE;
                     _add_recent_block.call(this);

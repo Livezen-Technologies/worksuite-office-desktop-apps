@@ -17,6 +17,8 @@
 
     // How many times a list asks the server for more pictures while it is shown (three are drawn each time).
     const PICTURE_ROUNDS = 12;
+    // rows shown before "Show all": the start page scrolls as one, so a long list does not push the rest away
+    const ROWS_SHOWN = 10;
 
     function hostOf(server) { return String(server || '').replace(/^https?:\/\//, ''); }
 
@@ -442,13 +444,15 @@
                         <div class="col-date">${_lang.wsModified}</div>
                     </div>
                     <div class="file-list-body ws-list"></div>
+                    <button class="ws-more"></button>
                     <p class="ws-state text-secondary"></p>
                 </div>
             </div>`).prependTo($container);
 
         this.$el.find('.ws-signin').on('click', () => this.signIn());
         this.$el.find('.ws-tabs').on('click', 'button', e => this.select($(e.currentTarget).data('view')));
-        this.$el.find('.ws-filters').on('click', 'button', e => { this.filter = $(e.currentTarget).data('filter'); this.render(); });
+        this.$el.find('.ws-filters').on('click', 'button', e => { this.filter = $(e.currentTarget).data('filter'); this.expanded = false; this.render(); });
+        this.$el.find('.ws-more').on('click', () => { this.expanded = !this.expanded; this.render(); });
         this.$el.find('.ws-crumbs').on('click', 'a', e => { e.preventDefault(); this.folder = $(e.currentTarget).data('id') || null; this.load(); });
         this.$el.find('.ws-search').on('keypress', e => {
             if (e.which === 13) {
@@ -569,6 +573,9 @@
 
         const opts = { folder: this.folder, q: this.query };
         const seq = ++this.seq;
+        const where = [this.view, this.folder, this.query].join('|');
+        if (where !== this.where) this.expanded = false;
+        this.where = where;
 
         this.$el.find('.ws-tabs button').each((i, b) => $(b).toggleClass('selected', $(b).data('view') === this.view));
         this.$el.find('.ws-tab-search').toggle(this.view === 'search');
@@ -654,7 +661,12 @@
         $crumbs.toggle(this.view === 'drive');
 
         this.items = this.visible();
-        this.$el.find('.ws-list').html(this.items.map((item, index) => {
+        const more = this.items.length - ROWS_SHOWN;
+        this.$el.find('.ws-more')
+            .text(this.expanded ? _lang.wsShowFewer : _lang.wsShowAll.replace('$1', this.items.length))
+            .toggle(more > 0);
+        const shown = more > 0 && !this.expanded ? this.items.slice(0, ROWS_SHOWN) : this.items;
+        this.$el.find('.ws-list').html(shown.map((item, index) => {
             const dot = item.name.lastIndexOf('.');
             const base = item.kind === 'file' && dot > 0 ? item.name.substring(0, dot) : item.name;
             const ext = item.kind === 'file' && dot > 0 ? item.name.substring(dot) : '';
