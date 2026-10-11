@@ -68,12 +68,17 @@ assert.ok($('.ws-dlg-custom').css('display') !== 'none', 'a different server onl
   assert.ok($continue.text().includes('Continue as Hasarinda Manjula'));
   assert.ok($continue.text().includes('Livezen Technologies Pvt Ltd · app.worksuite.lk'));
   assert.ok(!$('.ws-signin').hasClass('btn--landing'), 'the browser sign-in becomes the second choice');
+  assert.ok($continue.hasClass('ws-account-card') && $continue.hasClass('is-primary'), 'Continue as is an account card');
+  assert.strictEqual($continue.find('.ws-avatar').text(), 'HM', "the account's initials");
+  assert.ok($('.ws-signin').hasClass('ws-btn-outline'), 'beside the card, Sign in is the outlined second choice');
   $('.dlg-worksuite-signin').remove(); c.dialog = null;
   $continue.trigger('click');
   await new Promise(r => setTimeout(r, 20));
   assert.ok(opened.some(u => u.startsWith('worksuite://office/signin?client=worksuite-office&server=https%3A%2F%2Fapp.worksuite.lk&uid=9&')), 'one click asks WorkSuite Desktop');
   assert.ok($('.dlg-worksuite-signin .ws-dlg-wait-text').text() === 'wsWaitDesktop');
   assert.ok(w.WorkSuite.pendingSignIn(), 'waiting for WorkSuite Desktop');
+
+  assert.strictEqual($('.dlg-worksuite-signin .ws-dlg-code').css('display'), 'none', 'WorkSuite Desktop answers itself: no code to paste');
 
   // WorkSuite Desktop does not answer: no spinner forever, a message, Try again and the browser
   w.DialogWorkSuiteSignIn.waits.desktop = 30;
@@ -103,6 +108,30 @@ assert.ok($('.ws-dlg-custom').css('display') !== 'none', 'a different server onl
   assert.ok($('.dlg-worksuite-signin .ws-dlg-start').css('display') !== 'none' && $('.dlg-worksuite-signin .ws-dlg-wait').css('display') === 'none');
   desktopInstalled = true;
   $('.dlg-worksuite-signin .tool.close').trigger('click');
+  assert.strictEqual($('.dlg-worksuite-signin').length, 0);
+
+  // the browser route: if the browser cannot hand back, the code from its page finishes the sign-in
+  c.signIn();
+  await new Promise(r => setTimeout(r, 20));
+  $('.dlg-worksuite-signin .ws-dlg-signin').trigger('click');
+  await new Promise(r => setTimeout(r, 20));
+  assert.strictEqual($('.dlg-worksuite-signin .ws-dlg-wait-text').text(), 'wsWaitBrowser');
+  assert.ok($('.dlg-worksuite-signin .ws-dlg-code').css('display') !== 'none', 'the browser route offers the code');
+  assert.strictEqual($('.dlg-worksuite-signin .ws-dlg-code-row').css('display'), 'none', 'the field opens only when asked');
+  $('.dlg-worksuite-signin .ws-dlg-havecode').trigger('click');
+  assert.strictEqual($('.dlg-worksuite-signin .ws-dlg-code-row').css('display'), 'flex');
+  $('.dlg-worksuite-signin .ws-dlg-code-input').val('nope');
+  $('.dlg-worksuite-signin .ws-dlg-code-go').trigger('click');
+  assert.strictEqual($('.dlg-worksuite-signin .ws-dlg-code-error').text(), 'wsErrCode');
+  const used = [];
+  const realFinish = w.WorkSuite.finishWithCode;
+  w.WorkSuite.finishWithCode = t => { used.push(t); return true; };
+  $('.dlg-worksuite-signin .ws-dlg-code-input').val('Z'.repeat(43));
+  $('.dlg-worksuite-signin .ws-dlg-code-go').trigger('click');
+  assert.deepStrictEqual(used, ['Z'.repeat(43)], 'the pasted code goes to WorkSuite');
+  assert.strictEqual($('.dlg-worksuite-signin .ws-dlg-code-error').text(), '', 'and the error goes away');
+  w.WorkSuite.finishWithCode = realFinish;
+  $('.dlg-worksuite-signin .ws-dlg-cancel').trigger('click');
   assert.strictEqual($('.dlg-worksuite-signin').length, 0);
 
   // signed-in account straight in storage, as after a sign-in

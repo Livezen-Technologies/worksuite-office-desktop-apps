@@ -64,15 +64,24 @@
     }
 
     .ws-continue {
-      height: auto;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      padding: 6px 14px;
+      .ws-account-card();
+      min-width: 300px;
+    }
 
-      .ws-continue-org {
-        font-size: 11px;
-        opacity: 0.8;
+    // beside an account card: the same height, outlined, so the card is the one to press
+    .ws-signin {
+      height: 52px;
+      padding: 0 22px;
+      border-radius: 10px;
+    }
+
+    .ws-btn-outline {
+      background-color: transparent;
+      color: var(--text-normal);
+      border: 1px solid var(--border-regular-control);
+
+      &:hover {
+        background-color: var(--highlight-button-hover);
       }
     }
   }
@@ -266,7 +275,7 @@
   color: @text-normal;
 }
 
-#box-worksuite .ws-signedout .btn:not(.btn--landing):not(.btn--primary) {
+#box-worksuite .ws-signedout .btn:not(.btn--landing):not(.btn--primary):not(.ws-account-card):not(.ws-btn-outline) {
   .ws-btn-secondary();
 }
 
@@ -285,7 +294,7 @@
     .btn {
       width: 100%;
 
-      &:not(.btn--landing):not(.btn--primary) {
+      &:not(.btn--landing):not(.btn--primary):not(.ws-account-card) {
         .ws-btn-secondary();
       }
     }
@@ -313,15 +322,37 @@
   }
 
   .ws-dlg-continue {
-    height: auto;
+    .ws-account-card();
+    width: 100%;
+  }
+
+  // "Browser did not come back? Paste the sign-in code"
+  .ws-dlg-code {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 6px 12px;
+    gap: 8px;
 
-    .ws-continue-org, .ws-continue-via {
-      font-size: 11px;
-      opacity: 0.8;
+    .ws-dlg-havecode {
+      color: var(--text-link);
+      font-size: 12px;
+    }
+
+    .ws-dlg-code-row {
+      width: 100%;
+      gap: 8px;
+
+      .tbox {
+        flex: 1;
+        font-family: Menlo, Consolas, monospace;
+        font-size: 12px;
+      }
+
+      .btn {
+        width: auto;
+        flex: none;
+        padding: 0 16px;
+      }
     }
   }
 
@@ -437,5 +468,111 @@
 
   &:hover .ws-app-out {
     opacity: 1;
+  }
+}
+
+// "Continue as <name>": one account as a card — initials, who, which organisation, and a chevron.
+// The accent card (WorkSuite Desktop, one click) takes the accent colour; the others the theme's button.
+.ws-account-card() {
+  height: auto;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 14px 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border-regular-control);
+  background-color: @background-button;
+  color: @text-normal;
+  text-align: left;
+  font-weight: normal;
+  transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease, transform .1s ease;
+
+  .rtl & {
+    text-align: right;
+    padding: 8px 10px 8px 14px;
+  }
+
+  &:hover {
+    background-color: var(--highlight-button-hover);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .12);
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--background-accent-button);
+    outline-offset: 2px;
+  }
+
+  .ws-avatar {
+    flex: none;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: bold;
+    letter-spacing: .02em;
+    background-color: var(--background-accent-button);
+    color: var(--text-inverse);
+  }
+
+  .ws-card-text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .ws-continue-name {
+    font-size: 13px;
+    font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .ws-continue-org, .ws-continue-via {
+    font-size: 11px;
+    opacity: .75;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .ws-chevron {
+    flex: none;
+    width: 16px;
+    height: 16px;
+    opacity: .7;
+
+    .rtl & {
+      transform: scaleX(-1);
+    }
+  }
+
+  &.is-primary {
+    border-color: transparent;
+    background-color: var(--background-accent-button);
+    color: var(--text-inverse);
+
+    &:hover {
+      background-color: var(--highlight-accent-button-hover);
+    }
+
+    &:active {
+      background-color: var(--highlight-accent-button-pressed);
+    }
+
+    .ws-avatar {
+      background-color: rgba(255, 255, 255, .22);
+      color: var(--text-inverse);
+    }
   }
 }

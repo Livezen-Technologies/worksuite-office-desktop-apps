@@ -30,6 +30,25 @@
             d.toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
     }
 
+    function initials(name) {
+        const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+        return ((parts[0] || '?')[0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
+    }
+
+    /* "Continue as <name>": one account, as a card — who, which organisation and server, and how */
+    function continueCard(cls, name, org, via) {
+        const _lang = utils.Lang;
+        return `<button class="btn ws-account-card ${cls}"${via ? ` title="${esc(via)}"` : ''}>
+                    <span class="ws-avatar" aria-hidden="true">${esc(initials(name))}</span>
+                    <span class="ws-card-text">
+                        <span class="ws-continue-name">${esc(_lang.wsContinueAs.replace('$1', name))}</span>
+                        <span class="ws-continue-org">${esc(org)}</span>
+                        ${via ? `<span class="ws-continue-via">${esc(via)}</span>` : ''}
+                    </span>
+                    <svg class="ws-chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>`;
+    }
+
     /* ------------------------------------------------------------------ *
      * "Sign in to WorkSuite"
      * ------------------------------------------------------------------ */
@@ -62,6 +81,14 @@
                         <div class="ws-spinner"></div>
                         <p class="text-normal ws-dlg-wait-text"></p>
                         <p class="text-secondary ws-dlg-wait-server"></p>
+                        <div class="ws-dlg-code">
+                            <a class="link ws-dlg-havecode" href="#">${_lang.wsHaveCode}</a>
+                            <div class="ws-dlg-code-row" style="display:none">
+                                <input type="text" class="tbox ws-dlg-code-input" spellcheck="false" autocomplete="off" placeholder="${_lang.wsCodePlaceholder}">
+                                <button class="btn btn--landing ws-dlg-code-go">${_lang.wsCodeContinue}</button>
+                            </div>
+                            <p class="msg-error ws-dlg-code-error"></p>
+                        </div>
                         <div class="ws-dlg-buttons">
                             <button class="btn btn--landing ws-dlg-retry">${_lang.wsTryAgain}</button>
                             <button class="btn ws-dlg-again">${_lang.wsOpenAgain}</button>
@@ -94,8 +121,7 @@
         const $accounts = $el.find('.ws-dlg-accounts');
         WorkSuite.accounts().filter(a => a.signedOut).forEach(a => {
             const org = [a.user.organization, hostOf(a.server)].filter(Boolean).join(' · ');
-            $(`<button class="btn ws-dlg-continue"><span class="ws-continue-name">${esc(_lang.wsContinueAs.replace('$1', a.user.name))}</span>
-                 <span class="ws-continue-org text-secondary">${esc(org)}</span></button>`)
+            $(continueCard('ws-dlg-continue', a.user.name, org, ''))
                 .on('click', () => start(a.server))
                 .appendTo($accounts);
         });
@@ -111,6 +137,12 @@
             $el.find('.ws-dlg-retry').hide();
             $el.find('.ws-dlg-again').toggle(!viaDesktop);
             $el.find('.ws-dlg-browser').toggle(!!viaDesktop);
+            // the browser route can stall at the hand-back: offer the code from the browser page
+            $el.find('.ws-dlg-code').toggle(!viaDesktop);
+            $el.find('.ws-dlg-havecode').show();
+            $el.find('.ws-dlg-code-row').hide();
+            $el.find('.ws-dlg-code-input').val('');
+            $el.find('.ws-dlg-code-error').text('').hide();
             $el.find('.ws-dlg-wait').show();
 
             // never a spinner forever: say what to do, with a way to try again
@@ -163,8 +195,7 @@
             list = list.filter(d => !live.includes(d.server + '|' + d.user.id));
             list.forEach(d => {
                 const org = [d.user.organization, hostOf(d.server)].filter(Boolean).join(' · ');
-                $(`<button class="btn btn--landing ws-dlg-continue"><span class="ws-continue-name">${esc(_lang.wsContinueAs.replace('$1', d.user.name))}</span>
-                     <span class="ws-continue-org">${esc(org)}</span><span class="ws-continue-via">${esc(_lang.wsViaDesktop)}</span></button>`)
+                $(continueCard('ws-dlg-continue is-primary', d.user.name, org, _lang.wsViaDesktop))
                     .on('click', () => startDesktop(d))
                     .appendTo($el.find('.ws-dlg-desktop'));
             });
@@ -202,6 +233,18 @@
         $el.find('.ws-dlg-again, .ws-dlg-browser').on('click', () => start(server));
         $el.find('.ws-dlg-retry').on('click', () => lastDesktop && startDesktop(lastDesktop));
         $el.find('.ws-dlg-cancel').on('click', () => this.close());
+
+        $el.find('.ws-dlg-havecode').on('click', e => {
+            e.preventDefault();
+            $el.find('.ws-dlg-havecode').hide();
+            $el.find('.ws-dlg-code-row').css('display', 'flex').find('input').focus();
+        });
+        const useCode = () => {
+            const ok = WorkSuite.finishWithCode($el.find('.ws-dlg-code-input').val());
+            $el.find('.ws-dlg-code-error').text(ok ? '' : _lang.wsErrCode).toggle(!ok);
+        };
+        $el.find('.ws-dlg-code-go').on('click', useCode);
+        $el.find('.ws-dlg-code-input').on('keypress', e => { if (e.which === 13) useCode(); });
 
         this.done = () => { this.signedIn = true; this.$el && this.close(); };
         this.failed = e => this.$el && backToStart(e.message);
@@ -465,13 +508,11 @@
 
         WorkSuite.desktopAccounts().then(list => {
             const d = list.find(x => !live.includes(x.server + '|' + x.user.id));
-            this.$el.find('.ws-signin').toggleClass('btn--landing', !d);
+            this.$el.find('.ws-signin').toggleClass('btn--landing', !d).toggleClass('ws-btn-outline', !!d);
             if (!d) return;
 
             const org = [d.user.organization, hostOf(d.server)].filter(Boolean).join(' · ');
-            $(`<button class="btn btn--landing ws-continue" title="${esc(_lang.wsViaDesktop)}">
-                  <span class="ws-continue-name">${esc(_lang.wsContinueAs.replace('$1', d.user.name))}</span>
-                  <span class="ws-continue-org">${esc(org)}</span></button>`)
+            $(continueCard('ws-continue is-primary', d.user.name, org, _lang.wsViaDesktop))
                 .on('click', () => this.signIn(d))
                 .appendTo($box.empty());
         });

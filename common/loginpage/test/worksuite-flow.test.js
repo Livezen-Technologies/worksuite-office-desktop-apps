@@ -175,6 +175,22 @@ for (const s of ['', 'abc', 'x'.repeat(43), 'y'.repeat(128)])
   handlers.on_native_message.forEach(f => f('worksuite:link', 'worksuiteoffice://auth/callback?code=desktopcode&state=' + link.searchParams.get('state')));
   assert.strictEqual((await viaDesktop).id, 'https://app.worksuite.test|3');
 
+  // the browser could not hand back (Safari after the page waited, an app-link policy): the code pasted from its page
+  const byCode = new Promise(r => WS.on('signedin', r));
+  await WS.signIn('app.worksuite.test');
+  assert.strictEqual(WS.finishWithCode('not a code'), false, 'only a code the server could have issued');
+  assert.ok(WS.pendingSignIn(), 'a bad paste leaves the sign-in waiting');
+  assert.strictEqual(WS.finishWithCode('  ' + 'K'.repeat(43) + '\n'), true, 'spaces from the copy are trimmed');
+  assert.strictEqual((await byCode).id, 'https://app.worksuite.test|3');
+  assert.strictEqual(WS.pendingSignIn(), null, 'a used code ends the sign-in');
+  assert.strictEqual(WS.finishWithCode('K'.repeat(43)), false, 'nothing waiting: a code is refused');
+  // the whole callback link, pasted, works as if the browser had handed it over
+  const byLink = new Promise(r => WS.on('signedin', r));
+  await WS.signIn('app.worksuite.test');
+  const st = new URL(opened[opened.length - 1]).searchParams.get('state');
+  assert.strictEqual(WS.finishWithCode('worksuiteoffice://auth/callback?code=pasted&state=' + st), true);
+  assert.strictEqual((await byLink).id, 'https://app.worksuite.test|3');
+
   // the sidebar's WorkSuite item: the app chooses WorkSuite Desktop or the browser; the browser gets the account's server
   WS.openApp();
   assert.deepStrictEqual(commands[commands.length - 1], ['worksuite:app', JSON.stringify({ web: 'https://app.worksuite.test/' })]);

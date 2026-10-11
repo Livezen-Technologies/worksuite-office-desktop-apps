@@ -513,6 +513,26 @@
         }
     }
 
+    /*
+     * The same finish, from a code the person copied off the browser page. A browser can refuse to
+     * hand a worksuiteoffice:// link to the app (Safari after the page waited on the server, a policy
+     * that blocks app links, a link handler pointing at another copy of the app), and then nothing
+     * would ever arrive. The code alone is harmless: it is exchanged with the verifier that never
+     * left this page, once, within two minutes. A whole pasted callback link works too.
+     */
+    function finishWithCode(text) {
+        text = String(text || '').trim();
+        if (/^worksuiteoffice:\/\//i.test(text)) {
+            onLink(text);
+            return true;
+        }
+        const pending = pendingSignIn();
+        if (!pending || !/^[A-Za-z0-9_-]{43}$/.test(text)) return false;
+
+        finishSignIn(new URLSearchParams({ code: text, state: pending.state }));
+        return true;
+    }
+
     async function signOut(account) {
         try {
             const stored = await secret('get', secretKey(account)).catch(() => null);
@@ -772,6 +792,7 @@
         setActive: setActive,
         signIn: signIn,
         signInWithDesktop: signInWithDesktop,
+        finishWithCode: finishWithCode,
         desktopAccounts: desktopAccounts,
         cancelSignIn: cancelSignIn,
         pendingSignIn: pendingSignIn,
