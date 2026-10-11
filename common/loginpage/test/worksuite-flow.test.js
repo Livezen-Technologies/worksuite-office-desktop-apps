@@ -51,9 +51,11 @@ w.open = url => opened.push(url);
 w.utils = { Lang: new Proxy({}, { get: (t, k) => String(k) }), defines: { FileFormat: { FILE_UNKNOWN: 0, FILE_DOCUMENT_DOCX: 65, FILE_CROSSPLATFORM_PDF: 513 } } };
 
 let refreshCount = 0;
+let pollAnswer = () => [404, { status: 'error', message: 'an older server' }];
 const server = (req) => {
   const u = new URL(req.url);
   const body = req.body ? JSON.parse(req.body) : null;
+  if (u.pathname === '/api/auth/apps/poll') return pollAnswer(body);
   if (u.pathname === '/api/auth/apps/exchange') {
     assert.strictEqual(body.client, 'worksuite-office');
     const pend = JSON.parse(w.localStorage.getItem('ws:pending') || 'null');
@@ -190,6 +192,60 @@ for (const s of ['', 'abc', 'x'.repeat(43), 'y'.repeat(128)])
   const st = new URL(opened[opened.length - 1]).searchParams.get('state');
   assert.strictEqual(WS.finishWithCode('worksuiteoffice://auth/callback?code=pasted&state=' + st), true);
   assert.strictEqual((await byLink).id, 'https://app.worksuite.test|3');
+
+  // the link back never arrives (a browser or macOS that will not hand it over, WorkSuite Desktop's hand-off
+  // lost the same way): the sign-in is collected from the server with the verifier only this page holds
+  WS._poll.every = 5;
+  const tick = ms => new Promise(r => setTimeout(r, ms));
+  let polls = 0, handed = false;
+  pollAnswer = body => {
+    polls++;
+    assert.strictEqual(body.client, 'worksuite-office');
+    const challenge = new URL(opened[opened.length - 1]).searchParams.get('challenge');
+    assert.strictEqual(crypto.createHash('sha256').update(body.code_verifier).digest('base64url'), challenge);
+    return handed
+      ? [200, { status: 'success', data: { user: { id: 3, name: 'Samali', email: 's@x', organization: 'Livezen' }, tokens: { access_token: 'A9', refresh_token: 'R9', expires_in: 3600 } } }]
+      : [202, { status: 'success', data: { pending: true } }];
+  };
+  const collected = new Promise(r => WS.on('signedin', r));
+  await WS.signIn('app.worksuite.test');
+  const stC = new URL(opened[opened.length - 1]).searchParams.get('state');
+  await tick(40);
+  assert.ok(polls >= 2, 'it keeps asking while nothing is handed over');
+  assert.ok(WS.pendingSignIn(), 'and the sign-in stays waiting');
+  handed = true;
+  assert.strictEqual((await collected).id, 'https://app.worksuite.test|3');
+  assert.strictEqual(WS.pendingSignIn(), null);
+  assert.strictEqual(secrets['worksuite:https://app.worksuite.test|3'], 'R9');
+  const asked = polls;
+  await tick(30);
+  assert.strictEqual(polls, asked, 'it stops asking once signed in');
+  // the link that turns up afterwards is not an error
+  let lateError = null;
+  const onErr = e => (lateError = e);
+  WS.on('error', onErr);
+  handlers.on_native_message.forEach(f => f('worksuite:link', 'worksuiteoffice://auth/callback?code=late&state=' + stC));
+  await tick(20);
+  assert.strictEqual(lateError, null, 'a late link for a collected sign-in is ignored');
+  WS.off('error', onErr);
+
+  // cancelled: no more asking
+  handed = false;
+  await WS.signIn('app.worksuite.test');
+  await tick(20);
+  WS.cancelSignIn();
+  const atCancel = polls;
+  await tick(30);
+  assert.ok(polls <= atCancel + 1, 'cancelling stops it');
+
+  // an older server without the address: the link alone, as before
+  let old = 0;
+  pollAnswer = () => { old++; return [404, { status: 'error', message: 'nope' }]; };
+  await WS.signIn('app.worksuite.test');
+  await tick(40);
+  assert.strictEqual(old, 1, 'asked once, then left to the link');
+  assert.ok(WS.pendingSignIn(), 'still waiting for the link');
+  WS.cancelSignIn();
 
   // the sidebar's WorkSuite item: the app chooses WorkSuite Desktop or the browser; the browser gets the account's server
   WS.openApp();

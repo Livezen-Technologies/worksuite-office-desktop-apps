@@ -11,6 +11,8 @@
  *   3. The app passes the link to this page ("worksuite:link"), and the code is
  *      exchanged, with the verifier, at /api/auth/apps/exchange for a session of
  *      WorkSuite Office's own.
+ *   4. In case that link never arrives, the page also collects the sign-in itself
+ *      while it waits (/api/auth/apps/poll, with the verifier): see watchSignIn.
  *
  * TOKENS. The refresh token is kept by the operating system ("worksuite:secret":
  * Keychain, Windows Credential Manager); the access token only in memory. The
@@ -384,6 +386,7 @@
             throw new Error(utils.Lang.wsErrBrowser);
         }
         fire('pending', server);
+        watchSignIn();
         return server;
     }
 
@@ -409,6 +412,7 @@
             throw new Error(opened.reason === 'no-app' ? utils.Lang.wsErrNoDesktop : utils.Lang.wsErrBrowser);
         }
         fire('pending', server);
+        watchSignIn();
         return server;
     }
 
@@ -491,12 +495,15 @@
     }
 
     async function finishSignIn(params) {
+        // the link arriving after the sign-in was collected (watchSignIn): nothing to do, nothing wrong
+        if (params.get('state') && params.get('state') === finishedState) return;
         const pending = pendingSignIn();
         if (!pending || !params.get('state') || params.get('state') !== pending.state) {
             fire('error', new Error(utils.Lang.wsErrStale));
             return;
         }
         writeJson(localStorage, LS_PENDING, undefined);
+        finishedState = pending.state;
 
         try {
             const res = await http('POST', pending.server + '/api/auth/apps/exchange',
@@ -511,6 +518,65 @@
         } finally {
             fire('pending', null);
         }
+    }
+
+    /*
+     * The sign-in, collected rather than waited for. The link back (worksuiteoffice://auth/callback)
+     * is the one step nobody here controls: a browser can refuse to open it, macOS can give it to
+     * another copy of the app, WorkSuite Desktop's hand-off travels the same way. So while a sign-in
+     * waits, this asks the server every few seconds (/api/auth/apps/poll) with the PKCE verifier,
+     * which only this page holds; the server answers 202 until the browser or WorkSuite Desktop has
+     * handed over a code, then signs this app in exactly as the exchange would. Whichever comes
+     * first wins: the other finds the code spent and is ignored (finishedState).
+     *
+     * An older server without the address answers 404: the link alone, as before.
+     */
+    const poll = { every: 2000, slow: 5000, slowAfter: 2 * 60 * 1000 };
+    let pollTimer = null;
+    let finishedState = null;
+
+    function watchSignIn() {
+        clearTimeout(pollTimer);
+        const first = pendingSignIn();
+        if (!first) return;
+
+        const next = () => {
+            const p = pendingSignIn();
+            if (!p) return;
+            pollTimer = setTimeout(tick, Date.now() - p.at > poll.slowAfter ? poll.slow : poll.every);
+        };
+
+        const tick = async () => {
+            pollTimer = null;
+            const pending = pendingSignIn();
+            if (!pending || !pending.verifier) return;
+
+            let res = null;
+            try {
+                res = await http('POST', pending.server + '/api/auth/apps/poll', { client: CLIENT, code_verifier: pending.verifier });
+            } catch (e) { /* offline for a moment: ask again */ }
+
+            // finished by the link, cancelled or started again while the request was out
+            const now = pendingSignIn();
+            if (!now || now.state !== pending.state) return;
+
+            if (!res || res.status === 202 || res.status >= 500) return next();
+            if (res.status === 404 || res.status === 405) return;
+
+            writeJson(localStorage, LS_PENDING, undefined);
+            finishedState = pending.state;
+            try {
+                if (res.status !== 200 || !res.json || !res.json.data || !res.json.data.tokens)
+                    throw apiError(res, utils.Lang.wsErrStale);
+                fire('signedin', await remember(pending.server, res.json.data));
+            } catch (e) {
+                fire('error', e);
+            } finally {
+                fire('pending', null);
+            }
+        };
+
+        next();
     }
 
     /*
@@ -753,6 +819,9 @@
         }
     }
 
+    // a sign-in still waiting when the start page (re)loads goes on being collected
+    setTimeout(watchSignIn, 0);
+
     if (window.sdk && window.sdk.on) {
         window.sdk.on('on_native_message', (cmd, param) => {
             if (cmd === 'worksuite:secret') {
@@ -816,5 +885,6 @@
         /* for tests */
         _sha256Ascii: sha256Ascii,
         _onLink: onLink,
+        _poll: poll,
     };
 }();

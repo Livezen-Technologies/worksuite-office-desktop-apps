@@ -104,7 +104,7 @@
     DialogSignIn.prototype.constructor = DialogSignIn;
 
     // WorkSuite Desktop answers in seconds; a browser sign-in can take a while (two-step verification)
-    DialogSignIn.waits = { desktop: 60 * 1000, browser: 5 * 60 * 1000 };
+    DialogSignIn.waits = { desktop: 2 * 60 * 1000, browser: 5 * 60 * 1000 };
 
     DialogSignIn.prototype.show = function (width) {
         Dialog.prototype.show.call(this, width);
