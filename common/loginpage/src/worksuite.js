@@ -296,6 +296,7 @@
 
     function refresh(account) {
         if (refreshing[account.id]) return refreshing[account.id];
+        if (account.broker) return brokerRefresh(account, true);
 
         const run = async (retry) => {
             const stored = await secret('get', secretKey(account)).catch(() => null);
@@ -600,6 +601,7 @@
     }
 
     async function signOut(account) {
+        if (account.broker) return forgetBrokerAccount(account);
         try {
             const stored = await secret('get', secretKey(account)).catch(() => null);
             const bearer = access[account.id] ? { 'Authorization': 'Bearer ' + access[account.id].token } : {};
@@ -620,6 +622,182 @@
                 list.length ? localStorage.setItem(LS_ACTIVE, list[0].id) : localStorage.removeItem(LS_ACTIVE);
             fire('changed');
         }
+    }
+
+    /* ------------------------------------------------------------------ *
+     * WorkSuite OS: the OS credentials broker
+     *
+     * On WorkSuite OS (/etc/worksuite/os-release) the session belongs to the OS, as in
+     * WorkSuite Desktop's OS mode (worksuite-desktop docs/WORKSUITE_OS.md). The app relays
+     * one line-JSON request to worksuite-credentials ($XDG_RUNTIME_DIR/worksuite/credentials.sock)
+     * per "worksuite:broker" command: Status, GetAccessToken {account_id, force_refresh},
+     * SignIn {server_url, mode} (the broker opens the system browser). The refresh token stays
+     * in the broker's keyring: nothing is kept in "worksuite:secret", the access token is in
+     * memory only, and WorkSuite Office never asks for a password. Elsewhere the app answers
+     * "not_os" (or nothing: an older app) and the sign-in above is used.
+     * ------------------------------------------------------------------ */
+
+    const BROKER_SIGN_IN_TIMEOUT = 10 * 60 * 1000;
+    const brokerWaiting = {};
+    let brokerProbe = null;
+
+    function brokerCall(method, params, timeoutMs) {
+        if (!window.sdk || !window.sdk.command) return Promise.resolve({ ok: false, error: 'not_os' });
+        return new Promise(resolve => {
+            const req = random(12);
+            const timer = setTimeout(() => { delete brokerWaiting[req]; resolve({ ok: false, error: 'broker_timeout' }); }, timeoutMs || 15000);
+            brokerWaiting[req] = reply => { clearTimeout(timer); resolve(reply); };
+            window.sdk.command('worksuite:broker', JSON.stringify({ method: method, params: params || {}, req: req }));
+        });
+    }
+
+    function httpsServer(s) {
+        if (typeof s !== 'string' || !/^https:\/\//i.test(s)) return null;
+        try {
+            const u = new URL(s);
+            return u.protocol === 'https:' && !u.username && !u.password ? normalizeServer(s) : null;
+        } catch (e) { return null; }
+    }
+
+    function brokerAccounts(v) {
+        return (Array.isArray(v) ? v : []).map(a => {
+            const server = a && typeof a.id === 'string' && a.id ? httpsServer(a.server_url) : null;
+            return server ? { id: a.id, server: server, name: typeof a.name === 'string' ? a.name : null, state: typeof a.state === 'string' ? a.state : '' } : null;
+        }).filter(Boolean);
+    }
+
+    function hostOfServer(s) { try { return new URL(s).host; } catch (e) { return ''; } }
+
+    /* The account to open: one on the enrolled organisation's server, else the first signed in, else the first */
+    function chooseBrokerAccount(list, deviceServer) {
+        const host = deviceServer ? hostOfServer(deviceServer) : '';
+        const onDevice = host ? list.filter(a => hostOfServer(a.server) === host) : [];
+        return onDevice.find(a => a.state === 'signed_in') || list.find(a => a.state === 'signed_in') || onDevice[0] || list[0] || null;
+    }
+
+    /* Where the broker's sign-in goes: the OS shell's rule (enrolled server, previous account, WorkSuite Cloud) */
+    function brokerSignInTarget(deviceServer, list) {
+        if (deviceServer) return { server_url: deviceServer, mode: 'enterprise' };
+        const prev = list[0];
+        if (prev) return { server_url: prev.server, mode: /(^|\.)worksuitecloud\.com$/.test(new URL(prev.server).hostname) ? 'personal' : 'enterprise' };
+        return { server_url: 'https://worksuitecloud.com', mode: 'personal' };
+    }
+
+    /*
+     * Is this WorkSuite OS with its broker running? {available, accounts, account, deviceServer}.
+     * Asked once per start page; `again` asks afresh. Not available: the usual sign-in.
+     */
+    function osBroker(again) {
+        if (brokerProbe && !again) return brokerProbe;
+        brokerProbe = brokerCall('Status', {}, 3000).then(r => {
+            if (!r || !r.ok) return { available: false, error: (r && r.error) || 'broker_unavailable', accounts: [], account: null, deviceServer: null };
+            const list = brokerAccounts(r.result);
+            const deviceServer = httpsServer(r.device_server);
+            return { available: true, accounts: list, account: chooseBrokerAccount(list, deviceServer), deviceServer: deviceServer };
+        });
+        return brokerProbe;
+    }
+
+    function brokerError(code) {
+        const lang = utils.Lang;
+        const map = {
+            broker_unavailable: lang.wsOsErrUnavailable, broker_timeout: lang.wsOsErrTimeout, sign_in_timeout: lang.wsOsErrTimeout,
+            locked: lang.wsOsErrLocked, sign_in_required: lang.wsOsErrEnded, unknown_account: lang.wsOsErrEnded,
+            no_refresh_token: lang.wsOsErrEnded, insecure_url: lang.wsOsErrInsecure,
+        };
+        const err = new Error(map[code] || lang.wsOsErrFailed || code);
+        err.code = code;
+        return err;
+    }
+
+    const BROKER_ENDED = ['sign_in_required', 'unknown_account', 'no_refresh_token', 'invalid_argument'];
+
+    async function brokerToken(brokerId, force) {
+        const r = await brokerCall('GetAccessToken', { account_id: brokerId, force_refresh: !!force });
+        if (!r.ok) throw brokerError(r.error);
+        if (typeof r.result !== 'string' || !r.result) throw brokerError('bad_reply');
+        const exp = typeof r.expires_at === 'number' ? r.expires_at : Date.now() + 300 * 1000;
+        return { token: r.result, exp: Math.max(exp, Date.now() + 60 * 1000 + 1000) };
+    }
+
+    /* A broker account's "refresh": a GetAccessToken from the broker (forced: the cached one was refused or is old) */
+    function brokerRefresh(account, force) {
+        if (refreshing[account.id]) return refreshing[account.id];
+        const run = async () => {
+            try {
+                const t = await brokerToken(account.broker, force);
+                access[account.id] = t;
+                if (account.signedOut) updateAccount(account.id, { signedOut: false });
+                return t.token;
+            } catch (e) {
+                // the broker lost the grant: sign in again through it; locked or not running: the session stands
+                if (BROKER_ENDED.includes(e.code)) throw signedOut(account);
+                throw e;
+            }
+        };
+        refreshing[account.id] = run().finally(() => { delete refreshing[account.id]; });
+        return refreshing[account.id];
+    }
+
+    /*
+     * Signs in through WorkSuite OS: the account the OS is signed in to, or (none) the broker's
+     * sign-in in the system browser. Never a password, never a code exchange of our own.
+     */
+    async function signInWithBroker() {
+        const probe = await osBroker(true);
+        if (!probe.available) throw brokerError(probe.error);
+
+        let pick = probe.account;
+        if (pick && pick.state === 'locked') throw brokerError('locked');
+        if (!pick || pick.state !== 'signed_in') {
+            const target = pick ? { server_url: pick.server, mode: brokerSignInTarget(null, [pick]).mode } : brokerSignInTarget(probe.deviceServer, probe.accounts);
+            if (pick && probe.deviceServer && hostOfServer(probe.deviceServer) === hostOfServer(pick.server)) target.mode = 'enterprise';
+            fire('pending', target.server_url);
+            try {
+                const r = await brokerCall('SignIn', target, BROKER_SIGN_IN_TIMEOUT);
+                if (!r.ok) throw brokerError(r.error);
+                const a = r.result || {};
+                const server = typeof a.id === 'string' ? httpsServer(a.server_url) : null;
+                if (!server) throw brokerError('bad_reply');
+                pick = { id: a.id, server: server, name: typeof a.name === 'string' ? a.name : null, state: 'signed_in' };
+            } finally {
+                fire('pending', null);
+            }
+        }
+
+        const t = await brokerToken(pick.id, false);
+        const res = await http('GET', pick.server + '/api/auth/me', null, { 'Authorization': 'Bearer ' + t.token });
+        const user = res.status === 200 && res.json && res.json.data && res.json.data.user;
+        if (!user || user.id === undefined || user.id === null) throw apiError(res);
+
+        const account = {
+            id: accountId(pick.server, user.id),
+            server: pick.server,
+            broker: pick.id,
+            user: { id: user.id, name: user.name || pick.name || '', email: user.email || '', avatar: user.avatar || null, organization: user.organization || '' },
+            signedOut: false,
+        };
+        access[account.id] = t;
+        const list = accounts().filter(a => a.id !== account.id);
+        list.push(account);
+        saveAccounts(list);
+        setActive(account.id);
+        fire('signedin', account);
+        return account;
+    }
+
+    /* Signing out of a WorkSuite OS account here only forgets it: the session is the OS's (Settings › Accounts) */
+    function forgetBrokerAccount(account) {
+        delete access[account.id];
+        const list = accounts().filter(a => a.id !== account.id);
+        saveAccounts(list);
+        Object.keys(localStorage).filter(k => k.indexOf(LS_CACHE + account.id) === 0).forEach(k => localStorage.removeItem(k));
+        if (!list.some(a => a.server === account.server))
+            window.sdk && window.sdk.execCommand && window.sdk.execCommand('portal:logout', JSON.stringify({ domain: account.server }));
+        if (localStorage.getItem(LS_ACTIVE) === account.id)
+            list.length ? localStorage.setItem(LS_ACTIVE, list[0].id) : localStorage.removeItem(LS_ACTIVE);
+        fire('changed');
+        return Promise.resolve();
     }
 
     /* ------------------------------------------------------------------ *
@@ -833,6 +1011,15 @@
                     waiting(reply);
                 }
             } else
+            if (cmd === 'worksuite:broker') {
+                let reply = null;
+                try { reply = JSON.parse(param); } catch (e) { return; }
+                const waiting = reply && brokerWaiting[reply.req];
+                if (waiting) {
+                    delete brokerWaiting[reply.req];
+                    waiting(reply);
+                }
+            } else
             if (cmd === 'worksuite:link') {
                 onLink(param);
             } else
@@ -861,6 +1048,8 @@
         setActive: setActive,
         signIn: signIn,
         signInWithDesktop: signInWithDesktop,
+        signInWithBroker: signInWithBroker,
+        osBroker: osBroker,
         finishWithCode: finishWithCode,
         desktopAccounts: desktopAccounts,
         cancelSignIn: cancelSignIn,

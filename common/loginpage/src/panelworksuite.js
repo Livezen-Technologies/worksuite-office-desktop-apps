@@ -499,18 +499,63 @@
     };
 
     ControllerWorkSuite.prototype.signIn = function (desktopAccount) {
-        if (this.dialog) return;
+        if (this.dialog || this.osSigningIn) return;
+        // WorkSuite OS: the OS signs in (its credentials broker), never this app's own sign-in or a password
+        if (!desktopAccount && this.os && this.os.available) return this.signInOs();
         this.dialog = new DialogSignIn({ desktopAccount: desktopAccount || null, onclose: () => { this.dialog = null; } });
         this.dialog.show();
     };
 
-    /* Signed out, but WorkSuite Desktop is signed in on this computer: "Continue as <name>", one click */
+    /* WorkSuite OS: the account the OS is signed in to, through its credentials broker */
+    ControllerWorkSuite.prototype.signInOs = async function () {
+        const _lang = utils.Lang;
+        this.osSigningIn = true;
+        this.$el.find('.ws-os-error').text('').hide();
+        this.$el.find('.ws-continue, .ws-signin').prop('disabled', true);
+        try {
+            await WorkSuite.signInWithBroker();
+        } catch (e) {
+            this.$el.find('.ws-os-error').text(e.message).show();
+            this.state(e.message, true);
+        } finally {
+            this.osSigningIn = false;
+            this.$el && this.$el.find('.ws-continue, .ws-signin').prop('disabled', false);
+        }
+    };
+
+    /* Signed out, but WorkSuite Desktop is signed in on this computer: "Continue as <name>", one click.
+     * On WorkSuite OS, the OS's account instead (and straight away, once, when the OS is signed in). */
     ControllerWorkSuite.prototype.renderDesktop = function () {
         const _lang = utils.Lang;
         const $box = this.$el.find('.ws-desktop').empty();
         const live = WorkSuite.accounts().filter(a => !a.signedOut).map(a => a.id);
 
+        // an app without the broker relay never answers: offer WorkSuite Desktop meanwhile
+        if (!this.os || !this.os.available) this.renderDesktopApp($box, live);
+        WorkSuite.osBroker().then(os => {
+            this.os = os;
+            if (!os.available) return;
+
+            const a = os.account;
+            const signedIn = a && a.state === 'signed_in';
+            this.$el.find('.ws-signin').hide();
+            const org = a ? hostOf(a.server) : '';
+            $(continueCard('ws-continue is-primary', signedIn ? (a.name || org) : _lang.wsOsSignIn, org, _lang.wsViaOs))
+                .on('click', () => this.signInOs())
+                .appendTo($box.empty());
+            $('<p class="msg-error ws-os-error" style="display:none"></p>').appendTo($box);
+            if (signedIn && !this.osTried) {
+                this.osTried = true;
+                this.signInOs();
+            }
+        });
+    };
+
+    ControllerWorkSuite.prototype.renderDesktopApp = function ($box, live) {
+        const _lang = utils.Lang;
+        this.$el.find('.ws-signin').show();
         WorkSuite.desktopAccounts().then(list => {
+            if (this.os && this.os.available) return;
             const d = list.find(x => !live.includes(x.server + '|' + x.user.id));
             this.$el.find('.ws-signin').toggleClass('btn--landing', !d).toggleClass('ws-btn-outline', !!d);
             if (!d) return;

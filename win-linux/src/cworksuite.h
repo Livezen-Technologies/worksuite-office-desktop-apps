@@ -27,6 +27,7 @@
 #define CWORKSUITE_H
 
 #include <QString>
+#include <functional>
 
 /*
  * What the start page's WorkSuite section needs from the app (common/loginpage/src/worksuite.js).
@@ -64,6 +65,15 @@ namespace CWorkSuite
      * which drops a link opened after an await. {"req","ok","reason"} out: "no-app" when nothing here
      * opens worksuite:// links */
     QString openLink(const QString& json);
+
+    /* "worksuite:broker", {"method":"Status|GetAccessToken|SignIn","params":{…},"req":"…"}: on WorkSuite OS
+     * (/etc/worksuite/os-release), one request to the OS credentials broker, worksuite-credentials, at
+     * $XDG_RUNTIME_DIR/worksuite/credentials.sock (line JSON, one request per connection; Worksuite-OS
+     * services/credentials). The refresh token never leaves the broker: the page gets an access token only.
+     * Status also carries "device_server", the enrolled organisation's server (the device agent's status.json).
+     * Asynchronous (a SignIn waits for the system browser, up to ten minutes); `reply` gets
+     * {"req","ok","result","expires_at","error"}, error "not_os" anywhere but WorkSuite OS on Linux. */
+    void brokerRequest(const QString& json, std::function<void(const QString&)> reply);
 }
 
 #endif // CWORKSUITE_H
