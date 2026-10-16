@@ -29,6 +29,8 @@
 #include <QFileInfo>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <memory>
+#include <QTimer>
 #include <QRegularExpression>
 #include <QUrl>
 #ifdef Q_OS_WIN
@@ -40,7 +42,9 @@
 # include <windows.h>
 # include <wincred.h>
 #else
+# include <QLocalSocket>
 # include <QProcess>
+# include <unistd.h>
 # include <QProcessEnvironment>
 # include <QSaveFile>
 # include <QStandardPaths>
@@ -285,4 +289,130 @@ QString CWorkSuite::openLink(const QString& json)
 #endif
     }
     return QString::fromUtf8(QJsonDocument(reply).toJson(QJsonDocument::Compact));
+}
+
+namespace {
+    QString compact(const QJsonObject& o) { return QString::fromUtf8(QJsonDocument(o).toJson(QJsonDocument::Compact)); }
+
+#ifndef Q_OS_WIN
+    bool httpsAddress(const QString& s)
+    {
+        const QUrl u(s, QUrl::StrictMode);
+        return u.isValid() && u.scheme() == "https" && !u.host().isEmpty() && u.userInfo().isEmpty();
+    }
+
+    /* The enrolled organisation's server, from the device agent (0644, every user may read it), or "" */
+    QString deviceServer()
+    {
+        QFile file("/run/worksuite-device-agent/status.json");
+        if ( !file.open(QIODevice::ReadOnly) || file.size() > 64 * 1024 )
+            return "";
+        const QJsonObject st = QJsonDocument::fromJson(file.readAll()).object();
+        const QString server = st.value("server").toString();
+        return st.value("managed").toBool() && httpsAddress(server) ? server : "";
+    }
+
+    QString brokerSocketPath()
+    {
+        QString dir = qEnvironmentVariable("XDG_RUNTIME_DIR");
+        if ( dir.isEmpty() )
+            dir = QString("/run/user/%1").arg(getuid());
+        return dir + "/worksuite/credentials.sock";
+    }
+#endif
+}
+
+void CWorkSuite::brokerRequest(const QString& json, std::function<void(const QString&)> reply)
+{
+    const QJsonObject in = QJsonDocument::fromJson(json.toUtf8()).object();
+    const QString req = in.value("req").toString().left(64);
+    QJsonObject out{{"req", req}, {"ok", false}};
+
+#ifdef Q_OS_WIN
+    out["error"] = "not_os";
+    reply(compact(out));
+#else
+    if ( !QFileInfo::exists("/etc/worksuite/os-release") ) {
+        out["error"] = "not_os";
+        return reply(compact(out));
+    }
+
+    // only the three methods, with only their own parameters: the page cannot ask the broker anything else
+    const QString method = in.value("method").toString();
+    const QJsonObject p = in.value("params").toObject();
+    QJsonObject params;
+    int timeout_ms = 15000;
+    if ( method == "Status" ) {
+    } else
+    if ( method == "GetAccessToken" && p.value("account_id").isString() ) {
+        params["account_id"] = p.value("account_id").toString();
+        params["force_refresh"] = p.value("force_refresh").toBool();
+    } else
+    if ( method == "SignIn" && httpsAddress(p.value("server_url").toString()) &&
+            (p.value("mode").toString() == "personal" || p.value("mode").toString() == "enterprise") ) {
+        params["server_url"] = p.value("server_url").toString();
+        params["mode"] = p.value("mode").toString();
+        timeout_ms = 10 * 60 * 1000;    // the person is in the browser
+    } else {
+        out["error"] = "invalid_argument";
+        return reply(compact(out));
+    }
+
+    QLocalSocket * sock = new QLocalSocket;
+    QTimer * timer = new QTimer(sock);
+    auto buffer = std::make_shared<QByteArray>();
+    auto done = std::make_shared<bool>(false);
+    const QString device_server = method == "Status" ? deviceServer() : QString();
+
+    auto finish = [=](QJsonObject r) {
+        if ( *done ) return;
+        *done = true;
+        timer->stop();
+        r["req"] = req;
+        reply(compact(r));
+        sock->abort();
+        sock->deleteLater();
+    };
+
+    timer->setSingleShot(true);
+    QObject::connect(timer, &QTimer::timeout, [=] { finish({{"ok", false}, {"error", "broker_timeout"}}); });
+    QObject::connect(sock, &QLocalSocket::connected, [=] {
+        sock->write(QJsonDocument(QJsonObject{{"method", method}, {"params", params}}).toJson(QJsonDocument::Compact) + "\n");
+    });
+    QObject::connect(sock, &QLocalSocket::readyRead, [=] {
+        buffer->append(sock->readAll());
+        if ( buffer->size() > 64 * 1024 )
+            return finish({{"ok", false}, {"error", "bad_reply"}});
+        const int nl = buffer->indexOf('\n');
+        if ( nl < 0 ) return;
+
+        const QJsonDocument doc = QJsonDocument::fromJson(buffer->left(nl));
+        if ( !doc.isObject() )
+            return finish({{"ok", false}, {"error", "bad_reply"}});
+        const QJsonObject res = doc.object();
+        QJsonObject r;
+        if ( res.contains("error") && !res.value("error").isNull() ) {
+            r["ok"] = false;
+            r["error"] = res.value("error").isString() ? res.value("error").toString() : "broker_error";
+        } else {
+            r["ok"] = true;
+            r["result"] = res.value("result");
+            if ( res.value("expires_at").isDouble() )
+                r["expires_at"] = res.value("expires_at");
+            if ( method == "Status" )
+                r["device_server"] = device_server;
+        }
+        finish(r);
+    });
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+    QObject::connect(sock, &QLocalSocket::errorOccurred, [=](QLocalSocket::LocalSocketError) {
+#else
+    QObject::connect(sock, QOverload<QLocalSocket::LocalSocketError>::of(&QLocalSocket::error), [=](QLocalSocket::LocalSocketError) {
+#endif
+        finish({{"ok", false}, {"error", "broker_unavailable"}});
+    });
+
+    timer->start(timeout_ms);
+    sock->connectToServer(brokerSocketPath());
+#endif
 }

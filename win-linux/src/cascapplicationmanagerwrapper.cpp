@@ -296,6 +296,14 @@ bool CAscApplicationManagerWrapper::processCommonEvent(NSEditorApi::CAscCefMenuE
                 sendCommandTo(SEND_TO_ALL_START_PAGE, cmd, CWorkSuite::openLink(QString::fromStdWString(pData->get_Param())).toStdWString());
             return true;
         } else
+        if ( cmd.compare(L"worksuite:broker") == 0 ) {
+            // WorkSuite OS: the start page signs in through the OS credentials broker; the answer comes later
+            if ( m_pMainWindow && event->get_SenderId() == m_pMainWindow->startPanelId() )
+                CWorkSuite::brokerRequest(QString::fromStdWString(pData->get_Param()), [](const QString& answer) {
+                    sendCommandTo(SEND_TO_ALL_START_PAGE, L"worksuite:broker", answer.toStdWString());
+                });
+            return true;
+        } else
         if ( cmd.compare(L"worksuite:app") == 0 ) {
             // the start page's WorkSuite item in the sidebar: WorkSuite Desktop, or WorkSuite in the browser
             if ( m_pMainWindow && event->get_SenderId() == m_pMainWindow->startPanelId() )
