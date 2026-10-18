@@ -22,6 +22,7 @@ import { FileDropZone } from "./components/FileDropZone.jsx";
 import { aichat, openFullAIPanel, openSidePanel } from "@/stores/aichat.js";
 import { command } from "@/sdk/bridge.js";
 import "@/styles/components/home.css";
+import WorkSuiteSection from "@/worksuite/WorkSuiteSection.jsx";
 import { sendChatRecentsChanged, sendFileStatusToChat, sendFileToChat, sendPluginVisibility } from "@/services/ai-panel.js";
 
 const toArray = (v) => (Array.isArray(v) ? v : []);
@@ -212,6 +213,8 @@ export default function Index() {
       <section class="new-doc-section">
         <DocTypeGrid />
       </section>
+
+      <WorkSuiteSection />
 
       <Show when={loaded() && !hasFiles()}>
         <section class="file-drop-section">
