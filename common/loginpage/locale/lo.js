@@ -1,6 +1,6 @@
 export default {
-    welWelcome: 'ຍິນດີຕ້ອນຮັບເຂົ້າສູ່ ONLYOFFICE!',
-    welDescr: 'ໃຊ້ໄດ້ໂດຍບໍ່ມີເນັດ ຫຼືເຊື່ອມຕໍ່ເຂົ້າຄຣາວຂອງ: ONLYOFFICE, ownCloud, Nextcloud.',
+    welWelcome: 'ຍິນດີຕ້ອນຮັບເຂົ້າສູ່ WorkSuite!',
+    welDescr: 'ໃຊ້ໄດ້ໂດຍບໍ່ມີເນັດ ຫຼືເຊື່ອມຕໍ່ເຂົ້າຄຣາວຂອງ: WorkSuite, ownCloud, Nextcloud.',
     welNeedHelp: 'ຕ້ອງການຄວາມຊ່ວຍເຫຼືອບໍ? ເຂົ້າເບິ່ງ $1 ຂອງພວກເຮົາ.',
     textHelpCenter: 'ສູນຊ່ວຍເຫຼືອ',
     btnConnect: 'ເຊື່ອມຕໍ່ເລີຍ',
@@ -80,7 +80,7 @@ export default {
     emptySlide2Title: 'ບິ່ງຫຼືຟື້ນຟູລຸ້ນກ່ອນ',
     emptySlide2Text: 'ຟື້ນຟູຫຼືພຽງແຕ່ເບິ່ງສະບັບກ່ອນຂອງເອກະສານຂອງທ່ານ, ຕິດຕາມການປ່ຽນແປງແລະຜູ້ຂຽນຂອງພວກເຂົາ.',
     emptySlide3Title: 'ເກັບໄວ້ໃນ cloud',
-    emptySlide3Text: 'ເກັບຮັກສາເອກະສານຂອງທ່ານໃນ ONLYOFFICE cloud ແລະເຂົ້າເຖິງໄດ້ທຸກເວລາ, ຈາກທຸກບ່ອນ.',
+    emptySlide3Text: 'ເກັບຮັກສາເອກະສານຂອງທ່ານໃນ WorkSuite cloud ແລະເຂົ້າເຖິງໄດ້ທຸກເວລາ, ຈາກທຸກບ່ອນ.',
     settUserName: 'ຊື່ຜູ້ໃຊ້',
     settResetUserName: 'ຕັ້ງຄ່າເປັນຄ່າເລີ່ມຕົ້ນ',
     settOpenMode: 'ເປີດເອກະສານໃນຮູບແບບການສະແດງຕົວຢ່າງ',
@@ -153,8 +153,8 @@ export default {
     settingsGpuUseModeDescr: 'ປັບປຸງປະສິດທິພາບໃນອຸປະກອນສ່ວນໃຫຍ່. ປິດໃຊ້ງານຖ້າທ່ານພົບບັນຫາການສະແດງຜົນ.',
     settingsEnableAI: 'ເປີດໃຊ້ງານຄຸນສົມບັດ AI',
     settingsEnableAIDescr: 'ເປີດໃຊ້ AI ໃນແອັບພລິເຄຊັນເພື່ອເພີ່ມໂມເດລ ແລະ ໃຊ້ຟັງຊັນທີ່ຂັບເຄື່ອນດ້ວຍ AI',
-    settRemoveAddon: 'ONLYOFFICE AI Tools',
-    descrRemoveAddon: 'ONLYOFFICE AI Tools: AI ໃນທຸກບັນນາທິການ, ແບບຟອມສະຫຼາດ, ຜູ້ໃຫ້ບໍລິການກຳນົດເອງ, PDF ຂັ້ນສູງ',
+    settRemoveAddon: 'AI Tools',
+    descrRemoveAddon: 'AI Tools: AI ໃນທຸກບັນນາທິການ, ແບບຟອມສະຫຼາດ, ຜູ້ໃຫ້ບໍລິການກຳນົດເອງ, PDF ຂັ້ນສູງ',
     strLicensedUnder: 'ໄດ້ຮັບໃບອະນຸຍາດພາຍໃຕ້',
     tplNoInternet: 'ແມ່ແບບອອນລາຍບໍ່ສາມາດໃຊ້ງານໄດ້ເນື່ອງຈາກບັນຫາການເຊື່ອມຕໍ່ອິນເຕີເນັດ. ທ່ານສາມາດສ້າງເອກະສານໃໝ່ໄດ້ໂດຍໃຊ້ຕົວເລືອກຂ້າງເທິງ.',
 }
