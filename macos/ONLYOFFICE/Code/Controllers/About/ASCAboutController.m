@@ -48,7 +48,7 @@
 #import "ASCSharedSettings.h"
 #import "ASCLicenseController.h"
 
-static NSString * const kOfficialWebsiteURL = @"https://www.onlyoffice.com";
+static NSString * const kOfficialWebsiteURL = @"https://worksuitecloud.com";
 static NSString * const kBslLicenseURL = @"https://docspace.onlyoffice.com/s/b_rVPpqtF-pqKBr";
 
 @interface ASCAboutController () {
@@ -78,7 +78,7 @@ static NSString * const kBslLicenseURL = @"https://docspace.onlyoffice.com/s/b_r
     NSDictionary * infoDictionary = [[NSBundle mainBundle] infoDictionary];
     NSDictionary * localizedInfoDictionary = [[NSBundle mainBundle] localizedInfoDictionary];
     
-    NSString * locProductName = [NSString stringWithFormat:@"%@ %@", [ASCHelper appName], @"Desktop"];
+    NSString * locProductName = [ASCHelper appName];
     NSString * locCopyright     = localizedInfoDictionary[@"NSHumanReadableCopyright"];
 
     locCopyright = locCopyright ? locCopyright : infoDictionary[@"NSHumanReadableCopyright"];

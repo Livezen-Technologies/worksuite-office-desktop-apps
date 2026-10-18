@@ -2,5 +2,5 @@
 "CFBundleName" = "WorkSuite Office";
 
 /* Copyright (human-readable) */
-"NSHumanReadableCopyright" = "Авторски права © 2026 Ascensio System SIA. Всички права запазени.";
+"NSHumanReadableCopyright" = "Copyright © 2026 Ascensio System SIA and contributors. WorkSuite Office built by Livezen Technologies LLC.";
 
