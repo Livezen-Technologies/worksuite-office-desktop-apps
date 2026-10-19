@@ -1,17 +1,17 @@
-; -- ONLYOFFICE Desktop Editors Defines --
+; -- WorkSuite Office Defines --
 
-#define sCompanyName                    "ONLYOFFICE"
+#define sCompanyName                    "WorkSuite"
 #define sIntCompanyName                 sCompanyName
-#define sProductName                    "Desktop Editors"
+#define sProductName                    "Office"
 #define sIntProductName                 "DesktopEditors"
-#define sAppName                        str(sCompanyName)
+#define sAppName                        str(sCompanyName + " " + sProductName)
 #define sPackageName                    str(sIntCompanyName + "-" + sIntProductName)
-#define sAppPublisher                   "Ascensio System SIA"
-#define sAppPublisherURL                "https://www.onlyoffice.com/"
-#define sAppSupportURL                  "https://www.onlyoffice.com/support.aspx"
-#define sAppCopyright                   str("© " + sAppPublisher + " " + GetDateTimeString("yyyy",,) + ". All rights reserved.")
-#define sAppIconName                    "ONLYOFFICE"
-#define sOldAppIconName                 "ONLYOFFICE Editors"
+#define sAppPublisher                   "Livezen Technologies LLC"
+#define sAppPublisherURL                "https://worksuitecloud.com/"
+#define sAppSupportURL                  "https://worksuitecloud.com/"
+#define sAppCopyright                   str("© Ascensio System SIA and contributors, " + sAppPublisher + " " + GetDateTimeString("yyyy",,))
+#define sAppIconName                    "WorkSuite Office"
+#define sOldAppIconName                 "WorkSuite Editors"
 #define sAppProtocol                    'oo-office'
 #define sWorkSuiteProtocol              'worksuiteoffice'
 
@@ -26,11 +26,11 @@
 #define iconsExe                        "DesktopEditors.exe"
 #define NAME_EXE_OUT                    "editors.exe"
 
-#define ASSC_APP_NAME                   "ONLYOFFICE"
+#define ASSC_APP_NAME                   "WorkSuite Office"
 #define ASCC_REG_PREFIX                 "ASC"
-#define ASCC_REG_REGISTERED_APP_NAME    "ONLYOFFICE Editors"
+#define ASCC_REG_REGISTERED_APP_NAME    "WorkSuite Office"
 #define ASSOC_PROG_ID                   "ASC.Editors"
-#define ASSOC_APP_FRIENDLY_NAME         "ONLYOFFICE Editors"
+#define ASSOC_APP_FRIENDLY_NAME         "WorkSuite Office"
 
 #dim FA_ARR[61] { \
   "csv", \

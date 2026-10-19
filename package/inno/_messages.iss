@@ -1152,10 +1152,10 @@ ur.extMSSlideshow =مائیکروسافٹ پاورپوائنٹ سلائیڈ شو
 #if Ver >= EncodeVer(6,1,1)
 #endif
 
-;et.extDOCXF =ONLYOFFICE dokumendi vormi mall
-;lt.extDOCXF =ONLYOFFICE Anketos Šablonas
+;et.extDOCXF =WorkSuite dokumendi vormi mall
+;lt.extDOCXF =WorkSuite Anketos Šablonas
 ;hi.extDOCXF =ओनलीऑफिस दस्तावेज़ फॉर्म टेम्पलेट
-;ga_IE.extDOCXF =Teimpléad Foirm ONLYOFFICE
+;ga_IE.extDOCXF =Teimpléad Foirm WorkSuite
 #if Ver >= EncodeVer(6,1,1)
 #endif
 
