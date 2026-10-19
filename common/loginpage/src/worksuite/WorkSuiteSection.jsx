@@ -5,7 +5,7 @@
  * "Sign in to WorkSuite". See core.js for how signing in and opening work.
  */
 import { For, Show, createSignal, onCleanup, onMount } from "solid-js";
-import { Button, ContextMenu, DropdownMenu } from "@/components";
+import { ContextMenu, DropdownMenu } from "@/components";
 import { usePngIcons } from "@/services/display";
 import { L } from "./lang.js";
 import "./core.js";
@@ -334,7 +334,7 @@ export default function WorkSuiteSection() {
                               org={os().account ? hostOf(os().account.server) : ""} via={L.wsViaOs} onClick={signInOs} />
               </Show>
               <Show when={!(os() && os().available)}>
-                <Button variant={desktop() ? "outline" : "accent"} onClick={() => signIn()}>{L.wsSignInTitle}</Button>
+                <button class="ws-btn" classList={{ "ws-btn-primary": !desktop(), "ws-btn-secondary": !!desktop() }} onClick={() => signIn()}>{L.wsSignInTitle}</button>
               </Show>
             </div>
             <Show when={osError()}><p class="ws-error">{osError()}</p></Show>
