@@ -192,8 +192,9 @@ static NSString * const kBslLicenseURL = @"https://docspace.onlyoffice.com/s/b_r
 }
 
 - (void)applyAiToolsVisibility {
-    [self.aiToolsView setHidden:_aiToolsHidden];
-    [self.aiToolsSeparator setHidden:_aiToolsHidden];
+    // WorkSuite: the ONLYOFFICE AI Tools add-on row (commercial licence line) is never shown
+    [self.aiToolsView setHidden:YES];
+    [self.aiToolsSeparator setHidden:YES];
 
     [self adjustWindowHeight];
 }
