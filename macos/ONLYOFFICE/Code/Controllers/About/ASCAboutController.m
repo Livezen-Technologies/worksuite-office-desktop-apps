@@ -115,6 +115,8 @@ static NSString * const kBslLicenseURL = @"https://docspace.onlyoffice.com/s/b_r
         [self applyLinkStyleToButton:self.licenseButton];
         [self applyLinkStyleToButton:self.aiLicenseButton];
         [self applyLinkStyleToButton:self.websiteButton];
+        // WorkSuite: no link to onlyoffice.com
+        [self.websiteButton setHidden:YES];
         
 #ifdef _MAS
         [self.licenseRow setHidden:YES];
