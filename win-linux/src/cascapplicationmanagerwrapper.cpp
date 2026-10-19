@@ -63,6 +63,7 @@
 #include "cfilechecker.h"
 #include "OfficeFileFormats.h"
 #include "cproviders.h"
+#include "cworksuite.h"
 #ifndef __OS_WIN_XP
 # include "components/cnotification.h"
 #endif
@@ -337,6 +338,35 @@ bool CAscApplicationManagerWrapper::processCommonEvent(NSEditorApi::CAscCefMenuE
                     sendCommandTo(ptr, L"style:change", Utils::stringifyJson(json).toStdWString());
                 }
             }
+            return true;
+        } else
+        if ( cmd.compare(L"worksuite:secret") == 0 || cmd.compare(L"worksuite:desktop") == 0 ) {
+            // WorkSuite sign-ins, for the start page only: never for a web page in a tab
+            if ( m_pMainWindow && event->get_SenderId() == m_pMainWindow->startPanelId() ) {
+                const QString answer = cmd.compare(L"worksuite:secret") == 0 ?
+                            CWorkSuite::handleSecret(QString::fromStdWString(pData->get_Param())) : CWorkSuite::desktopAccounts();
+                sendCommandTo(SEND_TO_ALL_START_PAGE, cmd, answer.toStdWString());
+            }
+            return true;
+        } else
+        if ( cmd.compare(L"worksuite:open") == 0 ) {
+            // a sign-in from the start page, in the browser or WorkSuite Desktop; the page waits for the answer
+            if ( m_pMainWindow && event->get_SenderId() == m_pMainWindow->startPanelId() )
+                sendCommandTo(SEND_TO_ALL_START_PAGE, cmd, CWorkSuite::openLink(QString::fromStdWString(pData->get_Param())).toStdWString());
+            return true;
+        } else
+        if ( cmd.compare(L"worksuite:broker") == 0 ) {
+            // WorkSuite OS: the start page signs in through the OS credentials broker; the answer comes later
+            if ( m_pMainWindow && event->get_SenderId() == m_pMainWindow->startPanelId() )
+                CWorkSuite::brokerRequest(QString::fromStdWString(pData->get_Param()), [](const QString& answer) {
+                    sendCommandTo(SEND_TO_ALL_START_PAGE, L"worksuite:broker", answer.toStdWString());
+                });
+            return true;
+        } else
+        if ( cmd.compare(L"worksuite:app") == 0 ) {
+            // the start page's WorkSuite item in the sidebar: WorkSuite Desktop, or WorkSuite in the browser
+            if ( m_pMainWindow && event->get_SenderId() == m_pMainWindow->startPanelId() )
+                CWorkSuite::openApp(QString::fromStdWString(pData->get_Param()));
             return true;
         } else
         if ( cmd.compare(L"provider:list") == 0 ) {
@@ -1185,6 +1215,11 @@ void CAscApplicationManagerWrapper::handleInputCmd(const std::vector<wstring>& v
 
             continue;
         } else
+        if ( arg.rfind(L"" WORKSUITE_PROTOCOL ":", 0) == 0 ) {
+            // a sign-in coming back from the browser, or "Open in WorkSuite Office"
+            vec_window_actions.push_back(arg);
+            continue;
+        } else
         if ( arg.rfind(app_action_open, 0) == 0 ) {
             std::wstring deep_link = arg;
             Utils::replaceAll(deep_link, L"%7C", L"|");
@@ -1308,6 +1343,13 @@ void CAscApplicationManagerWrapper::handleInputCmd(const std::vector<wstring>& v
 
 void CAscApplicationManagerWrapper::handleDeeplinkActions(const std::vector<std::wstring>& actions)
 {
+    for (const auto& a: actions) {
+        if ( a.rfind(L"" WORKSUITE_PROTOCOL ":", 0) == 0 ) {
+            gotoMainWindow();
+            m_pMainWindow->handleWindowAction(L"worksuite|" + a);
+        }
+    }
+
     std::wstring app_scheme = GetExternalSchemeName();
     if ( !app_scheme.empty() ) {
         const std::wstring app_action_panel = app_scheme + L"//action|panel|";

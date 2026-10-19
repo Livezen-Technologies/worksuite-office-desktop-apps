@@ -322,6 +322,12 @@ Root: HKLM; Subkey: "Software\Classes\.{#iExt}\{#iProgID}\ShellNew"; ValueType: 
 #endsub
 #for {i = 0; i < DimOf(SN_ARR); i++} LoopShellNew
 
+; WorkSuite sign-in coming back from the browser, and "Open in WorkSuite Office" links
+Root: HKLM; Subkey: "SOFTWARE\Classes\{#sWorkSuiteProtocol}"; ValueType: "string"; ValueData: "URL:{#sAppName} WorkSuite Protocol"; Flags: uninsdeletekey;
+Root: HKLM; Subkey: "SOFTWARE\Classes\{#sWorkSuiteProtocol}"; ValueType: "string"; ValueName: "URL Protocol"; ValueData: "";
+Root: HKLM; Subkey: "SOFTWARE\Classes\{#sWorkSuiteProtocol}\DefaultIcon"; ValueType: "string"; ValueData: "{app}\{#iconsExe},0";
+Root: HKLM; Subkey: "SOFTWARE\Classes\{#sWorkSuiteProtocol}\Shell\Open\Command"; ValueType: "string"; ValueData: """{app}\{#iconsExe}"" ""%1""";
+
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}\..\{#UPD_PATH}";
 Type: files; Name: "{app}\svcrestart.bat";

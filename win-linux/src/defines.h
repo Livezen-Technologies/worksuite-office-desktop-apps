@@ -42,21 +42,21 @@
 #define reCmdLang           "--(keep)?lang[:|=](\\w{2,5})"
 
 #define APP_NAME "DesktopEditors"
-#define APP_TITLE "ONLYOFFICE"
+#define APP_TITLE "WorkSuite Office"
 #ifdef __linux
-# define APP_DATA_PATH "/onlyoffice/desktopeditors"
-# define REG_GROUP_KEY "onlyoffice"
+# define APP_DATA_PATH "/worksuite/office"
+# define REG_GROUP_KEY "worksuite"
 # define APP_MUTEX_NAME "asc:editors"
-# define DESKTOP_FILE_NAME "onlyoffice-desktopeditors"
+# define DESKTOP_FILE_NAME "worksuite-office"
 #else
-# define APP_DATA_PATH "/ONLYOFFICE/DesktopEditors"
-# define APP_REG_NAME  "ONLYOFFICE"
-# define REG_GROUP_KEY "ONLYOFFICE"
-# define REG_UNINST_KEY "ONLYOFFICE Desktop Editors"
+# define APP_DATA_PATH "/WorkSuite/DesktopEditors"
+# define APP_REG_NAME  "WorkSuite"
+# define REG_GROUP_KEY "WorkSuite"
+# define REG_UNINST_KEY "WorkSuite Office"
 # define APP_MUTEX_NAME "TEAMLAB"
 #endif
 
-#define WINDOW_NAME "ONLYOFFICE"
+#define WINDOW_NAME "WorkSuite Office"
 #define WINDOW_TITLE WINDOW_NAME
 #define WINDOW_CLASS_NAME L"DocEditorsWindowClass"
 #define WINDOW_EDITOR_CLASS_NAME L"SingleWindowClass"
@@ -64,12 +64,14 @@
 #define APP_DEFAULT_LOCALE "en-US"
 #define APP_DEFAULT_SYSTEM_LOCALE 1
 #define APP_USER_MODEL_ID "ASC.Documents.5"
-#define APP_SIMPLE_WINDOW_TITLE "ONLYOFFICE Editor"
+#define APP_SIMPLE_WINDOW_TITLE "WorkSuite Office"
 #define APP_PROTOCOL "oo-office"
-#define FILE_PREFIX "onlyoffice_"
+#define FILE_PREFIX "worksuite_"
 #define HTML_SCHEME "onlyoffice://plugin/"
+#define WORKSUITE_PROTOCOL "worksuiteoffice"
 
-#define URL_SITE                "http://www.onlyoffice.com"
+#define URL_SITE                "https://worksuitecloud.com"
+#define URL_SOURCE_CODE         "https://github.com/Livezen-Technologies/worksuite-office"
 #define URL_SIGNUP              "https://onlyoffice.com/registration.aspx?desktop=true"
 
 #define GET_REGISTRY_USER(variable) \

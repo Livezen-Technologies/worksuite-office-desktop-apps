@@ -13,6 +13,7 @@
 #define sAppIconName                    "ONLYOFFICE"
 #define sOldAppIconName                 "ONLYOFFICE Editors"
 #define sAppProtocol                    'oo-office'
+#define sWorkSuiteProtocol              'worksuiteoffice'
 
 #define APP_PATH                        str(sIntCompanyName + "\" + sIntProductName)
 #define UPD_PATH                        str(sIntProductName + "Updates")
