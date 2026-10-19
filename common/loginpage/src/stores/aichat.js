@@ -7,7 +7,7 @@ export const AI_PANEL_MIN_WIDTH = 300;
 export const AI_CONTENT_MIN_WIDTH = 320;
 
 const defaultAichat = {
-  open: true,
+  open: false, // WorkSuite: the AI side panel starts closed; AI Chat in the sidebar still opens it
   width: AI_PANEL_DEFAULT_WIDTH,
   url: "",
   available: false,
