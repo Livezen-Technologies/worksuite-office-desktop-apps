@@ -224,9 +224,9 @@ QString CWorkSuite::handleSecret(const QString& json)
 QString CWorkSuite::desktopAccounts()
 {
 #ifdef Q_OS_WIN
-    const QString app_data = qEnvironmentVariable("APPDATA");
+    const QString app_data = QString::fromLocal8Bit(qgetenv("APPDATA"));
 #else
-    QString app_data = qEnvironmentVariable("XDG_CONFIG_HOME");
+    QString app_data = QString::fromLocal8Bit(qgetenv("XDG_CONFIG_HOME"));
     if ( app_data.isEmpty() )
         app_data = QDir::homePath() + "/.config";
 #endif
@@ -278,14 +278,13 @@ QString CWorkSuite::openLink(const QString& json)
 #ifdef Q_OS_WIN
         reply["ok"] = QDesktopServices::openUrl(QUrl(link));
 #else
-        // xdg-open with the address as its argument: no shell (Utils::openUrl uses one), not the app's libraries
-        QProcess xdg;
-        QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-        env.remove("LD_LIBRARY_PATH");
-        xdg.setProcessEnvironment(env);
-        xdg.setProgram("xdg-open");
-        xdg.setArguments({link});
-        reply["ok"] = xdg.startDetached();
+        // xdg-open with the address as its argument: no shell (Utils::openUrl uses one), not the app's libraries.
+        // Qt 5.9 (the Linux build) has no QProcess::startDetached() with an environment, so the variable is
+        // taken out of ours for the call and put back.
+        const QByteArray ld = qgetenv("LD_LIBRARY_PATH");
+        qunsetenv("LD_LIBRARY_PATH");
+        reply["ok"] = QProcess::startDetached("xdg-open", QStringList{link});
+        if ( !ld.isEmpty() ) qputenv("LD_LIBRARY_PATH", ld);
 #endif
     }
     return QString::fromUtf8(QJsonDocument(reply).toJson(QJsonDocument::Compact));
@@ -314,7 +313,7 @@ namespace {
 
     QString brokerSocketPath()
     {
-        QString dir = qEnvironmentVariable("XDG_RUNTIME_DIR");
+        QString dir = QString::fromLocal8Bit(qgetenv("XDG_RUNTIME_DIR"));
         if ( dir.isEmpty() )
             dir = QString("/run/user/%1").arg(getuid());
         return dir + "/worksuite/credentials.sock";
