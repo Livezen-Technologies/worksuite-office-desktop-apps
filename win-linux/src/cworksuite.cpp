@@ -37,6 +37,13 @@
 # include <QDesktopServices>
 #endif
 #include "utils.h"
+#include <QSettings>
+#include <QJsonArray>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QNetworkRequest>
+#include <QHttpMultiPart>
+#include <QStandardPaths>
 
 #ifdef Q_OS_WIN
 # include <windows.h>
@@ -48,6 +55,7 @@
 # include <QProcessEnvironment>
 # include <QSaveFile>
 # include <QStandardPaths>
+# include <dlfcn.h>
 #endif
 
 #define SECRET_SERVICE "WorkSuite Office"
@@ -76,6 +84,10 @@ namespace {
 
     bool writeStore(const QJsonObject& obj)
     {
+        if ( obj.isEmpty() ) {
+            // nothing left in the file: no file (AUTH-13, after moving its sign-ins to the Secret Service)
+            return !QFile::exists(storePath()) || QFile::remove(storePath());
+        }
         QDir().mkpath(Utils::getAppCommonPath());
 
         QSaveFile file(storePath());
@@ -85,6 +97,125 @@ namespace {
         file.setPermissions(QFileDevice::ReadOwner | QFileDevice::WriteOwner);
         file.write(QJsonDocument(obj).toJson(QJsonDocument::Compact));
         return file.commit();
+    }
+
+    /*
+     * The Secret Service (AUTH-13, G-04): GNOME Keyring, KWallet (5.97+) or KeePassXC, through
+     * libsecret. libsecret is opened at run time, not linked: build_tools' Linux dependencies do
+     * not carry its headers, and a computer without it still runs the app (the file above is then
+     * the last resort, and the start page says so). Only the few symbols below are used; their
+     * structures are libsecret's stable ABI (secret-schema.h).
+     */
+    namespace SecretService {
+        struct GErrorAbi { quint32 domain; int code; char * message; };
+        struct AttributeAbi { const char * name; int type; };
+        struct SchemaAbi {
+            const char * name; int flags; AttributeAbi attributes[32];
+            int reserved; void * reserved1, * reserved2, * reserved3, * reserved4, * reserved5, * reserved6, * reserved7;
+        };
+
+        typedef int (*StoreFn)(const SchemaAbi *, const char *, const char *, const char *, void *, GErrorAbi **, ...);
+        typedef char * (*LookupFn)(const SchemaAbi *, void *, GErrorAbi **, ...);
+        typedef int (*ClearFn)(const SchemaAbi *, void *, GErrorAbi **, ...);
+        typedef void (*FreeFn)(char *);
+        typedef void (*ErrorFreeFn)(GErrorAbi *);
+
+        struct Api {
+            StoreFn store = nullptr; LookupFn lookup = nullptr; ClearFn clear = nullptr;
+            FreeFn free = nullptr; ErrorFreeFn error_free = nullptr;
+            bool loaded = false;
+        };
+
+        const SchemaAbi * schema()
+        {
+            static const SchemaAbi s = { "lk.worksuite.Office.SignIn", 0 /* SECRET_SCHEMA_NONE */,
+                                         { {"key", 0 /* SECRET_SCHEMA_ATTRIBUTE_STRING */}, {nullptr, 0} },
+                                         0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
+            return &s;
+        }
+
+        const Api& api()
+        {
+            static Api a = [] {
+                Api r;
+                void * lib = dlopen("libsecret-1.so.0", RTLD_NOW | RTLD_LOCAL);
+                if ( !lib ) return r;
+                r.store = reinterpret_cast<StoreFn>(dlsym(lib, "secret_password_store_sync"));
+                r.lookup = reinterpret_cast<LookupFn>(dlsym(lib, "secret_password_lookup_sync"));
+                r.clear = reinterpret_cast<ClearFn>(dlsym(lib, "secret_password_clear_sync"));
+                r.free = reinterpret_cast<FreeFn>(dlsym(lib, "secret_password_free"));
+                r.error_free = reinterpret_cast<ErrorFreeFn>(dlsym(lib, "g_error_free"));
+                r.loaded = r.store && r.lookup && r.clear && r.free && r.error_free;
+                return r;
+            }();
+            return a;
+        }
+
+        enum Result { Ok, NotFound, Unavailable };
+
+        /* the service failed (none running, no D-Bus session): remembered, so the file is used without asking again */
+        bool s_failed = false;
+
+        bool failed(GErrorAbi * error)
+        {
+            if ( !error ) return false;
+            api().error_free(error);
+            s_failed = true;
+            return true;
+        }
+
+        bool usable() { return api().loaded && !s_failed; }
+
+        Result lookup(const QString& key, QString& value)
+        {
+            if ( !usable() ) return Unavailable;
+            GErrorAbi * error = nullptr;
+            const QByteArray k = key.toUtf8();
+            char * v = api().lookup(schema(), nullptr, &error, "key", k.constData(), static_cast<char *>(nullptr));
+            if ( failed(error) ) return Unavailable;
+            if ( !v ) return NotFound;
+            value = QString::fromUtf8(v);
+            api().free(v);
+            return Ok;
+        }
+
+        bool store(const QString& key, const QString& value)
+        {
+            if ( !usable() ) return false;
+            GErrorAbi * error = nullptr;
+            const QByteArray k = key.toUtf8(), v = value.toUtf8();
+            const QByteArray label = ("WorkSuite Office sign-in (" + key.section('|', 0, 0).mid(QString("worksuite:").size()) + ")").toUtf8();
+            const int ok = api().store(schema(), "default", label.constData(), v.constData(), nullptr, &error,
+                                       "key", k.constData(), static_cast<char *>(nullptr));
+            return !failed(error) && ok;
+        }
+
+        Result clear(const QString& key)
+        {
+            if ( !usable() ) return Unavailable;
+            GErrorAbi * error = nullptr;
+            const QByteArray k = key.toUtf8();
+            const int removed = api().clear(schema(), nullptr, &error, "key", k.constData(), static_cast<char *>(nullptr));
+            if ( failed(error) ) return Unavailable;
+            return removed ? Ok : NotFound;
+        }
+
+        /* Once per run: the sign-ins an older version kept in the file go into the Secret Service, and the file goes */
+        void migrateFile()
+        {
+            static bool done = false;
+            if ( done || !usable() ) return;
+            done = true;
+
+            QJsonObject file = readStore();
+            if ( file.isEmpty() ) return;
+            for ( const QString& key : file.keys() ) {
+                if ( validKey(key) && store(key, file.value(key).toString()) )
+                    file.remove(key);
+                else if ( !usable() ) break;
+            }
+            writeStore(file);
+        }
     }
 #else
     std::wstring targetName(const QString& key)
@@ -160,6 +291,13 @@ bool CWorkSuite::setSecret(const QString& key, const QString& value)
 
     return CredWriteW(&cred, 0) == TRUE;
 #else
+    SecretService::migrateFile();
+    if ( SecretService::store(key, value) ) {
+        QJsonObject file = readStore();
+        if ( file.contains(key) ) { file.remove(key); writeStore(file); }
+        return true;
+    }
+    // last resort, when no Secret Service runs: the user-only file; the start page warns (handleSecret's "store")
     QJsonObject store = readStore();
     store[key] = value;
     return writeStore(store);
@@ -180,7 +318,18 @@ QString CWorkSuite::secret(const QString& key)
     CredFree(cred);
     return value;
 #else
-    return readStore().value(key).toString();
+    SecretService::migrateFile();
+    QString value;
+    if ( SecretService::lookup(key, value) == SecretService::Ok )
+        return value;
+
+    value = readStore().value(key).toString();
+    if ( !value.isEmpty() && SecretService::store(key, value) ) {
+        QJsonObject file = readStore();
+        file.remove(key);
+        writeStore(file);
+    }
+    return value;
 #endif
 }
 
@@ -192,6 +341,7 @@ bool CWorkSuite::removeSecret(const QString& key)
     std::wstring target = targetName(key);
     return CredDeleteW(target.c_str(), CRED_TYPE_GENERIC, 0) == TRUE || GetLastError() == ERROR_NOT_FOUND;
 #else
+    SecretService::clear(key);
     QJsonObject store = readStore();
     if ( !store.contains(key) ) return true;
     store.remove(key);
@@ -217,6 +367,13 @@ QString CWorkSuite::handleSecret(const QString& json)
     if ( op == "delete" ) {
         out["ok"] = removeSecret(key);
     }
+
+#ifdef Q_OS_WIN
+    out["store"] = "os";
+#else
+    // "file" only while sign-ins are in the user-only file (no Secret Service): the start page warns
+    out["store"] = SecretService::usable() ? "secret-service" : "file";
+#endif
 
     return QString::fromUtf8(QJsonDocument(out).toJson(QJsonDocument::Compact));
 }
@@ -288,6 +445,26 @@ QString CWorkSuite::openLink(const QString& json)
 #endif
     }
     return QString::fromUtf8(QJsonDocument(reply).toJson(QJsonDocument::Compact));
+}
+
+QString CWorkSuite::shareRequest(const QString& tabUrl, const QString& json)
+{
+    const QUrl tab(tabUrl);
+    static const QRegularExpression host_re("^[A-Za-z0-9.-]{1,253}$");
+    if ( !tab.isValid() || tab.scheme() != "https" || !tab.userInfo().isEmpty() || !host_re.match(tab.host(QUrl::FullyEncoded)).hasMatch() )
+        return "";
+
+    const QJsonValue v = QJsonDocument::fromJson(json.toUtf8()).object().value("file");
+    const QString file = v.isDouble() ? QString::number(qint64(v.toDouble())) : v.toString();
+    static const QRegularExpression id_re("^[0-9]{1,18}$");
+    if ( !id_re.match(file).hasMatch() )
+        return "";
+
+    QString server = "https://" + tab.host(QUrl::FullyEncoded).toLower();
+    if ( tab.port() > 0 && tab.port() != 443 )
+        server += ":" + QString::number(tab.port());
+    const QJsonObject out{{"server", server}, {"file", file}};
+    return QString::fromUtf8(QJsonDocument(out).toJson(QJsonDocument::Compact));
 }
 
 namespace {
@@ -414,4 +591,126 @@ void CWorkSuite::brokerRequest(const QString& json, std::function<void(const QSt
     timer->start(timeout_ms);
     sock->connectToServer(brokerSocketPath());
 #endif
+}
+
+/* ---- ADM-01: the organisation policy ------------------------------------ */
+
+namespace {
+    const char * const POLICY_KEYS[] = {"organization", "server", "lockServer", "allowOtherClouds",
+                                        "updateChannel", "updateAuto", "usageReports", "aiFunctions"};
+
+    QJsonObject readPolicy(QString& source)
+    {
+        QJsonObject out;
+#ifdef Q_OS_WIN
+        QSettings reg("HKEY_LOCAL_MACHINE\\Software\\Policies\\WorkSuite\\Office", QSettings::NativeFormat);
+        for (const char * key : POLICY_KEYS) {
+            const QVariant v = reg.value(key);
+            if ( !v.isValid() || v.toString().trimmed().isEmpty() ) continue;
+            out[key] = v.type() == QVariant::String ? QJsonValue(v.toString().trimmed()) : QJsonValue(v.toInt());
+        }
+        source = "registry";
+#else
+        QFile file("/etc/worksuite-office/policy.json");
+        if ( file.open(QIODevice::ReadOnly) && file.size() < 64 * 1024 ) {
+            const QJsonObject in = QJsonDocument::fromJson(file.readAll()).object();
+            for (const char * key : POLICY_KEYS) {
+                const QJsonValue v = in.value(key);
+                if ( v.isBool() || v.isDouble() || (v.isString() && !v.toString().trimmed().isEmpty()) )
+                    out[key] = v;
+            }
+        }
+        source = "file";
+#endif
+        return out;
+    }
+}
+
+QJsonObject CWorkSuite::policy()
+{
+    QString source;
+    return readPolicy(source);
+}
+
+bool CWorkSuite::policyBool(const QJsonValue& v)
+{
+    if ( v.isBool() ) return v.toBool();
+    if ( v.isDouble() ) return v.toInt() != 0;
+    const QString s = v.toString().trimmed().toLower();
+    return s == "1" || s == "true" || s == "yes" || s == "on";
+}
+
+QString CWorkSuite::policyAnswer()
+{
+    QString source;
+    const QJsonObject p = readPolicy(source);
+    QJsonObject out{{"managed", !p.isEmpty()}, {"source", source}, {"policy", p}};
+    return QString::fromUtf8(QJsonDocument(out).toJson(QJsonDocument::Compact));
+}
+
+/* ---- DOC-07: offline working copies back to Drive ------------------------ */
+
+QString CWorkSuite::offlineFolder()
+{
+    return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/offline";
+}
+
+void CWorkSuite::upload(const QString& json, std::function<void(const QString&)> reply)
+{
+    const QJsonObject in = QJsonDocument::fromJson(json.toUtf8()).object();
+    const QString req = in.value("req").toString().left(64);
+    auto answer = [reply, req](int status, const QByteArray& body) {
+        QJsonObject out{{"req", req}, {"status", status}, {"body", QString::fromUtf8(body.left(256 * 1024))}};
+        reply(QString::fromUtf8(QJsonDocument(out).toJson(QJsonDocument::Compact)));
+    };
+
+    // https://<host>/api/files/<id>/versions only, a file from the offline folder only
+    static const QRegularExpression path_re("^/api/files/[0-9]{1,20}/versions$");
+    const QUrl url(in.value("url").toString(), QUrl::StrictMode);
+    const QString root = QFileInfo(offlineFolder()).canonicalFilePath();
+    const QString path = QFileInfo(in.value("path").toString()).canonicalFilePath();
+    const QString token = in.value("token").toString();
+    if ( !url.isValid() || url.scheme() != "https" || !url.userInfo().isEmpty() || !path_re.match(url.path()).hasMatch() ||
+            root.isEmpty() || path.isEmpty() || !path.startsWith(root + "/") || token.isEmpty() || token.contains('\n') ) {
+        answer(400, QByteArray());
+        return;
+    }
+
+    QFile * file = new QFile(path);
+    if ( !file->open(QIODevice::ReadOnly) ) {
+        delete file;
+        answer(404, QByteArray());
+        return;
+    }
+
+    QHttpMultiPart * multi = new QHttpMultiPart(QHttpMultiPart::FormDataType);
+    const QJsonObject fields = in.value("fields").toObject();
+    for (auto it = fields.begin(); it != fields.end(); ++it) {
+        static const QRegularExpression name_re("^[a-z_]{1,32}$");
+        if ( !name_re.match(it.key()).hasMatch() ) continue;
+        QHttpPart part;
+        part.setHeader(QNetworkRequest::ContentDispositionHeader, QString("form-data; name=\"%1\"").arg(it.key()));
+        part.setBody(it.value().toString().left(1024).toUtf8());
+        multi->append(part);
+    }
+    QHttpPart filePart;
+    QString name = QFileInfo(path).fileName();
+    name.replace('"', '_');
+    filePart.setHeader(QNetworkRequest::ContentDispositionHeader, QString("form-data; name=\"file\"; filename=\"%1\"").arg(name));
+    filePart.setHeader(QNetworkRequest::ContentTypeHeader, "application/octet-stream");
+    filePart.setBodyDevice(file);
+    file->setParent(multi);
+    multi->append(filePart);
+
+    static QNetworkAccessManager * nam = new QNetworkAccessManager();
+    QNetworkRequest request(url);
+    request.setRawHeader("Authorization", "Bearer " + token.toUtf8());
+    request.setRawHeader("Accept", "application/json");
+    QNetworkReply * r = nam->post(request, multi);
+    multi->setParent(r);
+    QObject::connect(r, &QNetworkReply::finished, [r, answer]() {
+        const int status = r->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        answer(status, r->readAll());
+        r->deleteLater();
+    });
 }

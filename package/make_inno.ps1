@@ -7,7 +7,9 @@
     [string]$BuildDir,
     [string]$BrandingDir,
     [switch]$Sign,
-    [switch]$Debug
+    [switch]$Debug,
+    # WorkSuite (G-03): extra ISCC arguments, e.g. /DSIGNTOOL "/Swssign=signtool.exe sign ... `$f"
+    [string[]]$IsccArgs = @()
 )
 
 $ErrorActionPreference = "Stop"
@@ -145,6 +147,10 @@ if ($Sign) {
 }
 if ($Debug) {
     $InnoArgs += "/DPREPROCSAVE"
+}
+
+if ($IsccArgs) {
+    $InnoArgs += $IsccArgs
 }
 
 Write-Host "iscc $InnoArgs $IssFile"

@@ -3,6 +3,17 @@ import { L } from "./lang.js";
 
 export const hostOf = (server) => String(server || "").replace(/^https?:\/\//, "");
 
+/* "19:40" today, "12 Oct 2026" otherwise */
+export function when(value) {
+  if (!value) return "";
+  const d = new Date(String(value).replace(" ", "T"));
+  if (isNaN(d.getTime())) return String(value);
+  const today = new Date();
+  return d.toDateString() === today.toDateString()
+    ? d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    : d.toLocaleDateString([], { year: "numeric", month: "short", day: "numeric" });
+}
+
 export function initials(name) {
   const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
   return ((parts[0] || "?")[0] + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase();

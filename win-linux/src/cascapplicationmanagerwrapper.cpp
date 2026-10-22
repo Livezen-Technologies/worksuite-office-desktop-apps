@@ -64,6 +64,7 @@
 #include "OfficeFileFormats.h"
 #include "cproviders.h"
 #include "cworksuite.h"
+#include "cwinsparkle.h"
 #ifndef __OS_WIN_XP
 # include "components/cnotification.h"
 #endif
@@ -157,6 +158,10 @@ CAscApplicationManagerWrapper::~CAscApplicationManagerWrapper()
     // Start update installation
     if (m_pUpdateManager)
         m_pUpdateManager->handleAppClose();
+#endif
+#ifdef WS_WINSPARKLE
+    // a downloaded, verified update installs now (SHL-09 "It installs when you restart the app")
+    CWinSparkle::cleanup();
 #endif
     if (m_private.get()->m_needRestart)
         m_private.get()->restartApp();
@@ -363,6 +368,65 @@ bool CAscApplicationManagerWrapper::processCommonEvent(NSEditorApi::CAscCefMenuE
                 });
             return true;
         } else
+        if ( cmd.compare(L"worksuite:share") == 0 ) {
+            // "Share" in a WorkSuite Drive editor tab (DRV-10): the start page's Share dialog, for the tab's own server
+            if ( m_pMainWindow && event->get_SenderId() != m_pMainWindow->startPanelId() ) {
+                const QString answer = CWorkSuite::shareRequest(m_pMainWindow->tabWidget()->urlByView(event->get_SenderId()),
+                                                                QString::fromStdWString(pData->get_Param()));
+                if ( !answer.isEmpty() ) {
+                    m_pMainWindow->goStart();
+                    sendCommandTo(SEND_TO_ALL_START_PAGE, L"worksuite:share", answer.toStdWString());
+                }
+            }
+            return true;
+        } else
+        if ( cmd.compare(L"worksuite:policy") == 0 ) {
+            // ADM-01: what the organisation set, for Settings › WorkSuite and the WorkSuite section
+            if ( m_pMainWindow && event->get_SenderId() == m_pMainWindow->startPanelId() )
+                sendCommandTo(SEND_TO_ALL_START_PAGE, cmd, CWorkSuite::policyAnswer().toStdWString());
+            return true;
+        } else
+        if ( cmd.compare(L"worksuite:upload") == 0 ) {
+            // DOC-07: an offline working copy back to WorkSuite Drive; the answer comes later
+            if ( m_pMainWindow && event->get_SenderId() == m_pMainWindow->startPanelId() )
+                CWorkSuite::upload(QString::fromStdWString(pData->get_Param()), [](const QString& answer) {
+                    sendCommandTo(SEND_TO_ALL_START_PAGE, L"worksuite:upload", answer.toStdWString());
+                });
+            return true;
+        } else
+        if ( cmd.compare(L"worksuite:updates") == 0 ) {
+            // SHL-08, SHL-09: Settings › WorkSuite › Updates and the Update ready banner
+            if ( m_pMainWindow && event->get_SenderId() == m_pMainWindow->startPanelId() ) {
+                const QJsonObject in = QJsonDocument::fromJson(QString::fromStdWString(pData->get_Param()).toUtf8()).object();
+                const QString op = in.value("op").toString();
+#ifdef WS_WINSPARKLE
+                if ( CWinSparkle::active() ) {
+                    sendCommandTo(SEND_TO_ALL_START_PAGE, cmd, CWinSparkle::command(in).toStdWString());
+                    return true;
+                }
+#endif
+#ifdef _UPDMODULE
+                if ( m_pUpdateManager ) {
+                    if ( op == "set" ) {
+                        if ( in.contains("channel") )
+                            m_pUpdateManager->setWorkSuiteChannel(in.value("channel").toString());
+                        if ( in.contains("auto") && !CWorkSuite::policy().contains("updateAuto") )
+                            m_pUpdateManager->setNewUpdateSetting(in.value("auto").toBool() ? "silent" : "ask");
+                    } else
+                    if ( op == "check" ) {
+                        m_pUpdateManager->checkUpdates(true);
+                    } else
+                    if ( op == "restart" ) {
+                        m_pUpdateManager->installUpdates();
+                    }
+                    sendCommandTo(SEND_TO_ALL_START_PAGE, cmd, m_pUpdateManager->workSuiteState().toStdWString());
+                    return true;
+                }
+#endif
+                sendCommandTo(SEND_TO_ALL_START_PAGE, cmd, L"{\"available\":false}");
+            }
+            return true;
+        } else
         if ( cmd.compare(L"worksuite:app") == 0 ) {
             // the start page's WorkSuite item in the sidebar: WorkSuite Desktop, or WorkSuite in the browser
             if ( m_pMainWindow && event->get_SenderId() == m_pMainWindow->startPanelId() )
@@ -436,6 +500,14 @@ bool CAscApplicationManagerWrapper::processCommonEvent(NSEditorApi::CAscCefMenuE
 //            RELEASEINTERFACE(event);
             return true;
         } else
+#ifdef WS_WINSPARKLE
+        if ( cmd.find(L"updates:action") != std::wstring::npos && CWinSparkle::active() ) {
+            // About › Check for updates (T02)
+            if ( QString::fromStdWString(pData->get_Param()) == "check" )
+                CWinSparkle::checkWithUi();
+            return true;
+        } else
+#endif
 #ifdef _UPDMODULE
         if ( !(cmd.find(L"updates:action") == std::wstring::npos) ) {   // params: check, download, install, abort
             if (m_pUpdateManager) {
@@ -1588,6 +1660,11 @@ void CAscApplicationManagerWrapper::startApp()
         _app.m_pMainWindow = _app.prepareMainWindow();
         _app.m_pMainWindow->show(_is_maximized);
     }
+
+#ifdef WS_WINSPARKLE
+    // UPD-04, G-02: WorkSuite Office updates itself through WinSparkle (not started without a signing key)
+    CWinSparkle::init();
+#endif
 
     QObject::connect(CExistanceController::getInstance(), &CExistanceController::checked, [] (const QString& name, int uid, bool exists) {
         if ( !exists ) {

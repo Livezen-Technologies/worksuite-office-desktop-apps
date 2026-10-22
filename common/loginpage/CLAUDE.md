@@ -42,7 +42,7 @@ Run from `common/loginpage/` unless noted:
 `addondialog/` and `noconnect/` are separate npm packages with their own `dev`/`build`
 scripts (`cd addondialog && npm run build`, etc.) — run them from inside each directory.
 
-There is no test runner configured in this repo (no `test` script, no test files).
+`npm test` runs `test/worksuite.test.mjs` (node:test; bundles `src/worksuite/core.js` with esbuild and fakes the page's globals).
 
 ## Package manager
 

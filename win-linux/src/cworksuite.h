@@ -27,6 +27,8 @@
 #define CWORKSUITE_H
 
 #include <QString>
+#include <QJsonObject>
+#include <QJsonValue>
 #include <functional>
 
 /*
@@ -36,8 +38,12 @@
  *
  * Secrets: WorkSuite sign-ins (refresh tokens), kept for the user by the operating system.
  *   Windows: Windows Credential Manager (generic credentials, this user only).
- *   Linux:   a file in the app's data folder that only this user can read; no
- *            secret service is required at build or run time.
+ *   Linux:   the Secret Service (GNOME Keyring, KWallet), through libsecret opened at run time
+ *            (AUTH-13); sign-ins an older version kept in the file below move there and the file
+ *            is deleted. Only when no Secret Service runs: a file in the app's data folder that
+ *            only this user can read, and the start page shows a warning ("store":"file"). The
+ *            WorkSuite OS broker keeps its own tokens and is not involved. No library is
+ *            needed at build time.
  *
  * WorkSuite Desktop: the accounts WorkSuite Desktop is signed in to on this computer, so
  *   the start page can offer "Continue as <name>". Not a secret: WorkSuite Desktop writes
@@ -74,6 +80,32 @@ namespace CWorkSuite
      * Asynchronous (a SignIn waits for the system browser, up to ten minutes); `reply` gets
      * {"req","ok","result","expires_at","error"}, error "not_os" anywhere but WorkSuite OS on Linux. */
     void brokerRequest(const QString& json, std::function<void(const QString&)> reply);
+
+    /* "worksuite:share", {"file":"<Drive file id>"} from a WorkSuite Drive editor tab (DRV-10): the start page's
+     * Share dialog for that file. The server is the tab's own https origin (`tabUrl`, the address the tab was
+     * opened with), never one the page names. {"server","file"} out for the start page, or "" to ignore it. */
+    QString shareRequest(const QString& tabUrl, const QString& json);
+
+    /* ADM-01, ADM-02, CLD-02: what the organisation set for WorkSuite Office on this computer.
+     *   Windows: HKLM\Software\Policies\WorkSuite\Office (Group Policy, or the MSI properties
+     *            WS_SERVER, WS_LOCK_SERVER, WS_ALLOW_OTHER_CLOUDS, WS_UPDATE_CHANNEL, WS_UPDATE_AUTO,
+     *            WS_USAGE_REPORTS, WS_AI_FUNCTIONS, WS_ORGANIZATION)
+     *   Linux:   /etc/worksuite-office/policy.json
+     * Value names: organization, server, lockServer, allowOtherClouds, updateChannel, updateAuto,
+     * usageReports, aiFunctions (README "Managed configuration"). Empty values are left out. */
+    QJsonObject policy();
+    bool policyBool(const QJsonValue& v);
+
+    /* "worksuite:policy", "": {"managed","source","policy":{…}} */
+    QString policyAnswer();
+
+    /* "worksuite:upload", {"req","url","token","path","fields":{…}}: DOC-07, an offline working copy
+     * (only from <app data>/offline) posted as multipart "file" plus fields to
+     * https://<server>/api/files/<id>/versions. `reply` gets {"req","status","body"} */
+    void upload(const QString& json, std::function<void(const QString&)> reply);
+
+    /* where offline working copies of Drive documents are kept (DOC-07) */
+    QString offlineFolder();
 }
 
 #endif // CWORKSUITE_H

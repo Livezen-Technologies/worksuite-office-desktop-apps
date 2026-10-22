@@ -1,4 +1,4 @@
-QT  += core gui widgets printsupport
+QT  += core gui widgets printsupport network
 QT  += svg
 
 TEMPLATE = app
@@ -111,6 +111,7 @@ HEADERS += \
     $$PWD/src/cprintdata.h \
     $$PWD/src/cproviders.h \
     $$PWD/src/cworksuite.h \
+    $$PWD/src/cwinsparkle.h \
     $$PWD/src/cscalingwrapper.h \
     $$PWD/src/ctabundockevent.h \
     $$PWD/src/ccefeventsgate.h \
@@ -153,6 +154,7 @@ SOURCES += \
     $$PWD/src/cprintdata.cpp \
     $$PWD/src/cproviders.cpp \
     $$PWD/src/cworksuite.cpp \
+    $$PWD/src/cwinsparkle.cpp \
     $$PWD/src/cscalingwrapper.cpp \
     $$PWD/src/ctabundockevent.cpp \
     $$PWD/src/ccefeventsgate.cpp \
@@ -252,7 +254,7 @@ core_linux {
 
     CONFIG += link_pkgconfig
     PKGCONFIG += glib-2.0 gtk+-3.0 atk gtk+-unix-print-3.0 xcb xcb-shape libnotify
-    LIBS += -lX11 -lcups
+    LIBS += -lX11 -lcups -ldl
 
     # !disable_addon_mode {
         # SOURCES += \

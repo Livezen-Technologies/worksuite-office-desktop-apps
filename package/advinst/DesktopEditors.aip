@@ -1798,6 +1798,14 @@
     <ROW Registry="NoRepair" Root="-1" Key="Software\Microsoft\Windows\CurrentVersion\Uninstall\[ProductName] [ProductVersion]" Name="NoRepair" Value="#1" Component_="AI_CustomARPName" VirtualValue="#"/>
     <ROW Registry="PackageArch" Root="-1" Key="Software\[CompanyPath]\[DesktopPath]" Name="PackageArch" Value="[Arch]" Component_="c_reg_sw_app"/>
     <ROW Registry="PackageEdition" Root="-1" Key="Software\[CompanyPath]\[DesktopPath]" Name="PackageEdition" Value="[Edition]" Component_="c_reg_sw_app"/>
+    <ROW Registry="WsPolicyOrganization" Root="2" Key="Software\Policies\WorkSuite\Office" Name="organization" Value="[WS_ORGANIZATION]" Component_="c_reg_sw_app"/>
+    <ROW Registry="WsPolicyServer" Root="2" Key="Software\Policies\WorkSuite\Office" Name="server" Value="[WS_SERVER]" Component_="c_reg_sw_app"/>
+    <ROW Registry="WsPolicyLockServer" Root="2" Key="Software\Policies\WorkSuite\Office" Name="lockServer" Value="[WS_LOCK_SERVER]" Component_="c_reg_sw_app"/>
+    <ROW Registry="WsPolicyAllowOtherClouds" Root="2" Key="Software\Policies\WorkSuite\Office" Name="allowOtherClouds" Value="[WS_ALLOW_OTHER_CLOUDS]" Component_="c_reg_sw_app"/>
+    <ROW Registry="WsPolicyUpdateChannel" Root="2" Key="Software\Policies\WorkSuite\Office" Name="updateChannel" Value="[WS_UPDATE_CHANNEL]" Component_="c_reg_sw_app"/>
+    <ROW Registry="WsPolicyUpdateAuto" Root="2" Key="Software\Policies\WorkSuite\Office" Name="updateAuto" Value="[WS_UPDATE_AUTO]" Component_="c_reg_sw_app"/>
+    <ROW Registry="WsPolicyUsageReports" Root="2" Key="Software\Policies\WorkSuite\Office" Name="usageReports" Value="[WS_USAGE_REPORTS]" Component_="c_reg_sw_app"/>
+    <ROW Registry="WsPolicyAiFunctions" Root="2" Key="Software\Policies\WorkSuite\Office" Name="aiFunctions" Value="[WS_AI_FUNCTIONS]" Component_="c_reg_sw_app"/>
     <ROW Registry="PackageType" Root="-1" Key="Software\[CompanyPath]\[DesktopPath]" Name="PackageType" Value="advinst" Component_="c_reg_sw_app"/>
     <ROW Registry="ProductNameProductVersion" Root="-1" Key="Software\Microsoft\Windows\CurrentVersion\Uninstall\[ProductName] [ProductVersion]" Name="\"/>
     <ROW Registry="Publisher" Root="-1" Key="Software\Microsoft\Windows\CurrentVersion\Uninstall\[ProductName] [ProductVersion]" Name="Publisher" Value="[Manufacturer]" Component_="AI_CustomARPName"/>

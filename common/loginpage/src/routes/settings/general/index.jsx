@@ -13,6 +13,7 @@ import { availableLangs,
         langRestartPending} from "@/services/settings-sync";
 import { command } from "@/sdk/bridge";
 import styles from "./index.module.css";
+import { policy } from "@/worksuite/shell.js";
 import { addonInfo } from "@/services/about";
 import { aichat } from "@/stores/aichat";
 import { TEMPLATES_COUNTRY_ARRAY } from "@/data/countries";
@@ -157,6 +158,7 @@ export default function GeneralSettings() {
               <Select
                 options={updatesOptions()}
                 value={settings.checkUpdates}
+                disabled={policy().locked.updateAuto}
                 onChange={(v) => setSettings("checkUpdates", v)}
                 disallowEmptySelection
                 stacked
@@ -220,7 +222,7 @@ export default function GeneralSettings() {
             <label for="chb-use-ai" class={styles.fieldLabelBlock}>
               {t("settingsEnableAI")}{aichat.available && ' *'}<span class={styles.fieldDescription}>{t("settingsEnableAIDescr")}</span>
             </label>
-            <Switch id="chb-use-ai" checked={settings.useai !== false} onChange={(v) => setSettings("useai", v)} />
+            <Switch id="chb-use-ai" checked={settings.useai !== false && policy().aiFunctions !== "off"} disabled={policy().aiFunctions === "off"} onChange={(v) => setSettings("useai", v)} />
           </div>
         </Show>
 

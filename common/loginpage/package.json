@@ -12,7 +12,8 @@
     "sprites": "node ./build/generate-sprites.js",
     "fmt": "oxfmt",
     "lint": "oxlint",
-    "lint:fix": "oxlint --fix"
+    "lint:fix": "oxlint --fix",
+    "test": "node --test test/*.test.mjs src/worksuite/*.test.mjs"
   },
   "dependencies": {
     "@kobalte/core": "^0.13.11",
@@ -28,6 +29,5 @@
     "vite-plugin-solid": "^2.11.12",
     "pngjs": "^7.0.0"
   },
-  "devDependencies": {
-  }
+  "devDependencies": {}
 }

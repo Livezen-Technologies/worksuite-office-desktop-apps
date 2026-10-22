@@ -1,3 +1,4 @@
+import { isCloudAllowed } from "@/worksuite/shell.js";
 import { createSignal, createEffect, on, onCleanup } from "solid-js";
 import { onNativeMessage, onAuthChecked } from "@/sdk/events.js";
 import { command } from "@/sdk/bridge.js";
@@ -43,8 +44,11 @@ function deleteStorage(portalUrl) {
   } catch {}
 }
 
-const [providers, setProviders] = createSignal([]);
-const [portals, setPortals] = createSignal(readStorage());
+const [allProviders, setProviders] = createSignal([]);
+/* CLD-02, G-05: third-party clouds only when the organisation allows them (ADM-01); off by default */
+const providers = () => allProviders().filter((p) => isCloudAllowed(p.provider));
+const [allPortals, setPortals] = createSignal(readStorage());
+const portals = () => allPortals().filter((p) => isCloudAllowed(p.provider));
 
 export { providers, portals };
 
@@ -61,7 +65,7 @@ export function initPortals() {
   const clouds = getExternalClouds();
   if (clouds.length) {
     setProviders(sortProviders(clouds));
-    sendProviderList(clouds);
+    sendProviderList(clouds.filter((c) => isCloudAllowed(c.provider)));
   }
 
   const _portals = portals();
