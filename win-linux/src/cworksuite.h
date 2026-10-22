@@ -27,6 +27,8 @@
 #define CWORKSUITE_H
 
 #include <QString>
+#include <QJsonObject>
+#include <QJsonValue>
 #include <functional>
 
 /*
@@ -74,6 +76,27 @@ namespace CWorkSuite
      * Asynchronous (a SignIn waits for the system browser, up to ten minutes); `reply` gets
      * {"req","ok","result","expires_at","error"}, error "not_os" anywhere but WorkSuite OS on Linux. */
     void brokerRequest(const QString& json, std::function<void(const QString&)> reply);
+
+    /* ADM-01, ADM-02, CLD-02: what the organisation set for WorkSuite Office on this computer.
+     *   Windows: HKLM\Software\Policies\WorkSuite\Office (Group Policy, or the MSI properties
+     *            WS_SERVER, WS_LOCK_SERVER, WS_ALLOW_OTHER_CLOUDS, WS_UPDATE_CHANNEL, WS_UPDATE_AUTO,
+     *            WS_USAGE_REPORTS, WS_AI_FUNCTIONS, WS_ORGANIZATION)
+     *   Linux:   /etc/worksuite-office/policy.json
+     * Value names: organization, server, lockServer, allowOtherClouds, updateChannel, updateAuto,
+     * usageReports, aiFunctions (README "Managed configuration"). Empty values are left out. */
+    QJsonObject policy();
+    bool policyBool(const QJsonValue& v);
+
+    /* "worksuite:policy", "": {"managed","source","policy":{…}} */
+    QString policyAnswer();
+
+    /* "worksuite:upload", {"req","url","token","path","fields":{…}}: DOC-07, an offline working copy
+     * (only from <app data>/offline) posted as multipart "file" plus fields to
+     * https://<server>/api/files/<id>/versions. `reply` gets {"req","status","body"} */
+    void upload(const QString& json, std::function<void(const QString&)> reply);
+
+    /* where offline working copies of Drive documents are kept (DOC-07) */
+    QString offlineFolder();
 }
 
 #endif // CWORKSUITE_H

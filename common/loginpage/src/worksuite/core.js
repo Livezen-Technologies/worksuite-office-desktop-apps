@@ -63,6 +63,13 @@ const utils = { Lang: L, defines: { FileFormat } };
     const LS_PENDING = 'ws:pending';
     const LS_CACHE = 'ws:cache:';
 
+    /* oda-shell (SHL-08, ADM-01): the server an organisation set (policy) or the person chose
+       in Settings › WorkSuite comes before the built-in one. Kept up to date by shell.js. */
+    function defaultServer() {
+        const policy = readJson(localStorage, 'ws:policy', null);
+        return normalizeServer(policy && policy.server) || normalizeServer(readJson(localStorage, 'ws:pref:server', '')) || DEFAULT_SERVER;
+    }
+
     /* Office files and PDFs, by the filter they belong to */
     const TYPES = {
         word:  ['docx', 'doc', 'docm', 'dotx', 'dotm', 'odt', 'ott', 'fodt', 'rtf', 'txt', 'md'],
@@ -291,13 +298,15 @@ const utils = { Lang: L, defines: { FileFormat } };
         return err;
     }
 
-    async function remember(server, data) {
+    async function remember(server, data, via) {
         const user = data.user || {};
         const account = {
             id: accountId(server, user.id),
             server: server,
             user: { id: user.id, name: user.name, email: user.email, avatar: user.avatar || null, organization: user.organization || '' },
             signedOut: false,
+            via: via || 'browser', // oda-shell (SHL-08): how this account signed in, for Settings › WorkSuite
+            at: Date.now(),
         };
 
         await secret('set', secretKey(account), data.tokens.refresh_token).then(r => {
@@ -392,7 +401,10 @@ const utils = { Lang: L, defines: { FileFormat } };
     }
 
     async function signIn(server) {
-        server = normalizeServer(server) || DEFAULT_SERVER;
+        server = normalizeServer(server) || defaultServer();
+        // oda-shell (ADM-01): an organisation that locked the server signs in there only
+        const locked = readJson(localStorage, 'ws:policy', null);
+        if (locked && locked.lockServer && normalizeServer(locked.server)) server = normalizeServer(locked.server);
         const pair = await pkce();
         const state = random(24);
 
@@ -531,7 +543,7 @@ const utils = { Lang: L, defines: { FileFormat } };
             if (res.status !== 200 || !res.json || !res.json.data || !res.json.data.tokens)
                 throw apiError(res, utils.Lang.wsErrStale);
 
-            const account = await remember(pending.server, res.json.data);
+            const account = await remember(pending.server, res.json.data, pending.via);
             fire('signedin', account);
         } catch (e) {
             fire('error', e);
@@ -588,7 +600,7 @@ const utils = { Lang: L, defines: { FileFormat } };
             try {
                 if (res.status !== 200 || !res.json || !res.json.data || !res.json.data.tokens)
                     throw apiError(res, utils.Lang.wsErrStale);
-                fire('signedin', await remember(pending.server, res.json.data));
+                fire('signedin', await remember(pending.server, res.json.data, pending.via));
             } catch (e) {
                 fire('error', e);
             } finally {
@@ -793,6 +805,7 @@ const utils = { Lang: L, defines: { FileFormat } };
             id: accountId(pick.server, user.id),
             server: pick.server,
             broker: pick.id,
+            via: 'os',
             user: { id: user.id, name: user.name || pick.name || '', email: user.email || '', avatar: user.avatar || null, organization: user.organization || '' },
             signedOut: false,
         };
@@ -925,6 +938,11 @@ const utils = { Lang: L, defines: { FileFormat } };
     }
 
     async function open(account, file) {
+        // oda-shell (SHL-08): Settings › WorkSuite › "Open WorkSuite Drive documents in" the browser
+        if (readJson(localStorage, 'ws:pref:openIn', 'office') === 'browser') {
+            openInBrowser(account, '/editor/' + encodeURIComponent(file.id));
+            return;
+        }
         const pair = await pkce();
         const handed = await api(account, 'POST', '/api/auth/apps/handoff',
                                  { client: EDITOR_CLIENT, code_challenge: pair.challenge, code_challenge_method: 'S256' });
@@ -989,7 +1007,7 @@ const utils = { Lang: L, defines: { FileFormat } };
      */
     function openApp() {
         const account = active();
-        const web = (account ? account.server : DEFAULT_SERVER) + '/';
+        const web = (account ? account.server : defaultServer()) + '/';
 
         if (window.sdk && window.sdk.command) window.sdk.command('worksuite:app', JSON.stringify({ web: web }));
         else window.open(web);
@@ -1058,7 +1076,8 @@ const utils = { Lang: L, defines: { FileFormat } };
     }
 
     window.WorkSuite = {
-        DEFAULT_SERVER: DEFAULT_SERVER,
+        get DEFAULT_SERVER() { return defaultServer(); },
+        BUILT_IN_SERVER: DEFAULT_SERVER,
         TYPES: TYPES,
         on: on,
         off: off,
@@ -1090,6 +1109,9 @@ const utils = { Lang: L, defines: { FileFormat } };
         openApp: openApp,
         typeOf: typeOf,
         extOf: extOf,
+        /* oda-shell: Settings › WorkSuite and offline editing (SHL-08, DOC-07) */
+        token: token,
+        api: api,
         /* for tests */
         _sha256Ascii: sha256Ascii,
         _onLink: onLink,

@@ -5,12 +5,14 @@ import { A, useLocation } from "@solidjs/router";
 import { Button } from "@/components";
 import { isOptsChanged, applySettings, pendingApplyText } from "@/services/settings-sync";
 import { pluginConfigs } from "@/stores/plugin-settings";
+import { L } from "@/worksuite/lang.js";
 
 export default function SettingsLayout(props) {
   const location = useLocation();
 
   const headerTitle = () => {
     const parts = location.pathname.split("/");
+    if (parts[2] === "worksuite") return L.wsSettingsTab;
     if (parts[2] !== "plugin") return t("settingsGeneral");
     const pluginId = decodeURIComponent(parts[3] ?? "");
     const sectionId = decodeURIComponent(parts[4] ?? "");
@@ -31,6 +33,7 @@ export default function SettingsLayout(props) {
   };
 
   const isIframePage = () => currentIframeKey() !== null;
+  const isWorkSuitePage = () => location.pathname.split("/")[2] === "worksuite";
 
   const iframePages = () => {
     const pages = [];
@@ -58,6 +61,11 @@ export default function SettingsLayout(props) {
           <li class={styles.item}>
             <A href="/settings/general" activeClass={styles.selected} end>
               {t("settingsGeneral")}
+            </A>
+          </li>
+          <li class={styles.item}>
+            <A href="/settings/worksuite" activeClass={styles.selected} end>
+              {L.wsSettingsTab}
             </A>
           </li>
           <For each={pluginConfigs()}>
@@ -93,7 +101,7 @@ export default function SettingsLayout(props) {
           </header>
         </Show>
         <main class={styles.content}>{props.children}</main>
-        <Show when={!isIframePage()}>
+        <Show when={!isIframePage() && !isWorkSuitePage()}>
           <footer class={styles.footer}>
             <div class={styles.footerInner}>
               <Button variant="accent" disabled={!isOptsChanged()} onClick={onApplyClick}>

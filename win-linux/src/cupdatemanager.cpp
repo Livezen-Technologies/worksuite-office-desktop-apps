@@ -34,6 +34,7 @@
  */
 
 #include "cupdatemanager.h"
+#include "cworksuite.h"
 #include <QApplication>
 #include <QSettings>
 #include <QJsonDocument>
@@ -712,6 +713,18 @@ void CUpdateManager::refreshStartPage(const Command &cmd)
         jsn["button"] = btn_jsn;
     if (!jsn.isEmpty())
         AscAppManager::sendCommandTo(SEND_TO_ALL_START_PAGE, "updates:status", Utils::stringifyJson(jsn));
+
+    // SHL-09: the Update ready banner and dialog, once a package is downloaded and its checksum matched
+    if (cmd.icon == "success" && cmd.btn_action == "install") {
+        const QString version = !m_packageData->version.isEmpty() ? m_packageData->version : m_savedPackageData->version;
+        GET_REGISTRY_USER(reg_user);
+        QJsonObject ready{{"version", version},
+                          {"channel", reg_user.value("Updates/channel", "stable").toString()},
+                          {"verified", true},
+                          {"signatureChecked", false},
+                          {"notes", m_releaseNotes}};
+        AscAppManager::sendCommandTo(SEND_TO_ALL_START_PAGE, "worksuite:update-ready", Utils::stringifyJson(ready));
+    }
 }
 
 void CUpdateManager::launchIntervalStartTimer()
@@ -817,8 +830,37 @@ void CUpdateManager::skipVersion()
 
 int CUpdateManager::getUpdateMode()
 {
+    // ADM-01: an organisation that set updateAuto decides, whatever the person chose
+    const QJsonObject policy = CWorkSuite::policy();
+    if ( policy.contains("updateAuto") )
+        return CWorkSuite::policyBool(policy.value("updateAuto")) ? UpdateMode::SILENT : UpdateMode::ASK;
     GET_REGISTRY_USER(reg_user);
     return modeToEnum(reg_user.value("autoUpdateMode", "ask").toString());
+}
+
+QString CUpdateManager::workSuiteState()
+{
+    GET_REGISTRY_USER(reg_user);
+    const QJsonObject policy = CWorkSuite::policy();
+    QString channel = policy.value("updateChannel").toString().toLower();
+    if ( channel != "stable" && channel != "beta" )
+        channel = reg_user.value("Updates/channel", "stable").toString();
+    QJsonObject st{{"available", true},
+                   {"version", QString(VER_FILEVERSION_STR)},
+                   {"channel", channel},
+                   {"auto", getUpdateMode() == UpdateMode::SILENT},
+                   {"lastCheck", double(m_lastCheck)},
+                   {"host", "download.worksuitecloud.com"}};
+    return Utils::stringifyJson(st);
+}
+
+void CUpdateManager::setWorkSuiteChannel(const QString &channel)
+{
+    if ( (channel != "stable" && channel != "beta") || CWorkSuite::policy().contains("updateChannel") )
+        return;
+    // read by the update service the next time it starts (--appcast-dev-channel for beta)
+    GET_REGISTRY_USER(reg_user);
+    reg_user.setValue("Updates/channel", channel);
 }
 
 void CUpdateManager::onLoadCheckFinished(const QString &json)
@@ -836,6 +878,7 @@ void CUpdateManager::onLoadCheckFinished(const QString &json)
                 m_packageData->packageUrl = root.value("packageUrl").toString().toStdWString();
                 m_packageData->hash = root.value("hash").toString();
                 m_packageData->isInstallable = root.value("isInstallable").toBool();
+                m_releaseNotes = root.value("releaseNotes").toString().left(64 * 1024);
 
                 clearTempFiles(m_packageData->isInstallable && isSavedPackageValid() ? m_savedPackageData->fileName : "");
                 if (m_packageData->packageUrl.empty() || !m_socket->sendMessage(MSG_RequestContentLenght)) {

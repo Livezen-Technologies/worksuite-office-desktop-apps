@@ -13,6 +13,7 @@ import { initPortals } from "@/services/portals";
 import { initAiPanel } from "@/services/ai-panel";
 import { aichat } from "@/stores/aichat";
 import { extPlugins, pluginRouteId } from "@/stores/ext-plugins";
+import { UpdateBanner, OfflineChoiceDialog } from "@/worksuite/ShellParts.jsx";
 
 const TemplatesPanel = lazy(() => import("./routes/templates/index.jsx"));
 import "./styles/main.css";
@@ -47,6 +48,7 @@ function Shell(props) {
         <Sidebar />
       </div>
       <div class="col-center">
+        <UpdateBanner />
         <div class="home-panel" classList={{ "panel-active": isHomeSelected() }}>
           <HomePanel />
         </div>
@@ -80,6 +82,7 @@ function Shell(props) {
         </div>
       </Show>
       <About />
+      <OfflineChoiceDialog />
       <PluginModal />
     </div>
   );
@@ -99,6 +102,7 @@ const routes = [
     component: lazy(() => import("./routes/settings/layout.jsx")),
     children: [
       { path: "/general", component: lazy(() => import("./routes/settings/general/index.jsx")) },
+      { path: "/worksuite", component: lazy(() => import("./routes/settings/worksuite/index.jsx")) },
       { path: "/plugin/:pluginId/:section", component: lazy(() => import("./routes/settings/plugin/index.jsx")) },
     ],
   },

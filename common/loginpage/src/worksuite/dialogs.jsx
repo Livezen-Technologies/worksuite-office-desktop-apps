@@ -5,6 +5,7 @@
 import { For, Show, createSignal, onCleanup, onMount } from "solid-js";
 import { Button, Dialog } from "@/components";
 import { L } from "./lang.js";
+import { serverLocked } from "./shell.js";
 import { ContinueCard, hostOf } from "./cards.jsx";
 
 const WS = () => window.WorkSuite;
@@ -12,7 +13,7 @@ const WS = () => window.WorkSuite;
 // WorkSuite Desktop answers in seconds; a browser sign-in can take a while (two-step verification)
 const WAITS = { desktop: 2 * 60 * 1000, browser: 5 * 60 * 1000 };
 
-function Frame(props) {
+export function Frame(props) {
   return (
     <Dialog open onOpenChange={(open) => !open && props.onClose()}>
       <Dialog.Content class="ws-dlg">
@@ -150,8 +151,12 @@ export function SignInDialog(props) {
         </Button>
         <Show when={!custom()}>
           <p class="ws-dlg-server">
-            {L.wsServerIs.replace("$1", hostOf(server()))} ·{" "}
-            <a href="#" onClick={(e) => { e.preventDefault(); setCustom(true); }}>{L.wsOtherServer}</a>
+            {L.wsServerIs.replace("$1", hostOf(server()))}
+            {/* oda-shell (ADM-01): a server the organisation locked cannot be changed here */}
+            <Show when={!serverLocked()} fallback={<> · {L.wsSetByOrg}</>}>
+              {" "}·{" "}
+              <a href="#" onClick={(e) => { e.preventDefault(); setCustom(true); }}>{L.wsOtherServer}</a>
+            </Show>
           </p>
         </Show>
         <Show when={error()}><p class="ws-error" role="alert">{error()}</p></Show>

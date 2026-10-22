@@ -12,6 +12,7 @@ import "./core.js";
 import { SignInDialog, NewDialog } from "./dialogs.jsx";
 import { ContinueCard, hostOf, initials } from "./cards.jsx";
 import "./worksuite.css";
+import { PolicyBanner, PolicyCard } from "./ShellParts.jsx"; // oda-shell (ADM-01)
 
 const WS = () => window.WorkSuite;
 
@@ -314,6 +315,7 @@ export default function WorkSuiteSection() {
         </Show>
       </div>
 
+      <PolicyBanner />{/* oda-shell (ADM-01) */}
       <Show when={!live()}>
         <div class="ws-signedout">
           <div class="ws-signedout-art" aria-hidden="true">
@@ -341,6 +343,7 @@ export default function WorkSuiteSection() {
           </div>
         </div>
       </Show>
+      <Show when={!live()}><PolicyCard /></Show>{/* oda-shell (ADM-01) */}
 
       <Show when={live()}>
         <div class="ws-bar">

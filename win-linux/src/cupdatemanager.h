@@ -99,6 +99,9 @@ public:
     void refreshStartPage(const Command &cmd = Command());
     void launchIntervalStartTimer();
     void setServiceLang(QString lang = QString());
+    /* Settings › WorkSuite (SHL-08) and the Update ready banner (SHL-09): "worksuite:updates" */
+    QString workSuiteState();
+    void setWorkSuiteChannel(const QString &channel);
 
 public slots:
     void checkUpdates(bool manualCheck = false);
@@ -125,6 +128,7 @@ private:
 
     time_t      m_lastCheck = 0;
     int         m_interval = 0;
+    QString     m_releaseNotes;
 
     QTimer      *m_pIntervalStartTimer = nullptr,
                 *m_pLastCheckMsgTimer = nullptr,
