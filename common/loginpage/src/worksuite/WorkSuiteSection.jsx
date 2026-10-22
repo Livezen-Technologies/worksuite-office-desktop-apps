@@ -10,7 +10,8 @@ import { usePngIcons } from "@/services/display";
 import { L } from "./lang.js";
 import "./core.js";
 import { SignInDialog, NewDialog } from "./dialogs.jsx";
-import { ContinueCard, hostOf, initials } from "./cards.jsx";
+import { MoveDialog, VersionsDialog, ShareDialog, OpenLinkDialog } from "./drive.jsx";
+import { ContinueCard, hostOf, initials, when } from "./cards.jsx";
 import "./worksuite.css";
 
 const WS = () => window.WorkSuite;
@@ -23,16 +24,6 @@ const FORMAT_ICONS = ["csv", "djvu", "doc", "docm", "docx", "docxf", "dotm", "do
 const PICTURE_ROUNDS = 12;
 // rows shown before "Show all"
 const ROWS_SHOWN = 10;
-
-function when(value) {
-  if (!value) return "";
-  const d = new Date(String(value).replace(" ", "T"));
-  if (isNaN(d.getTime())) return String(value);
-  const today = new Date();
-  return d.toDateString() === today.toDateString()
-    ? d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-    : d.toLocaleDateString([], { year: "numeric", month: "short", day: "numeric" });
-}
 
 function FileIcon(props) {
   const icon = () => (props.item.kind === "folder" ? "folder-small" : FORMAT_ICONS.includes(props.item.ext) ? props.item.ext : "neutral");
@@ -60,7 +51,9 @@ export default function WorkSuiteSection() {
   const [data, setData] = createSignal(null);
   const [thumbs, setThumbs] = createSignal({});
   const [expanded, setExpanded] = createSignal(false);
-  const [state, setState] = createSignal({ text: "", error: false });
+  const [state, setState] = createSignal({ text: "", error: false, undo: null });
+  const [renaming, setRenaming] = createSignal(null); // the id of the file renamed in place
+  const [companies, setCompanies] = createSignal([]);
   const [dialog, setDialog] = createSignal(null); // { kind: 'signin', desktopAccount } | { kind: 'new', type }
   const [desktop, setDesktop] = createSignal(null); // a WorkSuite Desktop account to continue as
   const [os, setOs] = createSignal(null); // WorkSuite OS's credentials broker
@@ -70,18 +63,24 @@ export default function WorkSuiteSection() {
   let seq = 0, where = "", lastOpen = 0, pendingLink = null, osTried = false;
 
   const live = () => account() && !account().signedOut;
-  const say = (text, error) => setState({ text: text || "", error: !!error });
+  const say = (text, error, undo) => setState({ text: text || "", error: !!error, undo: undo || null });
 
   const visible = () => {
     const items = (data() && data().items) || [];
-    return filter() === "all" ? items : items.filter((i) => i.kind === "folder" || WS().typeOf(i.ext) === filter());
+    const org = account() ? WS().companyOf(account()) : null;
+    const inOrg = items.filter((i) => WS().inCompany(org, i));
+    return filter() === "all" ? inOrg : inOrg.filter((i) => i.kind === "folder" || WS().typeOf(i.ext) === filter());
   };
   const shown = () => (visible().length > ROWS_SHOWN && !expanded() ? visible().slice(0, ROWS_SHOWN) : visible());
 
   function refresh() {
     setAccounts(WS().accounts());
     setAccount(WS().active());
-    if (live()) load();
+    setCompanies((account() && account().companies) || []);
+    if (live()) {
+      load();
+      if (!account().companies) WS().companies(account()).then(setCompanies, () => {});
+    }
     else findDesktop();
   }
 
@@ -195,21 +194,105 @@ export default function WorkSuiteSection() {
     }
   }
 
-  /* worksuiteoffice://open?file=<id>&server=<host> — from WorkSuite Desktop or a chat card */
+  /*
+   * worksuiteoffice://open, contract v1 (LNK-04/05, G-06): the account is the link's uid on its server, chosen in
+   * "Open as" when more than one could open it; org switches the company; mode=view opens read-only; a src copy
+   * (a mail attachment) is read from the server and saved into a Drive folder the person picks.
+   */
   async function openLink(link) {
     const all = WS().accounts().filter((a) => !a.signedOut);
     const current = live() ? account() : null;
-    const acc = link.server ? (current && current.server === link.server ? current : all.find((a) => a.server === link.server)) : current;
-    if (!acc) {
+    const onServer = link.server ? all.filter((a) => a.server === link.server) : current ? [current] : [];
+    const own = link.uid ? onServer.find((a) => String(a.user.id) === String(link.uid)) : null;
+    if (!onServer.length) {
       pendingLink = link;
       signIn();
       return;
     }
-    if (!current || acc.id !== current.id) WS().setActive(acc.id);
+    const initial = own || (current && onServer.find((a) => a.id === current.id)) || onServer[0];
+    if (onServer.length === 1 && (!link.uid || own) && !link.src) return openLinkAs(link, initial);
+    setDialog({ kind: "link", link, candidates: onServer, initial, error: "" });
+  }
+
+  async function openLinkAs(link, acc) {
+    if (!current() || acc.id !== current().id) WS().setActive(acc.id);
+    if (link.org && link.uid && String(acc.user.id) === String(link.uid)) WS().setCompany(acc, link.org);
     try {
-      open(await WS().details(acc, link.id), acc);
+      if (link.src) {
+        const server = await WS().checkServer(acc.server).catch(() => ({}));
+        if (!server.openSource) throw new Error(L.wsErrNoSourceOpen);
+        await WS().open(acc, { src: link.src, name: link.name || "", ext: WS().extOf(link.name), level: "view" });
+      } else {
+        const file = await WS().details(acc, link.id);
+        if (link.mode === "view") file.level = "view";
+        await open(file, acc);
+      }
+      if (dialog() && dialog().kind === "link") setDialog(null);
+    } catch (e) {
+      if (e.signedOut) return;
+      if (dialog() && dialog().kind === "link") setDialog({ ...dialog(), error: e.message });
+      else say(e.message, true);
+    }
+  }
+
+  function current() {
+    return live() ? account() : null;
+  }
+
+  /* "Share" in a Drive editor tab (DRV-10): the Share dialog here, for the account on that tab's server */
+  async function shareFromEditor(req) {
+    const all = WS().accounts().filter((a) => !a.signedOut && a.server === req.server);
+    const acc = (current() && all.find((a) => a.id === current().id)) || all[0];
+    if (!acc) return;
+    try {
+      const file = await WS().details(acc, req.id);
+      if (!current() || acc.id !== current().id) WS().setActive(acc.id);
+      setDialog({ kind: "share", file, account: acc });
     } catch (e) {
       !e.signedOut && say(e.message, true);
+    }
+  }
+
+  /* ---- Drive actions (DRV-08, G-09) ---- */
+
+  const failed = (e) => !e.signedOut && say(e.message, true);
+
+  async function commitRename(item, value) {
+    setRenaming(null);
+    const dot = item.name.lastIndexOf(".");
+    const ext = dot > 0 ? item.name.substring(dot) : "";
+    const base = String(value || "").trim();
+    if (!base || base + ext === item.name) return;
+    try {
+      await WS().rename(account(), item, base + ext);
+      say(L.wsRenamed);
+      load();
+    } catch (e) {
+      failed(e);
+    }
+  }
+
+  async function makeCopy(item) {
+    try {
+      const copy = await WS().copy(account(), item);
+      say(L.wsCopied.replace("$1", copy.name || item.name));
+      load();
+    } catch (e) {
+      failed(e);
+    }
+  }
+
+  async function toBin(item) {
+    const acc = account();
+    try {
+      await WS().trash(acc, item);
+      say(L.wsMovedToBin.replace("$1", item.name), false, {
+        label: L.wsUndo,
+        run: () => WS().untrash(acc, item).then(() => { say(""); load(); }, failed),
+      });
+      load();
+    } catch (e) {
+      failed(e);
     }
   }
 
@@ -233,33 +316,56 @@ export default function WorkSuiteSection() {
     WS().on("changed", changed);
     WS().on("signedin", signedin);
     WS().on("openlink", openLink);
+    WS().on("share", shareFromEditor);
     WS().on("error", error);
     onCleanup(() => {
       WS().off("changed", changed);
       WS().off("signedin", signedin);
       WS().off("openlink", openLink);
+      WS().off("share", shareFromEditor);
       WS().off("error", error);
     });
     refresh();
   });
 
+  /* The row menu (T03): Open, Rename, Move to…, Make a copy, Version history, Share…, Move to bin.
+     What a view-only file may not do is not offered; the server refuses the rest in its own words. */
   const FileMenu = (p) => {
     const M = p.menu;
     const item = p.item;
+    const canEdit = item.level !== "view";
     return (
       <>
         <M.Item onSelect={() => open(item)}>{L.menuFileOpen}</M.Item>
+        <Show when={canEdit}>
+          <M.Item onSelect={() => setRenaming(item.id)}>{L.wsRename}</M.Item>
+          <M.Item onSelect={() => setDialog({ kind: "move", file: item })}>{L.wsMoveToMenu}</M.Item>
+        </Show>
+        <M.Item onSelect={() => makeCopy(item)}>{L.wsMakeCopy}</M.Item>
+        <M.Item onSelect={() => setDialog({ kind: "versions", file: item })}>{L.wsVersionHistory}</M.Item>
+        <M.Item onSelect={() => setDialog({ kind: "share", file: item, account: account() })}>{L.wsShareMenu}</M.Item>
+        <M.Separator />
         <Show when={item.level === "view"}>
-          <M.Item onSelect={() => WS().requestEdit(account(), item).then(() => say(L.wsRequestSent), (err) => say(err.message, true))}>
+          <M.Item onSelect={() => WS().requestEdit(account(), item).then(() => say(L.wsRequestSent), failed)}>
             {L.wsRequestEdit}
           </M.Item>
         </Show>
-        <M.Item onSelect={() => WS().star(account(), item, !item.starred).then(load, (err) => say(err.message, true))}>
+        <M.Item onSelect={() => WS().star(account(), item, !item.starred).then(load, failed)}>
           {item.starred ? L.wsUnstar : L.wsStar}
         </M.Item>
-        <M.Item onSelect={() => WS().openInBrowser(account(), "/files?file=" + encodeURIComponent(item.id))}>{L.wsShareInBrowser}</M.Item>
+        <M.Item onSelect={() => WS().openInBrowser(account(), "/files?file=" + encodeURIComponent(item.id))}>{L.wsOpenInBrowserItem}</M.Item>
+        <Show when={canEdit}>
+          <M.Separator />
+          <M.Item class="negative" onSelect={() => toBin(item)}>{L.wsMoveToBin}</M.Item>
+        </Show>
       </>
     );
+  };
+
+  const companyName = () => {
+    const org = account() ? WS().companyOf(account()) : null;
+    const c = org && companies().find((x) => String(x.id) === String(org));
+    return c ? c.name : companies().length > 1 ? L.wsAllCompanies : account() ? account().user.organization : "";
   };
 
   return (
@@ -271,21 +377,38 @@ export default function WorkSuiteSection() {
             <DropdownMenu.Trigger class="ws-account-btn" title={account().user.email || ""}>
               <span class="ws-avatar small" aria-hidden="true">{initials(account().user.name)}</span>
               <span class="ws-account-name">{account().user.name}</span>
-              <span class="ws-account-org">{[account().user.organization, hostOf(account().server)].filter(Boolean).join(" · ")}</span>
+              <span class="ws-account-org">{[companyName(), hostOf(account().server)].filter(Boolean).join(" · ")}</span>
               <svg class="ws-caret" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" /></svg>
             </DropdownMenu.Trigger>
-            <DropdownMenu.Content>
+            <DropdownMenu.Content class="ws-switcher">
               <For each={accounts()}>
                 {(x) => (
-                  <DropdownMenu.Item class={x.id === account().id ? "checked" : ""} onSelect={() => WS().setActive(x.id)}>
-                    {x.user.name + " · " + hostOf(x.server) + (x.signedOut ? " (" + L.wsSignedOutShort + ")" : "")}
-                  </DropdownMenu.Item>
+                  <>
+                    <DropdownMenu.Item class={x.id === account().id ? "checked" : ""} onSelect={() => WS().setActive(x.id)}>
+                      {x.user.name + " · " + hostOf(x.server) + (x.signedOut ? " (" + L.wsSignedOutShort + ")" : "")}
+                    </DropdownMenu.Item>
+                    <Show when={x.id === account().id && !x.signedOut && companies().length > 1}>
+                      <>
+                        <div class="ws-menu-label" role="presentation">{L.wsCompany}</div>
+                        <For each={companies()}>
+                          {(c) => (
+                            <DropdownMenu.Item class={"ws-company" + (String(WS().companyOf(x)) === String(c.id) ? " checked" : "")}
+                                               onSelect={() => WS().setCompany(x, c.id)}>{c.name}</DropdownMenu.Item>
+                          )}
+                        </For>
+                        <DropdownMenu.Item class={"ws-company" + (WS().companyOf(x) === null ? " checked" : "")}
+                                           onSelect={() => WS().setCompany(x, null)}>{L.wsAllCompanies}</DropdownMenu.Item>
+                      </>
+                    </Show>
+                  </>
                 )}
               </For>
               <DropdownMenu.Separator />
               <DropdownMenu.Item onSelect={() => signIn()}>{L.wsAddAccount}</DropdownMenu.Item>
               <DropdownMenu.Item onSelect={() => WS().openInBrowser(account(), "/files")}>{L.wsOpenWeb}</DropdownMenu.Item>
-              <DropdownMenu.Item class="negative" onSelect={() => WS().signOut(account())}>{L.wsSignOut.replace("$1", account().user.name)}</DropdownMenu.Item>
+              <DropdownMenu.Item class="negative" onSelect={() => WS().signOut(account())}>
+                {L.wsSignOut.replace("$1", account().user.name + " (" + hostOf(account().server) + ")")}
+              </DropdownMenu.Item>
             </DropdownMenu.Content>
           </DropdownMenu>
         </Show>
@@ -391,10 +514,20 @@ export default function WorkSuiteSection() {
                 const ext = item.kind === "file" && dot > 0 ? item.name.substring(dot) : "";
                 return (
                   <ContextMenu>
-                    <ContextMenu.Trigger as="div" class="row text-normal ws-grid" onClick={() => activate(item)}>
+                    <ContextMenu.Trigger as="div" class="row text-normal ws-grid" onClick={() => renaming() !== item.id && activate(item)}>
                       <div class="col-name" title={item.name}>
                         <FileIcon item={item} thumb={thumbs()[item.id]} />
-                        <p class="name">{base}<span class="ext">{ext}</span></p>
+                        <Show when={renaming() === item.id} fallback={<p class="name">{base}<span class="ext">{ext}</span></p>}>
+                          <input class="ws-input ws-rename" value={base} spellcheck={false} aria-label={L.wsRename}
+                                 ref={(el) => setTimeout(() => { el.focus(); el.select(); }, 0)}
+                                 onClick={(e) => e.stopPropagation()}
+                                 onKeyDown={(e) => {
+                                   e.stopPropagation();
+                                   if (e.key === "Enter") commitRename(item, e.currentTarget.value);
+                                   if (e.key === "Escape") setRenaming(null);
+                                 }}
+                                 onBlur={(e) => renaming() === item.id && commitRename(item, e.currentTarget.value)} />
+                        </Show>
                         <Show when={item.level === "view"}><span class="ws-badge">{L.wsViewOnly}</span></Show>
                       </div>
                       <div class="col-location" title={item.location}>{item.location}</div>
@@ -412,7 +545,12 @@ export default function WorkSuiteSection() {
         </Show>
 
         <Show when={state().text}>
-          <p class="ws-state" classList={{ "ws-error": state().error }}>{state().text}</p>
+          <p class="ws-state" classList={{ "ws-error": state().error }}>
+            {state().text}
+            <Show when={state().undo}>
+              {" "}<a href="#" class="ws-link" onClick={(e) => { e.preventDefault(); state().undo.run(); }}>{state().undo.label}</a>
+            </Show>
+          </p>
         </Show>
         <Show when={!data() && !state().error}>
           <div class="ws-skeleton" aria-hidden="true"><div /><div /><div /></div>
@@ -430,6 +568,20 @@ export default function WorkSuiteSection() {
       <Show when={dialog() && dialog().kind === "new"}>
         <NewDialog account={account()} type={dialog().type} onClose={() => setDialog(null)}
                    onCreated={(file) => { open(file); load(); }} />
+      </Show>
+      <Show when={dialog() && dialog().kind === "move"}>
+        <MoveDialog account={account()} file={dialog().file} onClose={() => setDialog(null)} onDone={(t) => { say(t); load(); }} />
+      </Show>
+      <Show when={dialog() && dialog().kind === "versions"}>
+        <VersionsDialog account={account()} file={dialog().file} onClose={() => setDialog(null)} onDone={(t) => { say(t); load(); }} />
+      </Show>
+      <Show when={dialog() && dialog().kind === "share"}>
+        <ShareDialog account={dialog().account || account()} file={dialog().file} onClose={() => setDialog(null)} />
+      </Show>
+      <Show when={dialog() && dialog().kind === "link"}>
+        <OpenLinkDialog link={dialog().link} candidates={dialog().candidates} initial={dialog().initial} error={dialog().error}
+                        onClose={() => setDialog(null)} onOpen={(acc) => openLinkAs(dialog().link, acc)}
+                        onSignIn={() => { pendingLink = dialog().link; setDialog(null); signIn(); }} />
       </Show>
     </section>
   );

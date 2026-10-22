@@ -363,6 +363,18 @@ bool CAscApplicationManagerWrapper::processCommonEvent(NSEditorApi::CAscCefMenuE
                 });
             return true;
         } else
+        if ( cmd.compare(L"worksuite:share") == 0 ) {
+            // "Share" in a WorkSuite Drive editor tab (DRV-10): the start page's Share dialog, for the tab's own server
+            if ( m_pMainWindow && event->get_SenderId() != m_pMainWindow->startPanelId() ) {
+                const QString answer = CWorkSuite::shareRequest(m_pMainWindow->tabWidget()->urlByView(event->get_SenderId()),
+                                                                QString::fromStdWString(pData->get_Param()));
+                if ( !answer.isEmpty() ) {
+                    m_pMainWindow->goStart();
+                    sendCommandTo(SEND_TO_ALL_START_PAGE, L"worksuite:share", answer.toStdWString());
+                }
+            }
+            return true;
+        } else
         if ( cmd.compare(L"worksuite:app") == 0 ) {
             // the start page's WorkSuite item in the sidebar: WorkSuite Desktop, or WorkSuite in the browser
             if ( m_pMainWindow && event->get_SenderId() == m_pMainWindow->startPanelId() )

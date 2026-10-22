@@ -522,7 +522,7 @@ public:
 #endif
 
                         if (cmd.compare(L"worksuite:secret") == 0 || cmd.compare(L"worksuite:desktop") == 0 || cmd.compare(L"worksuite:app") == 0 ||
-                            cmd.compare(L"worksuite:open") == 0) {
+                            cmd.compare(L"worksuite:open") == 0 || cmd.compare(L"worksuite:share") == 0) {
                             [[NSNotificationCenter defaultCenter] postNotificationName:CEFEventNameWorkSuiteSecret
                                                                                 object:nil
                                                                               userInfo:@{

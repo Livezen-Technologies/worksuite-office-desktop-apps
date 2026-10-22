@@ -12,7 +12,8 @@
     "sprites": "node ./build/generate-sprites.js",
     "fmt": "oxfmt",
     "lint": "oxlint",
-    "lint:fix": "oxlint --fix"
+    "lint:fix": "oxlint --fix",
+    "test": "node --test test/worksuite.test.mjs"
   },
   "dependencies": {
     "@kobalte/core": "^0.13.11",

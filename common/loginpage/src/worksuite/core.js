@@ -383,7 +383,7 @@ const utils = { Lang: L, defines: { FileFormat } };
     async function checkServer(server) {
         try {
             const res = await http('GET', server + '/.well-known/worksuite-desktop');
-            if (res.status === 200 && res.json) return { name: res.json.name || 'WorkSuite', office: !!res.json.office_sign_in };
+            if (res.status === 200 && res.json) return { name: res.json.name || 'WorkSuite', office: !!res.json.office_sign_in, openSource: !!res.json.office_open_source };
         } catch (e) { /* below */ }
 
         const health = await http('GET', server + '/api/health').catch(() => null);
@@ -837,11 +837,15 @@ const utils = { Lang: L, defines: { FileFormat } };
             modified: f.opened_at || f.last_at || f.updated_at || f.modified_at || f.created_at || '',
             level: level,
             starred: !!(f.starred || f.is_favorite),
+            org: f.org_id === undefined ? undefined : f.org_id,
+            folder: f.folder_id === undefined ? undefined : f.folder_id,
+            version: f.version === undefined ? undefined : f.version,
         };
     }
 
     function shapeFolder(f) {
-        return { kind: 'folder', id: f.id, name: f.name || '', owner: f.owner_name || '', modified: f.updated_at || '' };
+        return { kind: 'folder', id: f.id, name: f.name || '', owner: f.owner_name || '', modified: f.updated_at || '',
+                 org: f.org_id === undefined ? undefined : f.org_id };
     }
 
     /*
@@ -851,22 +855,24 @@ const utils = { Lang: L, defines: { FileFormat } };
     async function list(account, view, opts) {
         opts = opts || {};
         let data, items, breadcrumb = null;
+        const org = companyOf(account);
+        const orgQ = org ? '&org_id=' + encodeURIComponent(org) : '';
 
         if (view === 'drive') {
-            data = await api(account, 'GET', '/api/files/browse' + (opts.folder ? '?folder_id=' + encodeURIComponent(opts.folder) : ''));
+            data = await api(account, 'GET', '/api/files/browse?' + (opts.folder ? 'folder_id=' + encodeURIComponent(opts.folder) : '') + orgQ);
             items = (data.folders || []).map(shapeFolder).concat((data.files || []).map(shapeFile));
             breadcrumb = data.breadcrumb || [];
         } else
         if (view === 'search') {
-            data = await api(account, 'GET', '/api/files/search?limit=100&q=' + encodeURIComponent(opts.q || ''));
+            data = await api(account, 'GET', '/api/files/search?limit=100&q=' + encodeURIComponent(opts.q || '') + orgQ);
             items = (data.files || []).map(shapeFile);
         } else {
             const sort = view === 'recent' ? '&sort=opened&dir=desc' : '&sort=modified&dir=desc';
-            data = await api(account, 'GET', '/api/drive/list?per_page=100&view=' + encodeURIComponent(view) + sort);
+            data = await api(account, 'GET', '/api/drive/list?per_page=100&view=' + encodeURIComponent(view) + sort + orgQ);
             items = (data.files || []).map(shapeFile);
         }
 
-        items = items.filter(i => i.kind === 'folder' || OFFICE_EXT.includes(i.ext));
+        items = items.filter(i => (i.kind === 'folder' || OFFICE_EXT.includes(i.ext)) && inCompany(org, i));
         const result = { items: items, breadcrumb: breadcrumb, at: Date.now() };
 
         if (view !== 'search')
@@ -875,7 +881,8 @@ const utils = { Lang: L, defines: { FileFormat } };
     }
 
     function cacheKey(account, view, opts) {
-        return LS_CACHE + account.id + ':' + view + (view === 'drive' ? ':' + (opts.folder || 'root') : '');
+        const org = companyOf(account);
+        return LS_CACHE + account.id + ':' + view + (view === 'drive' ? ':' + (opts.folder || 'root') : '') + (org ? '@' + org : '');
     }
 
     function cached(account, view, opts) {
@@ -924,13 +931,21 @@ const utils = { Lang: L, defines: { FileFormat } };
         return { thumbs: got, pending: Array.isArray(data && data.pending) ? data.pending : [] };
     }
 
-    async function open(account, file) {
+    /*
+     * `extra.version`: an old version, read-only (DRV-09). `file.src`: a copy that is not in Drive (a mail
+     * attachment, LNK-05), read from the server with this sign-in; Save asks for a Drive folder.
+     */
+    async function open(account, file, extra) {
+        extra = extra || {};
         const pair = await pkce();
         const handed = await api(account, 'POST', '/api/auth/apps/handoff',
                                  { client: EDITOR_CLIENT, code_challenge: pair.challenge, code_challenge_method: 'S256' });
 
-        let next = '/editor/' + encodeURIComponent(file.id) + '?name=' + encodeURIComponent(file.name);
+        let next = file.src
+            ? '/editor/source?src=' + encodeURIComponent(file.src) + '&name=' + encodeURIComponent(file.name) + '&save=drive'
+            : '/editor/' + encodeURIComponent(file.id) + '?name=' + encodeURIComponent(file.name);
         if (file.level === 'view') next += '&mode=VIEW';
+        if (extra.version) next += '&version=' + encodeURIComponent(extra.version);
 
         const fragment = 'code=' + encodeURIComponent(handed.code) + '&verifier=' + encodeURIComponent(pair.verifier) +
                          '&uid=' + encodeURIComponent(account.user.id) + '&next=' + encodeURIComponent(next);
@@ -939,12 +954,13 @@ const utils = { Lang: L, defines: { FileFormat } };
             id: -1,
             name: file.name,
             path: account.server + '/desktop/office/session#' + fragment,
-            type: formatOf(file.ext),
+            type: formatOf(file.ext || extOf(file.name)),
             cloud: account.server,
             recovery: false,
         }));
 
-        api(account, 'POST', '/api/drive/opened/' + encodeURIComponent(file.id)).catch(() => {});
+        if (!file.src && !extra.version)
+            api(account, 'POST', '/api/drive/opened/' + encodeURIComponent(file.id)).catch(() => {});
     }
 
     async function create(account, type, name, folder) {
@@ -978,6 +994,154 @@ const utils = { Lang: L, defines: { FileFormat } };
         return api(account, 'POST', '/api/drive/access/file/' + encodeURIComponent(file.id) + '/request-edit', {});
     }
 
+    /* ------------------------------------------------------------------ *
+     * Drive actions in the app (DRV-08…10, G-09), over Drive's own routes
+     * ------------------------------------------------------------------ */
+
+    /* PUT /api/files/{id} {name}: needs "rename"; the open editor tabs take the new title (office/meta) */
+    async function rename(account, file, name) {
+        const data = await api(account, 'PUT', '/api/files/' + encodeURIComponent(file.id), { name: name });
+        api(account, 'POST', '/api/files/' + encodeURIComponent(file.id) + '/office/meta', {}).catch(() => {});
+        return shapeFile(data || {});
+    }
+
+    /* PUT /api/files/{id} {folder_id}: needs "move" here and "add_files" there; null is the top of My Drive */
+    function move(account, file, folder) {
+        return api(account, 'PUT', '/api/files/' + encodeURIComponent(file.id), { folder_id: folder || null }).then(d => shapeFile(d || {}));
+    }
+
+    /* POST /api/files/{id}/copy: "<name> (copy)" beside it, or at the top of My Drive where it may not add */
+    function copy(account, file) {
+        return api(account, 'POST', '/api/files/' + encodeURIComponent(file.id) + '/copy', {}).then(d => shapeFile(d || {}));
+    }
+
+    /* DELETE /api/files/{id}: to the bin (soft); POST /api/files/{id}/restore takes it back */
+    function trash(account, file) {
+        return api(account, 'DELETE', '/api/files/' + encodeURIComponent(file.id));
+    }
+
+    function untrash(account, file) {
+        return api(account, 'POST', '/api/files/' + encodeURIComponent(file.id) + '/restore', {});
+    }
+
+    /*
+     * GET /api/files/{id}/versions: newest first, the head marked current. Each: {id (snapshot row; null for the
+     * head), version, author, at, label, client ('office'|'web'|'desktop'|'mobile'|… when the server says), openable}.
+     */
+    async function versions(account, file) {
+        const d = await api(account, 'GET', '/api/files/' + encodeURIComponent(file.id) + '/versions');
+        const shape = (v, head) => ({
+            id: head ? null : v.id,
+            version: v.version,
+            author: v.author || '',
+            at: v.made_at || v.created_at || v.updated_at || '',
+            label: v.label || '',
+            client: typeof v.client === 'string' ? v.client : '',
+            current: !!head,
+            openable: !head && v.openable === true,
+        });
+        const seen = {};
+        const out = d && d.current ? [shape(d.current, true)] : [];
+        if (d && d.current) seen[d.current.version] = true;
+        ((d && d.history) || []).forEach(v => {
+            if (seen[v.version]) return;
+            seen[v.version] = true;
+            out.push(shape(v, false));
+        });
+        return out;
+    }
+
+    /* POST /api/files/{id}/versions/{row}/restore: a new version made from the old one (needs "edit"); nothing is lost */
+    function restoreVersion(account, file, version) {
+        return api(account, 'POST', '/api/files/' + encodeURIComponent(file.id) + '/versions/' + encodeURIComponent(version.id) + '/restore', {});
+    }
+
+    /* An old version, read-only in an editor tab: only where the server marks it openable (see server needs) */
+    function openVersion(account, file, version) {
+        return open(account, Object.assign({}, file, { level: 'view' }), { version: version.id });
+    }
+
+    /* GET /api/drive/access/file/{id}: item, may {share, manage}, grants, inherited, notify_defaults */
+    function fileAccess(account, file) {
+        return api(account, 'GET', '/api/drive/access/file/' + encodeURIComponent(file.id));
+    }
+
+    /* GET …/principals?q=: people, teams, departments, roles, companies the file may be shared with */
+    function principals(account, file, q) {
+        return api(account, 'GET', '/api/drive/access/file/' + encodeURIComponent(file.id) + '/principals?q=' + encodeURIComponent(q || ''));
+    }
+
+    /* POST …/grants {principal_type, principal_id, level, notify, message} */
+    function grant(account, file, principal, level, notify, message) {
+        return api(account, 'POST', '/api/drive/access/file/' + encodeURIComponent(file.id) + '/grants', {
+            principal_type: principal.type, principal_id: principal.id, level: level, effect: 'allow', notify: !!notify, message: message || '',
+        });
+    }
+
+    function changeGrant(account, file, grantId, level) {
+        return api(account, 'PUT', '/api/drive/access/file/' + encodeURIComponent(file.id) + '/grants/' + encodeURIComponent(grantId), { level: level });
+    }
+
+    function revokeGrant(account, file, grantId) {
+        return api(account, 'DELETE', '/api/drive/access/file/' + encodeURIComponent(file.id) + '/grants/' + encodeURIComponent(grantId));
+    }
+
+    /* The file's address in WorkSuite Drive: what "Copy link" copies. A link never grants more than view. */
+    function fileLink(account, file) {
+        return account.server + '/files?file=' + encodeURIComponent(file.id);
+    }
+
+    /* ------------------------------------------------------------------ *
+     * companies (DRV-11, G-10): an account's lists, scoped to one company or all
+     * ------------------------------------------------------------------ */
+
+    /* GET /api/drive/sharing/companies: the companies the person belongs to, [{id, name}] */
+    async function companies(account) {
+        const d = await api(account, 'GET', '/api/drive/sharing/companies');
+        const list = ((d && d.companies) || []).filter(c => c && c.id !== undefined).map(c => ({ id: c.id, name: String(c.name || '') }));
+        updateAccount(account.id, { companies: list });
+        return list;
+    }
+
+    /* The company the account's lists are scoped to; null is All companies */
+    function companyOf(account) {
+        const a = account && accounts().find(x => x.id === account.id);
+        return a && a.org !== undefined && a.org !== null && a.org !== '' ? a.org : null;
+    }
+
+    function setCompany(account, org) {
+        updateAccount(account.id, { org: org === null || org === undefined || org === '' ? null : org });
+        fire('changed');
+    }
+
+    /* Items the server did not say the company of stay listed: the server is the one that scopes */
+    function inCompany(org, item) {
+        return !org || item.org === undefined || item.org === null || String(item.org) === String(org);
+    }
+
+    /* ------------------------------------------------------------------ *
+     * templates (DOC-06, G-18): the server's office/templates gallery
+     * ------------------------------------------------------------------ */
+
+    const KIND_OF_TYPE = { word: 'document', cell: 'spreadsheet', slide: 'presentation' };
+
+    /* GET /api/files/office/templates?kind=: [{id, name, kind, extension, scope: system|organization, category, organization_id}] */
+    async function templates(account, type) {
+        const d = await api(account, 'GET', '/api/files/office/templates?kind=' + encodeURIComponent(KIND_OF_TYPE[type] || ''));
+        return ((d && d.templates) || []).filter(t => t && t.id !== undefined && (!t.kind || t.kind === KIND_OF_TYPE[type]));
+    }
+
+    /* POST /api/files/office/new {type, template_id, folder_id, name} → the new file */
+    async function createFromTemplate(account, type, template, name, folder) {
+        const d = await api(account, 'POST', '/api/files/office/new',
+                            { type: KIND_OF_TYPE[type], template_id: template ? String(template.id) : '', name: name, folder_id: folder || null });
+        const file = shapeFile((d && d.file) || {});
+        const ext = { word: 'docx', cell: 'xlsx', slide: 'pptx' }[type];
+        if (!file.ext) file.ext = ext;
+        if (!file.name) file.name = name + '.' + ext;
+        return file;
+    }
+
     function openInBrowser(account, path) {
         window.open(account.server + (path || '/files'));
     }
@@ -999,6 +1163,40 @@ const utils = { Lang: L, defines: { FileFormat } };
      * links from the app: worksuiteoffice://auth/callback, worksuiteoffice://open
      * ------------------------------------------------------------------ */
 
+    /*
+     * worksuiteoffice://open, contract v1 (LNK-04/05, G-06; worksuite-desktop shared/office-open.ts):
+     *   ?v=1&server=<origin>&uid=<user id>[&org=<id>]&file=<Drive file id>&name=<name>[&mode=edit|view]
+     *   ?v=1&server=<origin>&uid=<user id>[&org=<id>]&src=</api/… or /media/… path>&name=<name>
+     * and the older ?file=<id>&server=<host>[&name=] (and open/<id>). A src is a path on that server, never an
+     * address of its own, so the copy is read only from the account's server. A link of a later version (v > 1)
+     * is read as far as v1 goes.
+     */
+    function parseOpenLink(url, route) {
+        const q = url.searchParams;
+        const v = parseInt(q.get('v') || '0', 10) || 0;
+        const server = normalizeServer(q.get('server'));
+        const uid = q.get('uid');
+        const org = q.get('org');
+        const mode = (q.get('mode') || '').toLowerCase();
+        const name = (q.get('name') || '').slice(0, 255);
+        const id = q.get('file') || (route.indexOf('open/') === 0 ? route.split('/')[1] : '');
+        const srcRaw = q.get('src') || '';
+        const src = /^\/(api|media)\/[^\s]*$/.test(srcRaw) && srcRaw.indexOf('//') < 0 && srcRaw.indexOf('/../') < 0 ? srcRaw : '';
+
+        if (!id && !src) return null;
+        if (id && !/^[0-9]{1,18}$/.test(id)) return null;
+        return {
+            v: v,
+            id: id || null,
+            src: id ? '' : src,
+            server: server,
+            uid: uid && /^[0-9A-Za-z_-]{1,64}$/.test(uid) ? uid : null,
+            org: org && /^[0-9]{1,18}$/.test(org) ? org : null,
+            mode: mode === 'view' || mode === 'edit' ? mode : '',
+            name: name,
+        };
+    }
+
     function onLink(link) {
         let url;
         try { url = new URL(link); } catch (e) { return; }
@@ -1008,11 +1206,8 @@ const utils = { Lang: L, defines: { FileFormat } };
             finishSignIn(url.searchParams);
         } else
         if (route === 'open' || route.indexOf('open/') === 0) {
-            // worksuiteoffice://open?file=<id>&server=<host>[&name=<name>]
-            const id = url.searchParams.get('file') || route.split('/')[1];
-            const server = normalizeServer(url.searchParams.get('server'));
-            const name = url.searchParams.get('name') || '';
-            if (id) fire('openlink', { id: id, server: server, name: name });
+            const parsed = parseOpenLink(url, route);
+            if (parsed) fire('openlink', parsed);
         }
     }
 
@@ -1041,6 +1236,13 @@ const utils = { Lang: L, defines: { FileFormat } };
             } else
             if (cmd === 'worksuite:link') {
                 onLink(param);
+            } else
+            if (cmd === 'worksuite:share') {
+                // "Share" in a Drive editor tab (DRV-10): {server: the tab's own origin, file}
+                let req = null;
+                try { req = JSON.parse(param); } catch (e) { return; }
+                const server = req && normalizeServer(req.server);
+                if (server && req.file && /^[0-9]{1,18}$/.test(String(req.file))) fire('share', { server: server, id: String(req.file) });
             } else
             if (cmd === 'worksuite:desktop') {
                 desktopWaiting.slice().forEach(f => f(param));
@@ -1087,6 +1289,27 @@ const utils = { Lang: L, defines: { FileFormat } };
         star: star,
         requestEdit: requestEdit,
         openInBrowser: openInBrowser,
+        rename: rename,
+        move: move,
+        copy: copy,
+        trash: trash,
+        untrash: untrash,
+        versions: versions,
+        restoreVersion: restoreVersion,
+        openVersion: openVersion,
+        access: fileAccess,
+        principals: principals,
+        grant: grant,
+        changeGrant: changeGrant,
+        revokeGrant: revokeGrant,
+        fileLink: fileLink,
+        companies: companies,
+        companyOf: companyOf,
+        setCompany: setCompany,
+        inCompany: inCompany,
+        templates: templates,
+        createFromTemplate: createFromTemplate,
+        _parseOpenLink: (link) => { const u = new URL(link); return parseOpenLink(u, (u.host + u.pathname).replace(/\/+$/, '')); },
         openApp: openApp,
         typeOf: typeOf,
         extOf: extOf,

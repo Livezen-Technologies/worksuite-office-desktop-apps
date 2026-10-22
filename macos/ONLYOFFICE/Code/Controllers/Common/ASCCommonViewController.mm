@@ -1267,11 +1267,43 @@ static BOOL workSuiteKeychainDelete(NSString * key) {
     }
 }
 
+/// "worksuite:share", {"file": "<Drive file id>"} from a WorkSuite Drive editor tab (DRV-10): the start page's Share
+/// dialog for that file, on the tab's own https server (the address the tab was opened with), never one the page names.
+- (void)onWorkSuiteShare:(NSDictionary *)info {
+    if (!self.cefStartPageView || [info[@"viewId"] integerValue] == self.cefStartPageView.uuid)
+        return;
+
+    ASCTabView * tab = [self tabViewWithId:[info[@"viewId"] intValue]];
+    // a Drive document's tab is opened from the start page like a recent file: its address is its "path"
+    id tabUrl = [tab.params[@"path"] isKindOfClass:[NSString class]] ? tab.params[@"path"] : tab.params[@"url"];
+    NSURL * url = [tabUrl isKindOfClass:[NSString class]] ? [NSURL URLWithString:tabUrl] : nil;
+    if (!url || ![url.scheme.lowercaseString isEqualToString:@"https"] || url.host.length == 0 || url.user.length > 0)
+        return;
+
+    id file = [info[@"param"] dictionary][@"file"];
+    NSString * fileId = [file isKindOfClass:[NSNumber class]] ? [file stringValue] : ([file isKindOfClass:[NSString class]] ? file : nil);
+    NSCharacterSet * notDigits = [[NSCharacterSet decimalDigitCharacterSet] invertedSet];
+    if (fileId.length == 0 || fileId.length > 18 || [fileId rangeOfCharacterFromSet:notDigits].location != NSNotFound)
+        return;
+
+    NSString * server = [NSString stringWithFormat:@"https://%@", url.host.lowercaseString];
+    if (url.port && url.port.integerValue != 443)
+        server = [server stringByAppendingFormat:@":%@", url.port];
+
+    [self.tabView selectTabViewItemWithIdentifier:rootTabId];
+    [self.tabsControl selectTab:nil];
+    [self sendToStartPage:@"worksuite:share" param:[@{@"server": server, @"file": fileId} jsonString]];
+}
+
 /// The start page's WorkSuite section: sign-ins kept in the Keychain ("worksuite:secret"), the accounts
 /// WorkSuite Desktop is signed in to ("worksuite:desktop") and the sidebar's WorkSuite item ("worksuite:app").
 /// Never answered for a web page in a tab.
 - (void)onCEFWorkSuiteSecret:(NSNotification *)notification {
     NSDictionary * info = notification.userInfo;
+    if (info && [info[@"command"] isEqualToString:@"worksuite:share"]) {
+        [self onWorkSuiteShare:info];
+        return;
+    }
     if (!info || !self.cefStartPageView || [info[@"viewId"] integerValue] != self.cefStartPageView.uuid)
         return;
 

@@ -74,6 +74,11 @@ namespace CWorkSuite
      * Asynchronous (a SignIn waits for the system browser, up to ten minutes); `reply` gets
      * {"req","ok","result","expires_at","error"}, error "not_os" anywhere but WorkSuite OS on Linux. */
     void brokerRequest(const QString& json, std::function<void(const QString&)> reply);
+
+    /* "worksuite:share", {"file":"<Drive file id>"} from a WorkSuite Drive editor tab (DRV-10): the start page's
+     * Share dialog for that file. The server is the tab's own https origin (`tabUrl`, the address the tab was
+     * opened with), never one the page names. {"server","file"} out for the start page, or "" to ignore it. */
+    QString shareRequest(const QString& tabUrl, const QString& json);
 }
 
 #endif // CWORKSUITE_H

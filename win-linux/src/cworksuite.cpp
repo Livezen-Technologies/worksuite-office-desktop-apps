@@ -290,6 +290,26 @@ QString CWorkSuite::openLink(const QString& json)
     return QString::fromUtf8(QJsonDocument(reply).toJson(QJsonDocument::Compact));
 }
 
+QString CWorkSuite::shareRequest(const QString& tabUrl, const QString& json)
+{
+    const QUrl tab(tabUrl);
+    static const QRegularExpression host_re("^[A-Za-z0-9.-]{1,253}$");
+    if ( !tab.isValid() || tab.scheme() != "https" || !tab.userInfo().isEmpty() || !host_re.match(tab.host(QUrl::FullyEncoded)).hasMatch() )
+        return "";
+
+    const QJsonValue v = QJsonDocument::fromJson(json.toUtf8()).object().value("file");
+    const QString file = v.isDouble() ? QString::number(qint64(v.toDouble())) : v.toString();
+    static const QRegularExpression id_re("^[0-9]{1,18}$");
+    if ( !id_re.match(file).hasMatch() )
+        return "";
+
+    QString server = "https://" + tab.host(QUrl::FullyEncoded).toLower();
+    if ( tab.port() > 0 && tab.port() != 443 )
+        server += ":" + QString::number(tab.port());
+    const QJsonObject out{{"server", server}, {"file", file}};
+    return QString::fromUtf8(QJsonDocument(out).toJson(QJsonDocument::Compact));
+}
+
 namespace {
     QString compact(const QJsonObject& o) { return QString::fromUtf8(QJsonDocument(o).toJson(QJsonDocument::Compact)); }
 
