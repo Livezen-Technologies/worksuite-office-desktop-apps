@@ -41,3 +41,6 @@ We are here to help you with any questions or issues.
 * **❓ Have a question?** Ask our community and developers on the [ONLYOFFICE Forum](https://community.onlyoffice.com/).  
 * **💡 Want to suggest a feature?** Share your ideas on our [feedback platform](https://feedback.onlyoffice.com/forums/966080-your-voice-matters).
 * **🧑‍💻 Need help for developers?** Check our [API documentation](https://api.onlyoffice.com/?utm_source=github&utm_medium=cpc&utm_campaign=GitHubDesktopFrontend).
+## WorkSuite Office: managed configuration
+
+IT administrators can set the server, cloud providers, update channel and more for every person on a computer. See [docs/managed-configuration.md](docs/managed-configuration.md).

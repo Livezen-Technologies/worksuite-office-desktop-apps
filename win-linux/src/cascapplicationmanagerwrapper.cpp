@@ -375,6 +375,47 @@ bool CAscApplicationManagerWrapper::processCommonEvent(NSEditorApi::CAscCefMenuE
             }
             return true;
         } else
+        if ( cmd.compare(L"worksuite:policy") == 0 ) {
+            // ADM-01: what the organisation set, for Settings › WorkSuite and the WorkSuite section
+            if ( m_pMainWindow && event->get_SenderId() == m_pMainWindow->startPanelId() )
+                sendCommandTo(SEND_TO_ALL_START_PAGE, cmd, CWorkSuite::policyAnswer().toStdWString());
+            return true;
+        } else
+        if ( cmd.compare(L"worksuite:upload") == 0 ) {
+            // DOC-07: an offline working copy back to WorkSuite Drive; the answer comes later
+            if ( m_pMainWindow && event->get_SenderId() == m_pMainWindow->startPanelId() )
+                CWorkSuite::upload(QString::fromStdWString(pData->get_Param()), [](const QString& answer) {
+                    sendCommandTo(SEND_TO_ALL_START_PAGE, L"worksuite:upload", answer.toStdWString());
+                });
+            return true;
+        } else
+        if ( cmd.compare(L"worksuite:updates") == 0 ) {
+            // SHL-08, SHL-09: Settings › WorkSuite › Updates and the Update ready banner
+            if ( m_pMainWindow && event->get_SenderId() == m_pMainWindow->startPanelId() ) {
+                const QJsonObject in = QJsonDocument::fromJson(QString::fromStdWString(pData->get_Param()).toUtf8()).object();
+                const QString op = in.value("op").toString();
+#ifdef _UPDMODULE
+                if ( m_pUpdateManager ) {
+                    if ( op == "set" ) {
+                        if ( in.contains("channel") )
+                            m_pUpdateManager->setWorkSuiteChannel(in.value("channel").toString());
+                        if ( in.contains("auto") && !CWorkSuite::policy().contains("updateAuto") )
+                            m_pUpdateManager->setNewUpdateSetting(in.value("auto").toBool() ? "silent" : "ask");
+                    } else
+                    if ( op == "check" ) {
+                        m_pUpdateManager->checkUpdates(true);
+                    } else
+                    if ( op == "restart" ) {
+                        m_pUpdateManager->installUpdates();
+                    }
+                    sendCommandTo(SEND_TO_ALL_START_PAGE, cmd, m_pUpdateManager->workSuiteState().toStdWString());
+                    return true;
+                }
+#endif
+                sendCommandTo(SEND_TO_ALL_START_PAGE, cmd, L"{\"available\":false}");
+            }
+            return true;
+        } else
         if ( cmd.compare(L"worksuite:app") == 0 ) {
             // the start page's WorkSuite item in the sidebar: WorkSuite Desktop, or WorkSuite in the browser
             if ( m_pMainWindow && event->get_SenderId() == m_pMainWindow->startPanelId() )

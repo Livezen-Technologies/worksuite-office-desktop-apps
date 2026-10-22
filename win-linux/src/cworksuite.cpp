@@ -37,6 +37,13 @@
 # include <QDesktopServices>
 #endif
 #include "utils.h"
+#include <QSettings>
+#include <QJsonArray>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QNetworkRequest>
+#include <QHttpMultiPart>
+#include <QStandardPaths>
 
 #ifdef Q_OS_WIN
 # include <windows.h>
@@ -434,4 +441,126 @@ void CWorkSuite::brokerRequest(const QString& json, std::function<void(const QSt
     timer->start(timeout_ms);
     sock->connectToServer(brokerSocketPath());
 #endif
+}
+
+/* ---- ADM-01: the organisation policy ------------------------------------ */
+
+namespace {
+    const char * const POLICY_KEYS[] = {"organization", "server", "lockServer", "allowOtherClouds",
+                                        "updateChannel", "updateAuto", "usageReports", "aiFunctions"};
+
+    QJsonObject readPolicy(QString& source)
+    {
+        QJsonObject out;
+#ifdef Q_OS_WIN
+        QSettings reg("HKEY_LOCAL_MACHINE\\Software\\Policies\\WorkSuite\\Office", QSettings::NativeFormat);
+        for (const char * key : POLICY_KEYS) {
+            const QVariant v = reg.value(key);
+            if ( !v.isValid() || v.toString().trimmed().isEmpty() ) continue;
+            out[key] = v.type() == QVariant::String ? QJsonValue(v.toString().trimmed()) : QJsonValue(v.toInt());
+        }
+        source = "registry";
+#else
+        QFile file("/etc/worksuite-office/policy.json");
+        if ( file.open(QIODevice::ReadOnly) && file.size() < 64 * 1024 ) {
+            const QJsonObject in = QJsonDocument::fromJson(file.readAll()).object();
+            for (const char * key : POLICY_KEYS) {
+                const QJsonValue v = in.value(key);
+                if ( v.isBool() || v.isDouble() || (v.isString() && !v.toString().trimmed().isEmpty()) )
+                    out[key] = v;
+            }
+        }
+        source = "file";
+#endif
+        return out;
+    }
+}
+
+QJsonObject CWorkSuite::policy()
+{
+    QString source;
+    return readPolicy(source);
+}
+
+bool CWorkSuite::policyBool(const QJsonValue& v)
+{
+    if ( v.isBool() ) return v.toBool();
+    if ( v.isDouble() ) return v.toInt() != 0;
+    const QString s = v.toString().trimmed().toLower();
+    return s == "1" || s == "true" || s == "yes" || s == "on";
+}
+
+QString CWorkSuite::policyAnswer()
+{
+    QString source;
+    const QJsonObject p = readPolicy(source);
+    QJsonObject out{{"managed", !p.isEmpty()}, {"source", source}, {"policy", p}};
+    return QString::fromUtf8(QJsonDocument(out).toJson(QJsonDocument::Compact));
+}
+
+/* ---- DOC-07: offline working copies back to Drive ------------------------ */
+
+QString CWorkSuite::offlineFolder()
+{
+    return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/offline";
+}
+
+void CWorkSuite::upload(const QString& json, std::function<void(const QString&)> reply)
+{
+    const QJsonObject in = QJsonDocument::fromJson(json.toUtf8()).object();
+    const QString req = in.value("req").toString().left(64);
+    auto answer = [reply, req](int status, const QByteArray& body) {
+        QJsonObject out{{"req", req}, {"status", status}, {"body", QString::fromUtf8(body.left(256 * 1024))}};
+        reply(QString::fromUtf8(QJsonDocument(out).toJson(QJsonDocument::Compact)));
+    };
+
+    // https://<host>/api/files/<id>/versions only, a file from the offline folder only
+    static const QRegularExpression path_re("^/api/files/[0-9]{1,20}/versions$");
+    const QUrl url(in.value("url").toString(), QUrl::StrictMode);
+    const QString root = QFileInfo(offlineFolder()).canonicalFilePath();
+    const QString path = QFileInfo(in.value("path").toString()).canonicalFilePath();
+    const QString token = in.value("token").toString();
+    if ( !url.isValid() || url.scheme() != "https" || !url.userInfo().isEmpty() || !path_re.match(url.path()).hasMatch() ||
+            root.isEmpty() || path.isEmpty() || !path.startsWith(root + "/") || token.isEmpty() || token.contains('\n') ) {
+        answer(400, QByteArray());
+        return;
+    }
+
+    QFile * file = new QFile(path);
+    if ( !file->open(QIODevice::ReadOnly) ) {
+        delete file;
+        answer(404, QByteArray());
+        return;
+    }
+
+    QHttpMultiPart * multi = new QHttpMultiPart(QHttpMultiPart::FormDataType);
+    const QJsonObject fields = in.value("fields").toObject();
+    for (auto it = fields.begin(); it != fields.end(); ++it) {
+        static const QRegularExpression name_re("^[a-z_]{1,32}$");
+        if ( !name_re.match(it.key()).hasMatch() ) continue;
+        QHttpPart part;
+        part.setHeader(QNetworkRequest::ContentDispositionHeader, QString("form-data; name=\"%1\"").arg(it.key()));
+        part.setBody(it.value().toString().left(1024).toUtf8());
+        multi->append(part);
+    }
+    QHttpPart filePart;
+    QString name = QFileInfo(path).fileName();
+    name.replace('"', '_');
+    filePart.setHeader(QNetworkRequest::ContentDispositionHeader, QString("form-data; name=\"file\"; filename=\"%1\"").arg(name));
+    filePart.setHeader(QNetworkRequest::ContentTypeHeader, "application/octet-stream");
+    filePart.setBodyDevice(file);
+    file->setParent(multi);
+    multi->append(filePart);
+
+    static QNetworkAccessManager * nam = new QNetworkAccessManager();
+    QNetworkRequest request(url);
+    request.setRawHeader("Authorization", "Bearer " + token.toUtf8());
+    request.setRawHeader("Accept", "application/json");
+    QNetworkReply * r = nam->post(request, multi);
+    multi->setParent(r);
+    QObject::connect(r, &QNetworkReply::finished, [r, answer]() {
+        const int status = r->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        answer(status, r->readAll());
+        r->deleteLater();
+    });
 }

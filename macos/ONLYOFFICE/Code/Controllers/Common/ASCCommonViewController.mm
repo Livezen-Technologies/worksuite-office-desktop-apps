@@ -72,6 +72,7 @@
 #import "ASCLicenseController.h"
 #import <Carbon/Carbon.h>
 #import <Security/Security.h>
+#import <Sparkle/SUUpdater.h>
 #import <QuartzCore/QuartzCore.h>
 
 
@@ -1295,6 +1296,132 @@ static BOOL workSuiteKeychainDelete(NSString * key) {
     [self sendToStartPage:@"worksuite:share" param:[@{@"server": server, @"file": fileId} jsonString]];
 }
 
+/// ADM-01, CLD-02: what the organisation set, from a configuration profile for the app's domain
+/// (lk.worksuite.office). Only values the profile forces count: a person's own defaults are not policy.
+/// Value names as on Windows and Linux (README "Managed configuration").
+- (NSDictionary *)workSuitePolicy {
+    NSMutableDictionary * out = [NSMutableDictionary dictionary];
+    CFStringRef app = (__bridge CFStringRef)([[NSBundle mainBundle] bundleIdentifier] ?: @"lk.worksuite.office");
+    for (NSString * key in @[@"organization", @"server", @"lockServer", @"allowOtherClouds", @"updateChannel",
+                             @"updateAuto", @"usageReports", @"aiFunctions"]) {
+        if (!CFPreferencesAppValueIsForced((__bridge CFStringRef)key, app))
+            continue;
+        id value = CFBridgingRelease(CFPreferencesCopyAppValue((__bridge CFStringRef)key, app));
+        if ([value isKindOfClass:[NSString class]] && [(NSString *)value length] > 0 && [(NSString *)value length] < 512)
+            out[key] = value;
+        else if ([value isKindOfClass:[NSNumber class]])
+            out[key] = value;
+    }
+    return out;
+}
+
+/// SHL-08: Settings › WorkSuite › Updates, through Sparkle. The channel is the feed address's
+/// /channels/<channel>/ part (build-mac.yml stamps it into SUFeedURL).
+- (NSString *)workSuiteUpdates:(NSDictionary *)json {
+    SUUpdater * updater = [SUUpdater sharedUpdater];
+    NSDictionary * policy = [self workSuitePolicy];
+    NSString * op = [json[@"op"] isKindOfClass:[NSString class]] ? json[@"op"] : @"get";
+
+    NSString * (^channelOf)(NSURL *) = ^NSString *(NSURL * feed) {
+        NSArray * parts = feed.path.pathComponents;
+        NSUInteger i = [parts indexOfObject:@"channels"];
+        return (i != NSNotFound && i + 1 < parts.count) ? [parts[i + 1] lowercaseString] : @"stable";
+    };
+    void (^switchChannel)(NSString *) = ^(NSString * channel) {
+        NSURLComponents * c = [NSURLComponents componentsWithURL:updater.feedURL resolvingAgainstBaseURL:NO];
+        NSString * from = [NSString stringWithFormat:@"/channels/%@/", channelOf(updater.feedURL)];
+        if (c && [c.path containsString:from]) {
+            c.path = [c.path stringByReplacingOccurrencesOfString:from withString:[NSString stringWithFormat:@"/channels/%@/", channel]];
+            if (c.URL) updater.feedURL = c.URL;
+        }
+    };
+
+    NSString * forced = [policy[@"updateChannel"] isKindOfClass:[NSString class]] ? [policy[@"updateChannel"] lowercaseString] : nil;
+    if (forced && ([forced isEqualToString:@"stable"] || [forced isEqualToString:@"beta"]) && ![channelOf(updater.feedURL) isEqualToString:forced])
+        switchChannel(forced);
+    if (policy[@"updateAuto"]) {
+        BOOL on = [policy[@"updateAuto"] boolValue];
+        updater.automaticallyChecksForUpdates = YES;
+        updater.automaticallyDownloadsUpdates = on;
+    }
+
+    if ([op isEqualToString:@"set"]) {
+        NSString * channel = json[@"channel"];
+        if (!forced && [channel isKindOfClass:[NSString class]] && ([channel isEqualToString:@"stable"] || [channel isEqualToString:@"beta"]))
+            switchChannel(channel);
+        if (!policy[@"updateAuto"] && json[@"auto"]) {
+            updater.automaticallyChecksForUpdates = YES;
+            updater.automaticallyDownloadsUpdates = [json[@"auto"] boolValue];
+        }
+    } else if ([op isEqualToString:@"check"]) {
+        [updater checkForUpdates:nil];
+    }
+
+    NSDictionary * state = @{
+        @"available": @(updater.feedURL != nil),
+        @"version": [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"] ?: @"",
+        @"channel": channelOf(updater.feedURL),
+        @"auto": @(updater.automaticallyDownloadsUpdates),
+        @"lastCheck": @(updater.lastUpdateCheckDate ? (long long)updater.lastUpdateCheckDate.timeIntervalSince1970 : 0),
+        @"host": updater.feedURL.host ?: @"download.worksuitecloud.com",
+    };
+    return [state jsonString];
+}
+
+/// DOC-07: an offline working copy (only from ~/Library/Application Support/<app>/offline) posted to
+/// https://<server>/api/files/<id>/versions as multipart "file" plus fields. Answers "worksuite:upload".
+- (void)workSuiteUpload:(NSDictionary *)json {
+    NSString * req = [json[@"req"] isKindOfClass:[NSString class]] ? json[@"req"] : @"";
+    void (^answer)(NSInteger, NSData *) = ^(NSInteger status, NSData * body) {
+        NSString * text = body ? ([[NSString alloc] initWithData:body encoding:NSUTF8StringEncoding] ?: @"") : @"";
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self sendToStartPage:@"worksuite:upload" param:[@{@"req": req, @"status": @(status), @"body": text} jsonString]];
+        });
+    };
+
+    NSURL * url = [json[@"url"] isKindOfClass:[NSString class]] ? [NSURL URLWithString:json[@"url"]] : nil;
+    NSString * token = [json[@"token"] isKindOfClass:[NSString class]] ? json[@"token"] : nil;
+    NSString * support = [NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES) firstObject];
+    NSString * root = [[[support stringByAppendingPathComponent:[[NSBundle mainBundle] bundleIdentifier] ?: @"lk.worksuite.office"]
+                        stringByAppendingPathComponent:@"offline"] stringByResolvingSymlinksInPath];
+    NSString * path = [json[@"path"] isKindOfClass:[NSString class]] ? [json[@"path"] stringByResolvingSymlinksInPath] : nil;
+    NSRegularExpression * re = [NSRegularExpression regularExpressionWithPattern:@"^/api/files/[0-9]{1,20}/versions$" options:0 error:nil];
+    if (!url || ![url.scheme isEqualToString:@"https"] || url.user || !url.path ||
+        [re numberOfMatchesInString:url.path options:0 range:NSMakeRange(0, url.path.length)] != 1 ||
+        !path || ![path hasPrefix:[root stringByAppendingString:@"/"]] || token.length == 0 || [token containsString:@"\n"]) {
+        answer(400, nil);
+        return;
+    }
+    NSData * data = [NSData dataWithContentsOfFile:path];
+    if (!data) {
+        answer(404, nil);
+        return;
+    }
+
+    NSString * boundary = [NSString stringWithFormat:@"ws-%@", [[NSUUID UUID] UUIDString]];
+    NSMutableData * body = [NSMutableData data];
+    NSDictionary * fields = [json[@"fields"] isKindOfClass:[NSDictionary class]] ? json[@"fields"] : @{};
+    for (NSString * key in fields) {
+        if (![key isKindOfClass:[NSString class]] || key.length > 32 || [key rangeOfCharacterFromSet:[[NSCharacterSet characterSetWithCharactersInString:@"abcdefghijklmnopqrstuvwxyz_"] invertedSet]].location != NSNotFound)
+            continue;
+        NSString * value = [[NSString stringWithFormat:@"%@", fields[key]] substringToIndex:MIN((NSUInteger)1024, [[NSString stringWithFormat:@"%@", fields[key]] length])];
+        [body appendData:[[NSString stringWithFormat:@"--%@\r\nContent-Disposition: form-data; name=\"%@\"\r\n\r\n%@\r\n", boundary, key, value] dataUsingEncoding:NSUTF8StringEncoding]];
+    }
+    NSString * name = [[path lastPathComponent] stringByReplacingOccurrencesOfString:@"\"" withString:@"_"];
+    [body appendData:[[NSString stringWithFormat:@"--%@\r\nContent-Disposition: form-data; name=\"file\"; filename=\"%@\"\r\nContent-Type: application/octet-stream\r\n\r\n", boundary, name] dataUsingEncoding:NSUTF8StringEncoding]];
+    [body appendData:data];
+    [body appendData:[[NSString stringWithFormat:@"\r\n--%@--\r\n", boundary] dataUsingEncoding:NSUTF8StringEncoding]];
+
+    NSMutableURLRequest * request = [NSMutableURLRequest requestWithURL:url];
+    request.HTTPMethod = @"POST";
+    [request setValue:[@"Bearer " stringByAppendingString:token] forHTTPHeaderField:@"Authorization"];
+    [request setValue:@"application/json" forHTTPHeaderField:@"Accept"];
+    [request setValue:[NSString stringWithFormat:@"multipart/form-data; boundary=%@", boundary] forHTTPHeaderField:@"Content-Type"];
+    [[[NSURLSession sharedSession] uploadTaskWithRequest:request fromData:body completionHandler:^(NSData * d, NSURLResponse * r, NSError * e) {
+        answer(e ? 0 : [(NSHTTPURLResponse *)r statusCode], d);
+    }] resume];
+}
+
 /// The start page's WorkSuite section: sign-ins kept in the Keychain ("worksuite:secret"), the accounts
 /// WorkSuite Desktop is signed in to ("worksuite:desktop") and the sidebar's WorkSuite item ("worksuite:app").
 /// Never answered for a web page in a tab.
@@ -1319,6 +1446,22 @@ static BOOL workSuiteKeychainDelete(NSString * key) {
 
     if ([info[@"command"] isEqualToString:@"worksuite:open"]) {
         [self sendToStartPage:@"worksuite:open" param:[self openWorkSuiteLink:info[@"param"]]];
+        return;
+    }
+
+    if ([info[@"command"] isEqualToString:@"worksuite:policy"]) {
+        NSDictionary * policy = [self workSuitePolicy];
+        [self sendToStartPage:@"worksuite:policy" param:[@{@"managed": @(policy.count > 0), @"source": @"profile", @"policy": policy} jsonString]];
+        return;
+    }
+
+    if ([info[@"command"] isEqualToString:@"worksuite:updates"]) {
+        [self sendToStartPage:@"worksuite:updates" param:[self workSuiteUpdates:[info[@"param"] dictionary]]];
+        return;
+    }
+
+    if ([info[@"command"] isEqualToString:@"worksuite:upload"]) {
+        [self workSuiteUpload:[info[@"param"] dictionary]];
         return;
     }
 

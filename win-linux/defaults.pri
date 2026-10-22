@@ -1,4 +1,4 @@
-QT  += core gui widgets printsupport
+QT  += core gui widgets printsupport network
 QT  += svg
 
 TEMPLATE = app
