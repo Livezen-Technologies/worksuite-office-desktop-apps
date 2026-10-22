@@ -58,6 +58,13 @@ export function normalizePolicy(raw) {
   return p;
 }
 
+/* oda-shell → oda-platform (ADM-01, G-17): what the AI policy means for ai.js. "worksuite": WorkSuite AI only,
+ * external providers off; "off": no AI at all; not set or "all": everything allowed. */
+export function aiPolicyOf(policy) {
+  const mode = policy && policy.aiFunctions;
+  return { allowAi: mode !== "off", allowExternalAi: !mode || mode === "all" };
+}
+
 export function cloudAllowed(policy, provider) {
   if (!THIRD_PARTY_CLOUDS.includes(String(provider || "").toLowerCase())) return true;
   return !!(policy && policy.allowOtherClouds);

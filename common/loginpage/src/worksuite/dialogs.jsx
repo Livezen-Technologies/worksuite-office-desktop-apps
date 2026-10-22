@@ -304,7 +304,9 @@ export function NewDialog(props) {
   }
 
   onMount(() => {
-    WS().templates(props.account, props.type).then((list) => setGallery(list), () => setGallery(null));
+    // oda-platform hook (G-01): no gallery on a server without templates
+    if (WS().has(props.account, "files.templates")) WS().templates(props.account, props.type).then((list) => setGallery(list), () => setGallery(null));
+    else setGallery(null);
     if (!(WS().accounts().find((a) => a.id === props.account.id) || {}).companies) WS().companies(props.account).catch(() => {});
   });
 

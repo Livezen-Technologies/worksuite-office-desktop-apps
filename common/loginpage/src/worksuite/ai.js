@@ -28,6 +28,13 @@ const LS_MINE = "ws:ai:account";
 const RENEW_BEFORE = 10 * 60 * 1000;
 
 let timer = null;
+
+/* a timer that does not keep node (tests) alive; a plain number in the page */
+function later(fn, ms) {
+  const t = setTimeout(fn, ms);
+  if (t && t.unref) t.unref();
+  return t;
+}
 let running = null;
 
 function read(key, fallback) {
@@ -61,6 +68,23 @@ export function externalAiAllowedByPolicy() {
   return true;
 }
 
+/* ADM-01 hook: aiFunctions "off" sets window.WorkSuitePolicy.allowAi = false: no AI provider at all. */
+export function aiAllowedByPolicy() {
+  const p = window.WorkSuitePolicy;
+  const v = p && p.allowAi;
+  if (typeof v === "function") return v() !== false;
+  return v !== false;
+}
+
+/* AI off by policy: WorkSuite AI out, every other provider set aside until allowed again */
+function removeAll() {
+  setAside(read(LS_PROVIDERS, []));
+  write(LS_PROVIDERS, []);
+  write(LS_CURRENT, undefined);
+  write(LS_MODEL, undefined);
+  write(LS_MINE, undefined);
+}
+
 const isOurs = (p) => !!p && p.name === PROVIDER;
 
 function liveAccount(WS) {
@@ -84,7 +108,14 @@ function bringBack(list) {
 
 function remove() {
   const list = read(LS_PROVIDERS, []).filter((p) => !isOurs(p));
-  write(LS_PROVIDERS, bringBack(list));
+  // external providers come back only when IT's policy allows them (aiFunctions "worksuite" keeps them aside)
+  if (externalAiAllowedByPolicy()) write(LS_PROVIDERS, bringBack(list));
+  else {
+    setAside(list);
+    write(LS_PROVIDERS, []);
+    write(LS_CURRENT, undefined);
+    write(LS_MODEL, undefined);
+  }
   if (isOurs(read(LS_CURRENT, null))) {
     write(LS_CURRENT, undefined);
     write(LS_MODEL, undefined);
@@ -122,7 +153,7 @@ async function install(WS, account) {
 
   const life = Math.max(5 * 60 * 1000, (Number(data.expires_in) || 3600) * 1000 - RENEW_BEFORE);
   clearTimeout(timer);
-  timer = setTimeout(sync, life);
+  timer = later(sync, life);
 }
 
 /* Bring the AI settings in line with the signed-in account; safe to call any time. */
@@ -132,10 +163,15 @@ export function sync() {
   if (running) return running;
 
   running = (async () => {
+    if (!aiAllowedByPolicy()) {
+      clearTimeout(timer);
+      removeAll();
+      return;
+    }
     const account = liveAccount(WS);
     if (!account) {
       clearTimeout(timer);
-      if (read(LS_MINE, null) || isOurs(read(LS_CURRENT, null))) remove();
+      if (read(LS_MINE, null) || isOurs(read(LS_CURRENT, null)) || read(LS_SET_ASIDE, []).length) remove();
       return;
     }
     try {
@@ -145,7 +181,7 @@ export function sync() {
       if (e && (e.status === 403 || e.status === 404 || e.signedOut)) remove();
       else {
         clearTimeout(timer);
-        timer = setTimeout(sync, 5 * 60 * 1000);
+        timer = later(sync, 5 * 60 * 1000);
       }
     }
   })().finally(() => {
@@ -159,7 +195,7 @@ function start() {
   if (!WS) return;
   WS.on("changed", sync);
   WS.on("signedin", sync);
-  window.WorkSuiteAi = { sync: sync, externalAiAllowedByPolicy: externalAiAllowedByPolicy, PROVIDER: PROVIDER };
+  window.WorkSuiteAi = { sync: sync, externalAiAllowedByPolicy: externalAiAllowedByPolicy, aiAllowedByPolicy: aiAllowedByPolicy, PROVIDER: PROVIDER };
   sync();
 }
 

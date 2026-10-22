@@ -410,7 +410,11 @@ const utils = { Lang: L, defines: { FileFormat } };
 
     const MIN_SERVER = { auth: '2.4.0', euro_office: '1.2.0' };
     const REQUIRED_FEATURES = ['desktop.office', 'apps.exchange', 'apps.poll'];
-    const ASSUMED_WITH_SIGN_IN = ['apps.handoff', 'office.session', 'office.thumbs', 'office.save_as', 'files.request_edit'];
+    /* oda-drive actions, hidden when a server's `office.features` leaves them out (WorkSuite.has) */
+    const DRIVE_FEATURES = ['files.rename', 'files.move', 'files.copy', 'files.trash', 'files.versions', 'files.share',
+                            'files.templates'];
+    const ASSUMED_WITH_SIGN_IN = ['apps.handoff', 'office.session', 'office.thumbs', 'office.save_as', 'files.request_edit']
+        .concat(DRIVE_FEATURES);
     const LS_CAPS = 'ws:caps:';
     const CAPS_FRESH = 6 * 60 * 60 * 1000;
 
@@ -1326,7 +1330,8 @@ const utils = { Lang: L, defines: { FileFormat } };
     // a sign-in still waiting when the start page (re)loads goes on being collected
     setTimeout(watchSignIn, 0);
     setTimeout(refreshCapabilities, 0);
-    setInterval(refreshCapabilities, 60 * 60 * 1000);
+    const capsTimer = setInterval(refreshCapabilities, 60 * 60 * 1000);
+    if (capsTimer && capsTimer.unref) capsTimer.unref(); // node (tests): do not keep the process alive
 
     if (window.sdk && window.sdk.on) {
         window.sdk.on('on_native_message', (cmd, param) => {

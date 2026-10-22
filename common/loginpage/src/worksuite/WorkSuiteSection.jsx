@@ -336,18 +336,20 @@ export default function WorkSuiteSection() {
     const M = p.menu;
     const item = p.item;
     const canEdit = item.level !== "view";
+    // oda-platform hook (G-01): only what this account's server offers
+    const can = (feature) => WS().has(account(), feature);
     return (
       <>
         <M.Item onSelect={() => open(item)}>{L.menuFileOpen}</M.Item>
         <Show when={canEdit}>
-          <M.Item onSelect={() => setRenaming(item.id)}>{L.wsRename}</M.Item>
-          <M.Item onSelect={() => setDialog({ kind: "move", file: item })}>{L.wsMoveToMenu}</M.Item>
+          <Show when={can("files.rename")}><M.Item onSelect={() => setRenaming(item.id)}>{L.wsRename}</M.Item></Show>
+          <Show when={can("files.move")}><M.Item onSelect={() => setDialog({ kind: "move", file: item })}>{L.wsMoveToMenu}</M.Item></Show>
         </Show>
-        <M.Item onSelect={() => makeCopy(item)}>{L.wsMakeCopy}</M.Item>
-        <M.Item onSelect={() => setDialog({ kind: "versions", file: item })}>{L.wsVersionHistory}</M.Item>
-        <M.Item onSelect={() => setDialog({ kind: "share", file: item, account: account() })}>{L.wsShareMenu}</M.Item>
+        <Show when={can("files.copy")}><M.Item onSelect={() => makeCopy(item)}>{L.wsMakeCopy}</M.Item></Show>
+        <Show when={can("files.versions")}><M.Item onSelect={() => setDialog({ kind: "versions", file: item })}>{L.wsVersionHistory}</M.Item></Show>
+        <Show when={can("files.share")}><M.Item onSelect={() => setDialog({ kind: "share", file: item, account: account() })}>{L.wsShareMenu}</M.Item></Show>
         <M.Separator />
-        <Show when={item.level === "view"}>
+        <Show when={item.level === "view" && can("files.request_edit")}>
           <M.Item onSelect={() => WS().requestEdit(account(), item).then(() => say(L.wsRequestSent), failed)}>
             {L.wsRequestEdit}
           </M.Item>
@@ -356,7 +358,7 @@ export default function WorkSuiteSection() {
           {item.starred ? L.wsUnstar : L.wsStar}
         </M.Item>
         <M.Item onSelect={() => WS().openInBrowser(account(), "/files?file=" + encodeURIComponent(item.id))}>{L.wsOpenInBrowserItem}</M.Item>
-        <Show when={canEdit}>
+        <Show when={canEdit && can("files.trash")}>
           <M.Separator />
           <M.Item class="negative" onSelect={() => toBin(item)}>{L.wsMoveToBin}</M.Item>
         </Show>

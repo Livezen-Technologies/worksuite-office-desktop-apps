@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { normalizePolicy, cloudAllowed, offlineCopyName, reconcileOffline, parseReleaseNotes, policyBool } from "./shell-logic.js";
+import { normalizePolicy, cloudAllowed, offlineCopyName, reconcileOffline, parseReleaseNotes, policyBool, aiPolicyOf } from "./shell-logic.js";
 
 test("no policy: not managed, third-party clouds off by default (CLD-02)", () => {
   const p = normalizePolicy(null);
@@ -43,4 +43,11 @@ test("reconcile never overwrites a newer version (NFR-13)", () => {
 test("release notes sections", () => {
   const s = parseReleaseNotes("# 10.1.1\n\n## New Features\n- Windows **updates**\n\n## Bug Fixes\n- Fixed `x`\n## Known Issues\n");
   assert.deepEqual(s, [{ title: "New Features", items: ["Windows updates"] }, { title: "Bug Fixes", items: ["Fixed x"] }]);
+});
+
+test("AI policy → ai.js hook (ADM-01, G-17): worksuite = external off, off = no AI", () => {
+  assert.deepEqual(aiPolicyOf(normalizePolicy(null)), { allowAi: true, allowExternalAi: true });
+  assert.deepEqual(aiPolicyOf(normalizePolicy({ aiFunctions: "all" })), { allowAi: true, allowExternalAi: true });
+  assert.deepEqual(aiPolicyOf(normalizePolicy({ aiFunctions: "worksuite" })), { allowAi: true, allowExternalAi: false });
+  assert.deepEqual(aiPolicyOf(normalizePolicy({ aiFunctions: "off" })), { allowAi: false, allowExternalAi: false });
 });

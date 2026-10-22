@@ -14,7 +14,7 @@
  *   "worksuite:upload"  {"req","url","token","path","fields":{…},"name"} → {"req","status","body"}
  */
 import { createSignal } from "solid-js";
-import { normalizePolicy, cloudAllowed, reconcileOffline, offlineCopyName } from "./shell-logic.js";
+import { normalizePolicy, cloudAllowed, aiPolicyOf, reconcileOffline, offlineCopyName } from "./shell-logic.js";
 
 const native = () => window.AscDesktopEditor;
 
@@ -45,10 +45,19 @@ export { policy };
 export const serverLocked = () => !!(policy().lockServer && policy().server);
 export const isCloudAllowed = (provider) => cloudAllowed(policy(), provider);
 
+/* oda-platform hook (G-17): ai.js reads window.WorkSuitePolicy.allowExternalAi / allowAi */
+function publishAiPolicy(p) {
+  const ai = aiPolicyOf(p);
+  window.WorkSuitePolicy = Object.assign({}, window.WorkSuitePolicy, ai);
+  if (window.WorkSuiteAi && typeof window.WorkSuiteAi.sync === "function") window.WorkSuiteAi.sync();
+}
+publishAiPolicy(policy());
+
 function applyPolicy(raw) {
   const p = normalizePolicy(raw);
   setPolicyRaw(p);
   write("ws:policy", p.managed ? p : undefined);
+  publishAiPolicy(p);
 }
 
 /* ---- updates --------------------------------------------------------- */
