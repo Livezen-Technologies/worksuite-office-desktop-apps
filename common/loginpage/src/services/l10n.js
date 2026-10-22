@@ -13,7 +13,7 @@ const [langCode, setLangCode] = createSignal('en-US');
 export { langCode };
 
 export function initLocale() {
-  const en = l10n?.en ?? {};
+  const en = l10n?.en ?? l10n?.en_US ?? {};
   setTranslations({ ...en });
 
   const inParams = parseQueryParams();
@@ -44,7 +44,7 @@ export function applyLocale(locale) {
 
   if (table) {
     setLangCode(new_lang);
-    setTranslations({ ...(l10n.en ?? {}), ...table });
+    setTranslations({ ...(l10n.en ?? l10n.en_US ?? {}), ...table });
   }
 }
 

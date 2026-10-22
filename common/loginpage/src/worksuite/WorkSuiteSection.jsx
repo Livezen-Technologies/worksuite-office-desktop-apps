@@ -12,6 +12,7 @@ import "./core.js";
 import { SignInDialog, NewDialog } from "./dialogs.jsx";
 import { MoveDialog, VersionsDialog, ShareDialog, OpenLinkDialog } from "./drive.jsx";
 import { ContinueCard, hostOf, initials, when } from "./cards.jsx";
+import { PlatformNotices } from "./notices.jsx"; // oda-platform hook (G-01, G-04)
 import "./worksuite.css";
 import { PolicyBanner, PolicyCard } from "./ShellParts.jsx"; // oda-shell (ADM-01)
 
@@ -439,6 +440,9 @@ export default function WorkSuiteSection() {
       </div>
 
       <PolicyBanner />{/* oda-shell (ADM-01) */}
+      {/* oda-platform hook: server too old (G-01), sign-in kept in a file (G-04) */}
+      <PlatformNotices account={account()} />
+
       <Show when={!live()}>
         <div class="ws-signedout">
           <div class="ws-signedout-art" aria-hidden="true">

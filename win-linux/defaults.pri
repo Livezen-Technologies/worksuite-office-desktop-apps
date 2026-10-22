@@ -252,7 +252,7 @@ core_linux {
 
     CONFIG += link_pkgconfig
     PKGCONFIG += glib-2.0 gtk+-3.0 atk gtk+-unix-print-3.0 xcb xcb-shape libnotify
-    LIBS += -lX11 -lcups
+    LIBS += -lX11 -lcups -ldl
 
     # !disable_addon_mode {
         # SOURCES += \

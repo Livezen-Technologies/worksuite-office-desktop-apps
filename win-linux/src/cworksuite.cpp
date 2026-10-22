@@ -55,6 +55,7 @@
 # include <QProcessEnvironment>
 # include <QSaveFile>
 # include <QStandardPaths>
+# include <dlfcn.h>
 #endif
 
 #define SECRET_SERVICE "WorkSuite Office"
@@ -83,6 +84,10 @@ namespace {
 
     bool writeStore(const QJsonObject& obj)
     {
+        if ( obj.isEmpty() ) {
+            // nothing left in the file: no file (AUTH-13, after moving its sign-ins to the Secret Service)
+            return !QFile::exists(storePath()) || QFile::remove(storePath());
+        }
         QDir().mkpath(Utils::getAppCommonPath());
 
         QSaveFile file(storePath());
@@ -92,6 +97,125 @@ namespace {
         file.setPermissions(QFileDevice::ReadOwner | QFileDevice::WriteOwner);
         file.write(QJsonDocument(obj).toJson(QJsonDocument::Compact));
         return file.commit();
+    }
+
+    /*
+     * The Secret Service (AUTH-13, G-04): GNOME Keyring, KWallet (5.97+) or KeePassXC, through
+     * libsecret. libsecret is opened at run time, not linked: build_tools' Linux dependencies do
+     * not carry its headers, and a computer without it still runs the app (the file above is then
+     * the last resort, and the start page says so). Only the few symbols below are used; their
+     * structures are libsecret's stable ABI (secret-schema.h).
+     */
+    namespace SecretService {
+        struct GErrorAbi { quint32 domain; int code; char * message; };
+        struct AttributeAbi { const char * name; int type; };
+        struct SchemaAbi {
+            const char * name; int flags; AttributeAbi attributes[32];
+            int reserved; void * reserved1, * reserved2, * reserved3, * reserved4, * reserved5, * reserved6, * reserved7;
+        };
+
+        typedef int (*StoreFn)(const SchemaAbi *, const char *, const char *, const char *, void *, GErrorAbi **, ...);
+        typedef char * (*LookupFn)(const SchemaAbi *, void *, GErrorAbi **, ...);
+        typedef int (*ClearFn)(const SchemaAbi *, void *, GErrorAbi **, ...);
+        typedef void (*FreeFn)(char *);
+        typedef void (*ErrorFreeFn)(GErrorAbi *);
+
+        struct Api {
+            StoreFn store = nullptr; LookupFn lookup = nullptr; ClearFn clear = nullptr;
+            FreeFn free = nullptr; ErrorFreeFn error_free = nullptr;
+            bool loaded = false;
+        };
+
+        const SchemaAbi * schema()
+        {
+            static const SchemaAbi s = { "lk.worksuite.Office.SignIn", 0 /* SECRET_SCHEMA_NONE */,
+                                         { {"key", 0 /* SECRET_SCHEMA_ATTRIBUTE_STRING */}, {nullptr, 0} },
+                                         0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
+            return &s;
+        }
+
+        const Api& api()
+        {
+            static Api a = [] {
+                Api r;
+                void * lib = dlopen("libsecret-1.so.0", RTLD_NOW | RTLD_LOCAL);
+                if ( !lib ) return r;
+                r.store = reinterpret_cast<StoreFn>(dlsym(lib, "secret_password_store_sync"));
+                r.lookup = reinterpret_cast<LookupFn>(dlsym(lib, "secret_password_lookup_sync"));
+                r.clear = reinterpret_cast<ClearFn>(dlsym(lib, "secret_password_clear_sync"));
+                r.free = reinterpret_cast<FreeFn>(dlsym(lib, "secret_password_free"));
+                r.error_free = reinterpret_cast<ErrorFreeFn>(dlsym(lib, "g_error_free"));
+                r.loaded = r.store && r.lookup && r.clear && r.free && r.error_free;
+                return r;
+            }();
+            return a;
+        }
+
+        enum Result { Ok, NotFound, Unavailable };
+
+        /* the service failed (none running, no D-Bus session): remembered, so the file is used without asking again */
+        bool s_failed = false;
+
+        bool failed(GErrorAbi * error)
+        {
+            if ( !error ) return false;
+            api().error_free(error);
+            s_failed = true;
+            return true;
+        }
+
+        bool usable() { return api().loaded && !s_failed; }
+
+        Result lookup(const QString& key, QString& value)
+        {
+            if ( !usable() ) return Unavailable;
+            GErrorAbi * error = nullptr;
+            const QByteArray k = key.toUtf8();
+            char * v = api().lookup(schema(), nullptr, &error, "key", k.constData(), static_cast<char *>(nullptr));
+            if ( failed(error) ) return Unavailable;
+            if ( !v ) return NotFound;
+            value = QString::fromUtf8(v);
+            api().free(v);
+            return Ok;
+        }
+
+        bool store(const QString& key, const QString& value)
+        {
+            if ( !usable() ) return false;
+            GErrorAbi * error = nullptr;
+            const QByteArray k = key.toUtf8(), v = value.toUtf8();
+            const QByteArray label = ("WorkSuite Office sign-in (" + key.section('|', 0, 0).mid(QString("worksuite:").size()) + ")").toUtf8();
+            const int ok = api().store(schema(), "default", label.constData(), v.constData(), nullptr, &error,
+                                       "key", k.constData(), static_cast<char *>(nullptr));
+            return !failed(error) && ok;
+        }
+
+        Result clear(const QString& key)
+        {
+            if ( !usable() ) return Unavailable;
+            GErrorAbi * error = nullptr;
+            const QByteArray k = key.toUtf8();
+            const int removed = api().clear(schema(), nullptr, &error, "key", k.constData(), static_cast<char *>(nullptr));
+            if ( failed(error) ) return Unavailable;
+            return removed ? Ok : NotFound;
+        }
+
+        /* Once per run: the sign-ins an older version kept in the file go into the Secret Service, and the file goes */
+        void migrateFile()
+        {
+            static bool done = false;
+            if ( done || !usable() ) return;
+            done = true;
+
+            QJsonObject file = readStore();
+            if ( file.isEmpty() ) return;
+            for ( const QString& key : file.keys() ) {
+                if ( validKey(key) && store(key, file.value(key).toString()) )
+                    file.remove(key);
+                else if ( !usable() ) break;
+            }
+            writeStore(file);
+        }
     }
 #else
     std::wstring targetName(const QString& key)
@@ -167,6 +291,13 @@ bool CWorkSuite::setSecret(const QString& key, const QString& value)
 
     return CredWriteW(&cred, 0) == TRUE;
 #else
+    SecretService::migrateFile();
+    if ( SecretService::store(key, value) ) {
+        QJsonObject file = readStore();
+        if ( file.contains(key) ) { file.remove(key); writeStore(file); }
+        return true;
+    }
+    // last resort, when no Secret Service runs: the user-only file; the start page warns (handleSecret's "store")
     QJsonObject store = readStore();
     store[key] = value;
     return writeStore(store);
@@ -187,7 +318,18 @@ QString CWorkSuite::secret(const QString& key)
     CredFree(cred);
     return value;
 #else
-    return readStore().value(key).toString();
+    SecretService::migrateFile();
+    QString value;
+    if ( SecretService::lookup(key, value) == SecretService::Ok )
+        return value;
+
+    value = readStore().value(key).toString();
+    if ( !value.isEmpty() && SecretService::store(key, value) ) {
+        QJsonObject file = readStore();
+        file.remove(key);
+        writeStore(file);
+    }
+    return value;
 #endif
 }
 
@@ -199,6 +341,7 @@ bool CWorkSuite::removeSecret(const QString& key)
     std::wstring target = targetName(key);
     return CredDeleteW(target.c_str(), CRED_TYPE_GENERIC, 0) == TRUE || GetLastError() == ERROR_NOT_FOUND;
 #else
+    SecretService::clear(key);
     QJsonObject store = readStore();
     if ( !store.contains(key) ) return true;
     store.remove(key);
@@ -224,6 +367,13 @@ QString CWorkSuite::handleSecret(const QString& json)
     if ( op == "delete" ) {
         out["ok"] = removeSecret(key);
     }
+
+#ifdef Q_OS_WIN
+    out["store"] = "os";
+#else
+    // "file" only while sign-ins are in the user-only file (no Secret Service): the start page warns
+    out["store"] = SecretService::usable() ? "secret-service" : "file";
+#endif
 
     return QString::fromUtf8(QJsonDocument(out).toJson(QJsonDocument::Compact));
 }

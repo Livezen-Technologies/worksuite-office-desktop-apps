@@ -303,6 +303,7 @@ private:
         ,{"lo-LA", {"ພາສາລາວ", "Lao"}}
         ,{"gl-ES", {"Galego", "Galego"}}
         ,{"si-LK", {"සිංහල", "Sinhala (Sri Lanka)"}}
+        ,{"ta-LK", {"தமிழ்", "Tamil (Sri Lanka)"}}
         ,{"ar-SA", {"اَلْعَرَبِيَّة", "Arabic"}}
         ,{"sr-Latn-RS", {"Srpski (Latin)", "Serbian (Latin)"}}
         ,{"sr-Cyrl-RS", {"Српски (Ћирилица)", "Serbian (Cyrillic)"}}
