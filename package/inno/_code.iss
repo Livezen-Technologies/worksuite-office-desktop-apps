@@ -286,6 +286,12 @@ begin
   //WizardForm.TasksList.OnClickCheck := @OnTasksListClickCheck;
 end;
 
+// WorkSuite (UPD-04): the app asked for a restart after its update (WinSparkle "Restart to update")
+function wsRelaunchAfterUpdate: Boolean;
+begin
+  Result := WizardSilent and (ExpandConstant('{param:WSRELAUNCH|0}') = '1');
+end;
+
 function isAssociateExtension(index: Integer): Boolean;
 begin
   if ChlbAudio = nil then begin

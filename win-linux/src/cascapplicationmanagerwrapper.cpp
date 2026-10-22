@@ -64,6 +64,7 @@
 #include "OfficeFileFormats.h"
 #include "cproviders.h"
 #include "cworksuite.h"
+#include "cwinsparkle.h"
 #ifndef __OS_WIN_XP
 # include "components/cnotification.h"
 #endif
@@ -157,6 +158,10 @@ CAscApplicationManagerWrapper::~CAscApplicationManagerWrapper()
     // Start update installation
     if (m_pUpdateManager)
         m_pUpdateManager->handleAppClose();
+#endif
+#ifdef WS_WINSPARKLE
+    // a downloaded, verified update installs now (SHL-09 "It installs when you restart the app")
+    CWinSparkle::cleanup();
 #endif
     if (m_private.get()->m_needRestart)
         m_private.get()->restartApp();
@@ -394,6 +399,12 @@ bool CAscApplicationManagerWrapper::processCommonEvent(NSEditorApi::CAscCefMenuE
             if ( m_pMainWindow && event->get_SenderId() == m_pMainWindow->startPanelId() ) {
                 const QJsonObject in = QJsonDocument::fromJson(QString::fromStdWString(pData->get_Param()).toUtf8()).object();
                 const QString op = in.value("op").toString();
+#ifdef WS_WINSPARKLE
+                if ( CWinSparkle::active() ) {
+                    sendCommandTo(SEND_TO_ALL_START_PAGE, cmd, CWinSparkle::command(in).toStdWString());
+                    return true;
+                }
+#endif
 #ifdef _UPDMODULE
                 if ( m_pUpdateManager ) {
                     if ( op == "set" ) {
@@ -489,6 +500,14 @@ bool CAscApplicationManagerWrapper::processCommonEvent(NSEditorApi::CAscCefMenuE
 //            RELEASEINTERFACE(event);
             return true;
         } else
+#ifdef WS_WINSPARKLE
+        if ( cmd.find(L"updates:action") != std::wstring::npos && CWinSparkle::active() ) {
+            // About › Check for updates (T02)
+            if ( QString::fromStdWString(pData->get_Param()) == "check" )
+                CWinSparkle::checkWithUi();
+            return true;
+        } else
+#endif
 #ifdef _UPDMODULE
         if ( !(cmd.find(L"updates:action") == std::wstring::npos) ) {   // params: check, download, install, abort
             if (m_pUpdateManager) {
@@ -1641,6 +1660,11 @@ void CAscApplicationManagerWrapper::startApp()
         _app.m_pMainWindow = _app.prepareMainWindow();
         _app.m_pMainWindow->show(_is_maximized);
     }
+
+#ifdef WS_WINSPARKLE
+    // UPD-04, G-02: WorkSuite Office updates itself through WinSparkle (not started without a signing key)
+    CWinSparkle::init();
+#endif
 
     QObject::connect(CExistanceController::getInstance(), &CExistanceController::checked, [] (const QString& name, int uid, bool exists) {
         if ( !exists ) {

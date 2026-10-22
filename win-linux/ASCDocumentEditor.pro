@@ -30,6 +30,24 @@ message($$PLATFORM_BUILD)
     }
 #}
 
+# WorkSuite (UPD-04, G-02): self-update through WinSparkle when CI gives the appcast and WinSparkle
+# (build-windows-v10.yml). Without them (local builds) nothing changes and no update code is compiled in.
+win32 {
+    WS_APPCAST = $$(WS_UPDATE_APPCAST_URL)
+    WS_SPARKLE = $$(WINSPARKLE_DIR)
+    !isEmpty(WS_APPCAST):!isEmpty(WS_SPARKLE) {
+        DEFINES += WS_WINSPARKLE WS_APPCAST_URL=\\\"$$WS_APPCAST\\\" \
+                   WS_EDDSA_PUBLIC_KEY=\\\"$$(WS_UPDATE_EDDSA_PUBLIC_KEY)\\\" WS_BUILD_NUMBER=\\\"$$(BUILD_NUMBER)\\\"
+        INCLUDEPATH += $$WS_SPARKLE/include
+        LIBS += -L$$WS_SPARKLE/x64/Release -lWinSparkle -lversion
+        # the upstream update service (updatesvc, ONLYOFFICE's JSON feed) is not used
+        DEFINES -= _UPDMODULE
+        HEADERS -= $$PWD/src/cupdatemanager.h
+        SOURCES -= $$PWD/src/cupdatemanager.cpp
+        message(WorkSuite updates through WinSparkle: $$WS_APPCAST)
+    }
+}
+
 !disable_addon_mode {
     ENV_URL_APPCAST_MAIN = $$(DESKTOP_URL_UPDATES_MAIN_CHANNEL)
     !isEmpty(ENV_URL_APPCAST_MAIN) {

@@ -106,6 +106,15 @@ OutputBaseFileName                ={#OUTPUT_FILE}
 #ifdef SIGN
 SignTool                  =byparam $p
 #endif
+;WorkSuite (G-03): CI passes /DSIGNTOOL /Swssign="signtool.exe sign ... $f" so the uninstaller Inno
+;writes (unins000.exe) is Authenticode-signed too
+#ifdef SIGNTOOL
+SignTool                  =wssign
+SignedUninstaller         =yes
+#endif
+;WorkSuite (UPD-04, G-02): WinSparkle runs the update in place with /SILENT /SP- /NOCANCEL /NORESTART
+;/CLOSEAPPLICATIONS over a running or closed app (AppId stays the same)
+CloseApplications         =yes
 
 SetupIconFile={#BRANDING_DIR}\..\..\win-linux\extras\projicons\res\icons\desktopeditors.ico
 WizardStyle=classic dynamic
@@ -242,6 +251,8 @@ Name: "{group}\{cm:jumpDOCXF}"; IconFilename: "{app}\{#iconsExe}"; IconIndex: 17
 [Run]
 ;Filename: {app}\{#NAME_EXE_OUT}; Description: {cm:Launch,{#sAppName}}; Flags: postinstall nowait skipifsilent;
 Filename: {app}\{#iconsExe}; Description: {cm:Launch,{#sAppName}}; Flags: postinstall nowait skipifsilent runasoriginaluser;
+;WorkSuite (UPD-04): "Restart to update" passes /WSRELAUNCH=1, so the app opens again after a silent update
+Filename: {app}\{#iconsExe}; Flags: nowait runasoriginaluser; Check: wsRelaunchAfterUpdate
 ;Filename: http://www.onlyoffice.com/remove-portal-feedback-form.aspx; Description: Visit website; Flags: postinstall shellexec nowait
 ;Filename: ms-settings:defaultapps; Description: {cm:runOpenDefaultApps}; Flags:postinstall shellexec nowait unchecked; MinVersion: 10.0.10240;
 #sub LoopRunAssoc
