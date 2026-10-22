@@ -6,6 +6,7 @@
 import "@/sdk/bridge.js";
 import { FileFormat } from "@/sdk/format.js";
 import { L } from "./lang.js";
+import "./ai.js";
 
 const native = window.AscDesktopEditor || {};
 if (!window.sdk) {
@@ -227,6 +228,11 @@ const utils = { Lang: L, defines: { FileFormat } };
     }
 
     const secretWaiting = {};
+    const LS_SECRET_STORE = 'ws:secret-store';
+    let secretStore = (() => { try { return localStorage.getItem(LS_SECRET_STORE) || ''; } catch (e) { return ''; } })();
+
+    /* Where the app keeps refresh tokens: "os" (Keychain, Credential Manager), "secret-service", or "file" (Linux, last resort) */
+    function secretStoreKind() { return secretStore; }
 
     function secret(op, key, value) {
         if (!window.sdk || !window.sdk.command) return Promise.reject(new Error('no secret store'));
@@ -379,20 +385,107 @@ const utils = { Lang: L, defines: { FileFormat } };
      * signing in and out
      * ------------------------------------------------------------------ */
 
+    /* ------------------------------------------------------------------ *
+     * what the server can do (G-01, AUTH-02, NFR-20)
+     *
+     * WorkSuite Office needs Auth >= 2.4.0 (AppHandoff: apps/exchange, apps/poll, apps/handoff,
+     * /desktop/office) and EuroOffice >= 1.2.0 (office/thumbs, save-as) and Files sharing
+     * (request-edit). /.well-known/worksuite-desktop says so: its `office` block lists the
+     * features and module versions; a server that only announces `office_sign_in` (main before
+     * the block) is read from that block's addresses and is assumed to have the rest, as every
+     * server with office_sign_in does. Missing sign-in endpoints or older modules = "too old":
+     * the person is told to ask the administrator, by capability, not by one flag. Features that
+     * are not needed to sign in (thumbs, save-as, request-edit, AI) only hide their action
+     * (`has(account, feature)`).
+     * ------------------------------------------------------------------ */
+
+    const MIN_SERVER = { auth: '2.4.0', euro_office: '1.2.0' };
+    const REQUIRED_FEATURES = ['desktop.office', 'apps.exchange', 'apps.poll'];
+    const ASSUMED_WITH_SIGN_IN = ['apps.handoff', 'office.session', 'office.thumbs', 'office.save_as', 'files.request_edit'];
+    const LS_CAPS = 'ws:caps:';
+    const CAPS_FRESH = 6 * 60 * 60 * 1000;
+
+    function compareVersions(a, b) {
+        const pa = String(a).split(/[.+-]/).map(n => parseInt(n, 10) || 0);
+        const pb = String(b).split(/[.+-]/).map(n => parseInt(n, 10) || 0);
+        for (let i = 0; i < 3; i++) {
+            if ((pa[i] || 0) !== (pb[i] || 0)) return (pa[i] || 0) < (pb[i] || 0) ? -1 : 1;
+        }
+        return 0;
+    }
+
+    function capabilityOf(doc) {
+        const office = doc && typeof doc.office === 'object' && doc.office ? doc.office : null;
+        const signIn = doc && typeof doc.office_sign_in === 'object' && doc.office_sign_in ? doc.office_sign_in : null;
+        let features = [];
+
+        if (office && Array.isArray(office.features)) {
+            features = office.features.filter(f => typeof f === 'string');
+        } else if (signIn) {
+            if (signIn.url) features.push('desktop.office');
+            if (signIn.exchange) features.push('apps.exchange');
+            if (signIn.poll) features.push('apps.poll');
+            features = features.concat(ASSUMED_WITH_SIGN_IN);
+        }
+
+        const versions = office && office.versions && typeof office.versions === 'object' ? office.versions : {};
+        const old = Object.keys(MIN_SERVER).filter(m => typeof versions[m] === 'string' && compareVersions(versions[m], MIN_SERVER[m]) < 0);
+        const missing = REQUIRED_FEATURES.filter(f => features.indexOf(f) < 0);
+
+        return { ok: !missing.length && !old.length, features: features, versions: versions, missing: missing, old: old, checked: Date.now() };
+    }
+
     /* Is there a WorkSuite server here that can sign WorkSuite Office in? */
     async function checkServer(server) {
         try {
             const res = await http('GET', server + '/.well-known/worksuite-desktop');
-            if (res.status === 200 && res.json) return { name: res.json.name || 'WorkSuite', office: !!res.json.office_sign_in };
+            if (res.status === 200 && res.json) {
+                const capability = capabilityOf(res.json);
+                writeJson(localStorage, LS_CAPS + server, capability);
+                return { name: res.json.name || 'WorkSuite', office: capability.ok, capability: capability };
+            }
         } catch (e) { /* below */ }
 
         const health = await http('GET', server + '/api/health').catch(() => null);
-        if (health && health.status === 200) return { name: 'WorkSuite', office: false };
+        if (health && health.status === 200) {
+            const capability = capabilityOf(null);
+            writeJson(localStorage, LS_CAPS + server, capability);
+            return { name: 'WorkSuite', office: false, capability: capability };
+        }
         throw new Error(utils.Lang.wsErrServerNotFound);
+    }
+
+    /* Before a sign-in starts: a server known to be too old stops it; one that cannot be asked does not. */
+    async function ensureCapable(server) {
+        const found = await checkServer(server).catch(() => null);
+        if (found && !found.office) throw new Error(utils.Lang.wsErrServerOld);
+    }
+
+    function capability(account) {
+        return account ? readJson(localStorage, LS_CAPS + account.server, null) : null;
+    }
+
+    /* Whether the account's server has a feature; unknown (never asked, or offline) counts as yes. */
+    function has(account, feature) {
+        const c = capability(account);
+        return !c || c.features.indexOf(feature) >= 0;
+    }
+
+    /* The signed-in accounts' servers, asked again now and then; a change shows straight away. */
+    function refreshCapabilities() {
+        const servers = accounts().map(a => a.server).filter((s, i, all) => all.indexOf(s) === i);
+        servers.forEach(server => {
+            const before = readJson(localStorage, LS_CAPS + server, null);
+            if (before && Date.now() - before.checked < CAPS_FRESH) return;
+            checkServer(server).then(found => {
+                if (!before || before.ok !== found.capability.ok || before.features.join() !== found.capability.features.join()) fire('changed');
+            }, () => { /* offline: keep what we knew */ });
+        });
     }
 
     async function signIn(server) {
         server = normalizeServer(server) || DEFAULT_SERVER;
+        await ensureCapable(server);
         const pair = await pkce();
         const state = random(24);
 
@@ -418,6 +511,7 @@ const utils = { Lang: L, defines: { FileFormat } };
      */
     async function signInWithDesktop(desktopAccount) {
         const server = normalizeServer(desktopAccount.server);
+        await ensureCapable(server);
         const pair = await pkce();
         const state = random(24);
 
@@ -1018,6 +1112,8 @@ const utils = { Lang: L, defines: { FileFormat } };
 
     // a sign-in still waiting when the start page (re)loads goes on being collected
     setTimeout(watchSignIn, 0);
+    setTimeout(refreshCapabilities, 0);
+    setInterval(refreshCapabilities, 60 * 60 * 1000);
 
     if (window.sdk && window.sdk.on) {
         window.sdk.on('on_native_message', (cmd, param) => {
@@ -1025,6 +1121,12 @@ const utils = { Lang: L, defines: { FileFormat } };
                 let reply = null;
                 try { reply = JSON.parse(param); } catch (e) { return; }
                 const waiting = reply && secretWaiting[reply.req];
+                if (reply && typeof reply.store === 'string' && reply.store !== secretStore) {
+                    // AUTH-13: "file" when no Secret Service runs on Linux; the page warns about it
+                    secretStore = reply.store;
+                    try { localStorage.setItem(LS_SECRET_STORE, secretStore); } catch (e) { /* only a hint */ }
+                    fire('changed');
+                }
                 if (waiting) {
                     delete secretWaiting[reply.req];
                     waiting(reply);
@@ -1075,6 +1177,13 @@ const utils = { Lang: L, defines: { FileFormat } };
         pendingSignIn: pendingSignIn,
         signOut: signOut,
         checkServer: checkServer,
+        capability: capability,
+        has: has,
+        refreshCapabilities: refreshCapabilities,
+        secretStoreKind: secretStoreKind,
+        accessToken: token,
+        api: api,
+        MIN_SERVER: MIN_SERVER,
         normalizeServer: normalizeServer,
         list: list,
         cached: cached,
@@ -1092,6 +1201,8 @@ const utils = { Lang: L, defines: { FileFormat } };
         extOf: extOf,
         /* for tests */
         _sha256Ascii: sha256Ascii,
+        _capabilityOf: capabilityOf,
+        _compareVersions: compareVersions,
         _onLink: onLink,
         _poll: poll,
     };

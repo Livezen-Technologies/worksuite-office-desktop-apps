@@ -36,8 +36,12 @@
  *
  * Secrets: WorkSuite sign-ins (refresh tokens), kept for the user by the operating system.
  *   Windows: Windows Credential Manager (generic credentials, this user only).
- *   Linux:   a file in the app's data folder that only this user can read; no
- *            secret service is required at build or run time.
+ *   Linux:   the Secret Service (GNOME Keyring, KWallet), through libsecret opened at run time
+ *            (AUTH-13); sign-ins an older version kept in the file below move there and the file
+ *            is deleted. Only when no Secret Service runs: a file in the app's data folder that
+ *            only this user can read, and the start page shows a warning ("store":"file"). The
+ *            WorkSuite OS broker keeps its own tokens and is not involved. No library is
+ *            needed at build time.
  *
  * WorkSuite Desktop: the accounts WorkSuite Desktop is signed in to on this computer, so
  *   the start page can offer "Continue as <name>". Not a secret: WorkSuite Desktop writes

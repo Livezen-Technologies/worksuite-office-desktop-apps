@@ -382,3 +382,9 @@
 @media (prefers-reduced-motion: reduce) {
   .ws-spinner, .ws-skeleton div, .ws-thumb { animation: none; }
 }
+
+/* WorkSuite platform notices (notices.jsx) */
+.ws-notice { margin: 8px 16px 0; padding: 8px 12px; border-radius: 6px; font-size: 12px; line-height: 1.4;
+  background: var(--background-toolbar-additional, rgba(37, 99, 235, 0.08)); color: var(--text-normal, inherit);
+  border: 1px solid var(--border-toolbar, rgba(0, 0, 0, 0.1)); }
+.ws-notice-error { color: var(--text-negative, #c62828); }

@@ -11,6 +11,7 @@ import { L } from "./lang.js";
 import "./core.js";
 import { SignInDialog, NewDialog } from "./dialogs.jsx";
 import { ContinueCard, hostOf, initials } from "./cards.jsx";
+import { PlatformNotices } from "./notices.jsx"; // oda-platform hook (G-01, G-04)
 import "./worksuite.css";
 
 const WS = () => window.WorkSuite;
@@ -313,6 +314,9 @@ export default function WorkSuiteSection() {
           </div>
         </Show>
       </div>
+
+      {/* oda-platform hook: server too old (G-01), sign-in kept in a file (G-04) */}
+      <PlatformNotices account={account()} />
 
       <Show when={!live()}>
         <div class="ws-signedout">

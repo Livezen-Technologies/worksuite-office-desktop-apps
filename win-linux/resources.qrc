@@ -233,6 +233,8 @@
         <file alias="ro-RO.qm">langs/ro.qm</file>
         <file alias="ru-RU.qm">langs/ru.qm</file>
         <file alias="si-LK.qm">langs/si.qm</file>
+        <!-- WorkSuite (AIL-02): Tamil; the native windows are in English until a ta.ts is translated, the start page is in Tamil -->
+        <file alias="ta-LK.qm">langs/en.qm</file>
         <file alias="sk-SK.qm">langs/sk.qm</file>
         <file alias="sl-SI.qm">langs/sl.qm</file>
         <file alias="sq-AL.qm">langs/sq.qm</file>
