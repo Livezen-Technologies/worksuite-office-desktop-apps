@@ -1404,7 +1404,8 @@ static BOOL workSuiteKeychainDelete(NSString * key) {
     for (NSString * key in fields) {
         if (![key isKindOfClass:[NSString class]] || key.length > 32 || [key rangeOfCharacterFromSet:[[NSCharacterSet characterSetWithCharactersInString:@"abcdefghijklmnopqrstuvwxyz_"] invertedSet]].location != NSNotFound)
             continue;
-        NSString * value = [[NSString stringWithFormat:@"%@", fields[key]] substringToIndex:MIN((NSUInteger)1024, [[NSString stringWithFormat:@"%@", fields[key]] length])];
+        NSString * text = [NSString stringWithFormat:@"%@", fields[key]];
+        NSString * value = [text substringToIndex:MIN((NSUInteger)1024, text.length)];
         [body appendData:[[NSString stringWithFormat:@"--%@\r\nContent-Disposition: form-data; name=\"%@\"\r\n\r\n%@\r\n", boundary, key, value] dataUsingEncoding:NSUTF8StringEncoding]];
     }
     NSString * name = [[path lastPathComponent] stringByReplacingOccurrencesOfString:@"\"" withString:@"_"];
