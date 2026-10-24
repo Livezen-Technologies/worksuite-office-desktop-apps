@@ -1,0 +1,164 @@
+//
+//  The WorkSuite loading mark — the one place its geometry lives.
+//  ---------------------------------------------------------------------------
+//
+//  THE SOURCE OF TRUTH IS THE LOTTIE, NOT THIS FILE.
+//
+//  Every number below is read off `web/src/assets/brand/worksuite-loader.json`
+//  in the LHCP repository — the bodymovin export the designers edit. Nothing
+//  here is eyeballed. If the mark ever has to change, it changes there first
+//  and the figures are re-derived; that is why each one is annotated with the
+//  frame or canvas value it came from.
+//
+//  The animation needs nothing a Lottie player provides: no paths to
+//  interpolate, no masks, no embedded images — four solid squares, each
+//  dimming and shrinking a little and coming back, one after another. So it is
+//  four plain child elements and one keyframe here, and the app gains no
+//  dependency and no runtime canvas for it.
+//
+//  FROM THE JSON
+//
+//    canvas      w 200 × h 200, fr 60, ip 0 → op 72
+//                  → one cycle is 72 / 60 = 1.2s
+//                  → positions are expressed below as percentages of 200,
+//                    so one `@size` drives the whole mark at any scale.
+//
+//    layers      Lottie gives each square a centre (`ks.p`) and a size
+//                (`shapes[].it[0].s`); CSS wants a top-left corner, so the
+//                corner is centre − size / 2. Corner radius (`it[0].r`) is 0
+//                on all four, so none of them is rounded.
+//
+//      ind 4 "blue"         p [125, 75]  s [100, 100]  → corner (75, 25)
+//                           fl [0.0392, 0.4235, 1.0]   → #0A6CFF
+//      ind 3 "cyan left"    p [50, 100]  s [50, 50]    → corner (25, 75)
+//                           fl [0.0, 0.8549, 0.9490]   → #00DAF2
+//      ind 2 "cyan bottom"  p [100, 150] s [50, 50]    → corner (75, 125)
+//                           fl [0.0, 0.8549, 0.9490]   → #00DAF2
+//      ind 1 "navy core"    p [100, 100] s [50, 50]    → corner (75, 75)
+//                           fl [0.0, 0.0941, 0.2588]   → #001842
+//
+//    stacking    Lottie paints layer ind 1 ON TOP; CSS paints the LAST
+//                positioned sibling on top. So the children are emitted back
+//                to front — the reverse of the JSON's layer order — and navy
+//                sits over the blue square where the two overlap, as designed.
+//                Child order is therefore: 1 blue, 2 cyan left,
+//                3 cyan bottom, 4 navy.
+//
+//    the dim     Every layer runs the same shape, offset in time. Taking
+//                "cyan left" (the one this keyframe is written against):
+//                  ks.o  100 @ f12  →  28 @ f22  →  100 @ f36
+//                  ks.s  100 @ f12  →  84 @ f22  →  100 @ f36
+//                As a share of the 72-frame cycle:
+//                  f12 = 16.667%   f22 = 30.556%   f36 = 50%
+//                and it holds at 100 from 50% back round to 0%. The scale is
+//                about each square's own centre (Lottie anchor `ks.a` is
+//                [0,0,0] and the rect's `p` is [0,0], i.e. centred), which is
+//                `transform-origin: center`.
+//
+//    the easing  Each keyframe pair carries o.x 0.45 / o.y 0 and
+//                i.x 0.55 / i.y 1 → cubic-bezier(0.45, 0, 0.55, 1).
+//
+//    the stagger Troughs fall at f10 (blue), f22 (cyan left), f34 (navy),
+//                f46 (cyan bottom) — 12 frames, 0.2s, apart. Expressed as
+//                animation-delay relative to "cyan left" at 0s, which makes
+//                blue's delay negative. A negative delay starts the animation
+//                already part-way through, so all four are in step from the
+//                very first painted frame instead of easing in one by one.
+//
+@ws-brand-loader-blue: #0A6CFF;
+@ws-brand-loader-cyan: #00DAF2;
+@ws-brand-loader-navy: #001842;
+
+@ws-brand-loader-cycle: 1.2s;   // op 72 / fr 60
+@ws-brand-loader-step:  0.2s;   // 12 frames / fr 60
+@ws-brand-loader-ease:  cubic-bezier(0.45, 0, 0.55, 1);
+
+@keyframes ws-brand-loader-dim {
+    0%, 16.667% { opacity: 1;    transform: scale(1); }
+    30.556%     { opacity: 0.28; transform: scale(0.84); }
+    50%, 100%   { opacity: 1;    transform: scale(1); }
+}
+
+//  Draws the mark on a container holding exactly four empty children, in the
+//  order blue, cyan left, cyan bottom, navy:
+//
+//      <div class="my-loader"><i></i><i></i><i></i><i></i></div>
+//      .my-loader { .ws-brand-loader-draw(24px); }
+//
+//  `@size` is the rendered edge; the mark is square. `display` is left to the
+//  caller's own rule where the surrounding layout needs something other than
+//  the block default (an inline-block beside a button, say).
+.ws-brand-loader-draw(@size) {
+    position: relative;
+    display: block;
+    width: @size;
+    height: @size;
+    // the old rotating spinners were sized by border/background; make sure no
+    // inherited one of those paints behind the squares
+    border: none;
+    border-radius: 0;
+    background: none;
+    animation: none;
+
+    > * {
+        position: absolute;
+        display: block;
+        margin: 0;
+        padding: 0;
+        border: none;
+        border-radius: 0;        // it[0].r is 0 on all four layers
+        content: normal;         // in case the caller's element used CSS `content`
+        transform-origin: center;
+        animation: ws-brand-loader-dim @ws-brand-loader-cycle @ws-brand-loader-ease infinite;
+    }
+
+    // 1 — blue, 100 × 100 at (75, 25) of 200; trough 12 frames before cyan left
+    > *:nth-child(1) {
+        left: 37.5%;
+        top: 12.5%;
+        width: 50%;
+        height: 50%;
+        background-color: @ws-brand-loader-blue;
+        animation-delay: -@ws-brand-loader-step;
+    }
+
+    // 2 — cyan left, 50 × 50 at (25, 75) of 200; the keyframe's own phase
+    > *:nth-child(2) {
+        left: 12.5%;
+        top: 37.5%;
+        width: 25%;
+        height: 25%;
+        background-color: @ws-brand-loader-cyan;
+        animation-delay: 0s;
+    }
+
+    // 3 — cyan bottom, 50 × 50 at (75, 125) of 200; two steps after cyan left
+    > *:nth-child(3) {
+        left: 37.5%;
+        top: 62.5%;
+        width: 25%;
+        height: 25%;
+        background-color: @ws-brand-loader-cyan;
+        animation-delay: (@ws-brand-loader-step * 2);
+    }
+
+    // 4 — navy core, 50 × 50 at (75, 75) of 200; one step after cyan left.
+    //     Last, so it paints over the blue square.
+    > *:nth-child(4) {
+        left: 37.5%;
+        top: 37.5%;
+        width: 25%;
+        height: 25%;
+        background-color: @ws-brand-loader-navy;
+        animation-delay: @ws-brand-loader-step;
+    }
+
+    // Still the mark, still plainly visible — it just stops moving.
+    @media (prefers-reduced-motion: reduce) {
+        > * {
+            animation: none;
+            opacity: 1;
+            transform: none;
+        }
+    }
+}

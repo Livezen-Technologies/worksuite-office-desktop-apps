@@ -42,7 +42,7 @@ window.LoginDlg = function(opts) {
                             <!--<a id="link-create" class="text-sub link newportal" target="popup" href="javascript:void(0)">${utils.Lang.linkCreatePortal}</a>-->
                             <span />
                             <div>
-                              <img class="img-loader">
+                              <span class="img-loader" role="img" aria-label="${utils.Lang.wsLoading}"><i></i><i></i><i></i><i></i></span>
                               <button id="btn-next" class="btn primary">${utils.Lang.btnNext}</button>
                             </div>
                           </div>
@@ -67,7 +67,7 @@ window.LoginDlg = function(opts) {
                             <a id="link-restore" class="text-sub link" target="popup" href="javascript:void(0)">${utils.Lang.linkForgotPass}</a>
                             <span />
                             <div>
-                              <img class="img-loader">
+                              <span class="img-loader" role="img" aria-label="${utils.Lang.wsLoading}"><i></i><i></i><i></i><i></i></span>
                               <button id="btn-login" class="btn primary">${utils.Lang.btnLogin}</button>
                             </div>
                           </div>
@@ -357,7 +357,7 @@ window.LoginDlg = function(opts) {
 
     function disableDialog(disable) {
         $el.find('.tbox, #btn-login').prop('disabled', disable);
-        $el.find('.img-loader')[disable?'show':'hide']();
+        $el.find('.img-loader').css('display', disable ? 'inline-block' : 'none');
     };
 
     function onRestorePass() {

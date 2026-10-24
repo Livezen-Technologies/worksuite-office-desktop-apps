@@ -335,34 +335,20 @@ dialog {
     display: none;
 }
 
-@keyframes rotation {
-    from {
-        transform: rotate(0);
-    }
-
-    to {
-        transform: rotate(360deg);
-    }
-}
-
+// The small loading mark beside Connect / Sign in in the cloud-portal dialogs. It was a
+// rotating PNG, one bitmap per pixel ratio and one per theme; it is the WorkSuite mark now,
+// drawn in CSS, so it is sharp at every ratio and needs no light/dark pair. Geometry and
+// timings come from brandloader.less, read off the brand Lottie.
+//
+// It starts hidden and is shown while a request is in flight. The two dialogs set its
+// `display` explicitly (`inline-block`, to sit on the button's line) rather than through
+// jQuery's show(), which would guess a display for an element the stylesheet hides.
+// See dlglogin.js and dialogconnect.js.
 .img-loader {
-    content: data-uri('../res/img/spinner-dark.png');
+    .ws-brand-loader-draw(20px);
     display: none;
+    vertical-align: middle;
     margin-right: 10px;
-    animation: 0.8s rotation infinite linear;
-    width: 20px;
-    height: 20px;
-
-    .pixel-ratio__2 &,
-    .pixel-ratio__1_5 & {
-        content: data-uri('../res/img/spinner-dark@2x.png');
-    }
-}
-
-.theme-type-dark {
-    .img-loader {
-        content: data-uri('../res/img/spinner-light.png');
-    }
 }
 
 .win_xp .dlg.dlg-about .body {

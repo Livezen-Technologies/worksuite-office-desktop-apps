@@ -343,18 +343,15 @@
   }
 }
 
+// The WorkSuite loading mark, wherever WorkSuite's own parts of the start page wait: the
+// sign-in dialog and the file picker's list. It was a rotating ring in the theme's border
+// colour; it is the brand mark now. Geometry and timings come from brandloader.less, which
+// reads them off the brand Lottie — nothing about the mark is restated here.
+// `display: block` is what the mixin gives it, so `margin: … auto` still centres it and
+// jQuery's show()/hide() round-trips back to it.
 .ws-spinner {
-  width: 24px;
-  height: 24px;
+  .ws-brand-loader-draw(24px);
   margin: 8px auto;
-  border-radius: 50%;
-  border: 3px solid var(--border-regular-control);
-  border-top-color: var(--text-normal);
-  animation: ws-spin 0.9s linear infinite;
-}
-
-@keyframes ws-spin {
-  to { transform: rotate(360deg); }
 }
 
 // A plain button in WorkSuite's parts of the home screen: the theme's button colours. The start page's

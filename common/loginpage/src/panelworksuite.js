@@ -22,6 +22,17 @@
 
     function hostOf(server) { return String(server || '').replace(/^https?:\/\//, ''); }
 
+    /* The WorkSuite loading mark: four squares that dim in turn, styled by `.ws-spinner`
+       in css/worksuite.less. The four children carry no meaning of their own — the
+       geometry is entirely in css/brandloader.less, taken from the brand Lottie — so the
+       markup is written once here rather than at each place that waits.
+       `label` is null where something beside the mark already says we are waiting, so a
+       screen reader does not announce it twice. */
+    function spinner(label) {
+        const a = label === null ? 'aria-hidden="true"' : `role="img" aria-label="${esc(label)}"`;
+        return `<div class="ws-spinner" ${a}><i></i><i></i><i></i><i></i></div>`;
+    }
+
     function when(value) {
         if (!value) return '';
         const d = new Date(String(value).replace(' ', 'T'));
@@ -80,7 +91,7 @@
                         <p class="msg-error ws-dlg-error"></p>
                     </div>
                     <div class="ws-dlg-wait" style="display:none">
-                        <div class="ws-spinner"></div>
+                        ${spinner(null)}
                         <p class="text-normal ws-dlg-wait-text"></p>
                         <p class="text-secondary ws-dlg-wait-server"></p>
                         <div class="ws-dlg-code">
@@ -314,7 +325,7 @@
 
         const browse = async id => {
             folder = id;
-            const $list = $el.find('.ws-picker-list').html(`<div class="ws-spinner"></div>`);
+            const $list = $el.find('.ws-picker-list').html(spinner(_lang.wsLoading));
             try {
                 const data = await WorkSuite.folders(this.account, id);
                 const crumbs = [{ id: null, name: _lang.wsMyDrive }].concat(data.breadcrumb || []);

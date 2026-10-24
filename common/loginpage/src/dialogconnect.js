@@ -57,7 +57,7 @@ window.DialogConnect = function(params) {
                                     <!--<a class="text-sub link newportal" target="popup" href="javascript:void(0)">${utils.Lang.linkCreatePortal}</a>-->
                                     ${window.DialogWorkSuiteSignIn ? `<a class="text-sub link ws-instead" href="#">${utils.Lang.wsSignInTitle}</a>` : '<span />'}
                                     <div class="lr-flex">
-                                        <img class="img-loader">
+                                        <span class="img-loader" role="img" aria-label="${utils.Lang.wsLoading}"><i></i><i></i><i></i><i></i></span>
                                         <button id="btn-next" l10n class="btn btn--landing">${utils.Lang.btnConnect}</button>
                                     </div>
                                 </div>
@@ -221,7 +221,7 @@ window.DialogConnect = function(params) {
 
     function _disable_dialog(disable) {
         $body.find('.tbox, #btn-login').prop('disabled', disable);
-        $body.find('.img-loader')[disable?'show':'hide']();
+        $body.find('.img-loader').css('display', disable ? 'inline-block' : 'none');
     };
 
     function _require_portal_info(portal, provider) {
