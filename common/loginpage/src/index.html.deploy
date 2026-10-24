@@ -81,6 +81,12 @@
         <div id="placeholder"></div>
     </div>
 
+    <!-- the Office loading screen: vendored player, the export, then the mounter.
+         Falls back to the four-square mark above if any of the three is missing. -->
+    <script type="text/javascript" src="lottie_light.min.js"></script>
+    <script type="text/javascript" src="office-loading-animation.js"></script>
+    <script type="text/javascript" src="brandsplash.js"></script>
+
     <div class="injected-svg">
     <inline src="../res/img/generated/connect.svg" />
     <inline src="../res/img/generated/welcome.svg" />

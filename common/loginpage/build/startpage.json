@@ -37,6 +37,10 @@
                     "dest": "../deploy/bs-select.min.js"
                 },
                 {
+                    "src": "../vendor/lottie-web/lottie_light.min.js",
+                    "dest": "../deploy/lottie_light.min.js"
+                },
+                {
                     "expand": true,
                     "cwd": "../src/",
                     "src": [

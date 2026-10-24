@@ -1,0 +1,40 @@
+//
+//  The WorkSuite Office loading screen, centred on the start page's mask.
+//  ---------------------------------------------------------------------------
+//
+//  Geometry comes from the export (`src/office-loading-animation.js`):
+//  w 640 x h 400. Nothing here is eyeballed, and nothing here draws any part of
+//  the animation - lottie-web renders the whole of it into an <svg> inside
+//  `.ws-office-splash`. These rules only place and size the box it renders in.
+//
+//  Width is capped so the screen never overflows a narrow window; the aspect
+//  ratio is held at 640/400 so the player's `xMidYMid meet` never has to letter-
+//  box. The mark it replaces (`loader.less`) is left in the markup underneath
+//  and is what shows if the player does not come up - see `brandsplash.js`.
+//
+@ws-office-splash-width:  640px;
+@ws-office-splash-height: 400px;
+
+.ws-office-splash {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    width: @ws-office-splash-width;
+    max-width: 88%;
+    aspect-ratio: ~"@{ws-office-splash-width} / @{ws-office-splash-height}";
+
+    // Chromium understands aspect-ratio, so this is only a floor for the
+    // degenerate case of a window too short to honour it.
+    max-height: 88%;
+
+    line-height: 0;     // no stray baseline gap under the injected <svg>
+    pointer-events: none;
+
+    > svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+}
