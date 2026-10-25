@@ -44,6 +44,9 @@
 #include <QNetworkRequest>
 #include <QHttpMultiPart>
 #include <QStandardPaths>
+#include <QHash>
+#include <QPointer>
+#include <QDesktopServices>
 
 #ifdef Q_OS_WIN
 # include <windows.h>
@@ -653,6 +656,136 @@ QString CWorkSuite::policyAnswer()
 QString CWorkSuite::offlineFolder()
 {
     return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/offline";
+}
+
+namespace {
+    QHash<QString, QPointer<QNetworkReply>> & downloads()
+    {
+        static QHash<QString, QPointer<QNetworkReply>> all;
+        return all;
+    }
+
+    QString downloadsFolder()
+    {
+        QString dir = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
+        if ( dir.isEmpty() ) dir = QDir::homePath();
+        return QFileInfo(dir).canonicalFilePath();
+    }
+
+    /* "Report.docx", or "Report (2).docx" when that is taken; no path, no reserved characters */
+    QString freeName(const QString& folder, QString name)
+    {
+        name.replace(QRegularExpression("[\\\\/:*?\"<>|\\x00-\\x1f]"), "_");
+        name = name.trimmed().left(180);
+        if ( name.isEmpty() || name == "." || name == ".." ) name = "download";
+        const QFileInfo fi(name);
+        const QString base = fi.completeBaseName(), ext = fi.suffix().isEmpty() ? QString() : "." + fi.suffix();
+        QString path = folder + "/" + name;
+        for (int n = 2; QFileInfo::exists(path) && n < 1000; ++n)
+            path = folder + "/" + base + QString(" (%1)").arg(n) + ext;
+        return path;
+    }
+}
+
+void CWorkSuite::transfer(const QString& json, std::function<void(const QString&)> reply)
+{
+    const QJsonObject in = QJsonDocument::fromJson(json.toUtf8()).object();
+    const QString op = in.value("op").toString();
+    const QString req = in.value("req").toString().left(64);
+    auto send = [reply](const QJsonObject& out) { reply(QString::fromUtf8(QJsonDocument(out).toJson(QJsonDocument::Compact))); };
+    static QNetworkAccessManager * nam = new QNetworkAccessManager();
+
+    if ( op == "cancel" ) {
+        if ( QNetworkReply * r = downloads().value(req) ) r->abort();
+        return;
+    }
+
+    if ( op == "reveal" ) {
+        const QString root = downloadsFolder();
+        const QString path = QFileInfo(in.value("path").toString()).canonicalFilePath();
+        if ( !root.isEmpty() && path.startsWith(root + "/") )
+            QDesktopServices::openUrl(QUrl::fromLocalFile(QFileInfo(path).absolutePath()));
+        return;
+    }
+
+    const QUrl url(in.value("url").toString(), QUrl::StrictMode);
+    const bool https = url.isValid() && url.scheme() == "https" && url.userInfo().isEmpty() && !url.host().isEmpty();
+
+    if ( op == "chunk" ) {
+        static const QRegularExpression path_re("^/api/uploads/[0-9a-fA-F-]{36}/chunk$");
+        const QString token = in.value("token").toString();
+        const int index = in.value("index").toInt(-1);
+        const QByteArray data = QByteArray::fromBase64(in.value("data").toString().toLatin1());
+        if ( !https || !path_re.match(url.path()).hasMatch() || url.hasQuery() || token.isEmpty() || token.contains('\n') ||
+                index < 0 || data.size() > 16 * 1024 * 1024 ) {
+            send({{"req", req}, {"status", 400}, {"body", ""}});
+            return;
+        }
+        QHttpMultiPart * multi = new QHttpMultiPart(QHttpMultiPart::FormDataType);
+        QHttpPart indexPart;
+        indexPart.setHeader(QNetworkRequest::ContentDispositionHeader, "form-data; name=\"chunk_index\"");
+        indexPart.setBody(QByteArray::number(index));
+        multi->append(indexPart);
+        QHttpPart filePart;
+        filePart.setHeader(QNetworkRequest::ContentDispositionHeader, QString("form-data; name=\"chunk\"; filename=\"%1.part\"").arg(index));
+        filePart.setHeader(QNetworkRequest::ContentTypeHeader, "application/octet-stream");
+        filePart.setBody(data);
+        multi->append(filePart);
+        QNetworkRequest request(url);
+        request.setRawHeader("Authorization", "Bearer " + token.toUtf8());
+        request.setRawHeader("Accept", "application/json");
+        QNetworkReply * r = nam->post(request, multi);
+        multi->setParent(r);
+        QObject::connect(r, &QNetworkReply::finished, [r, req, send]() {
+            const int status = r->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+            send({{"req", req}, {"status", status}, {"body", QString::fromUtf8(r->readAll().left(64 * 1024))}});
+            r->deleteLater();
+        });
+        return;
+    }
+
+    if ( op == "download" ) {
+        static const QRegularExpression path_re("^/media/[A-Za-z0-9._~-]{8,2048}$");
+        const QString root = downloadsFolder();
+        if ( !https || !path_re.match(url.path()).hasMatch() || (url.hasQuery() && url.query() != "download=1") || root.isEmpty() || req.isEmpty() ) {
+            send({{"req", req}, {"status", 400}, {"done", true}});
+            return;
+        }
+        const QString path = freeName(root, in.value("name").toString());
+        QFile * file = new QFile(path + ".part");
+        if ( !file->open(QIODevice::WriteOnly) ) {
+            delete file;
+            send({{"req", req}, {"status", 507}, {"done", true}});
+            return;
+        }
+        QNetworkRequest request(url);
+        request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
+        QNetworkReply * r = nam->get(request);
+        file->setParent(r);
+        downloads().insert(req, r);
+        auto last = std::make_shared<qint64>(0);
+        QObject::connect(r, &QNetworkReply::readyRead, [r, file]() { file->write(r->readAll()); });
+        QObject::connect(r, &QNetworkReply::downloadProgress, [req, send, last](qint64 received, qint64 total) {
+            if ( received - *last < 256 * 1024 && received != total ) return;
+            *last = received;
+            send({{"req", req}, {"received", double(received)}, {"total", double(total)}});
+        });
+        QObject::connect(r, &QNetworkReply::finished, [r, file, req, path, send]() {
+            downloads().remove(req);
+            const int status = r->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+            file->write(r->readAll());
+            file->close();
+            const bool ok = r->error() == QNetworkReply::NoError && status >= 200 && status < 300;
+            if ( ok && QFile::rename(file->fileName(), path) )
+                send({{"req", req}, {"status", status}, {"done", true}, {"path", path}});
+            else {
+                QFile::remove(file->fileName());
+                send({{"req", req}, {"status", r->error() == QNetworkReply::OperationCanceledError ? 499 : (status ? status : 0)}, {"done", true}});
+            }
+            r->deleteLater();
+        });
+        return;
+    }
 }
 
 void CWorkSuite::upload(const QString& json, std::function<void(const QString&)> reply)

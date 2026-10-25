@@ -55,7 +55,9 @@ const SORT_VALUE = {
   modified: (i) => whenMs(i.modified !== undefined ? i.modified : i.date),
   opened: (i) => whenMs(i.date !== undefined ? i.date : i.modified),
   owner: (i) => String(i.owner || "").toLowerCase(),
-  type: (i) => typeOfExt(i.ext) + ":" + String(i.ext || "").toLowerCase(),
+  type: (i) => (i.kind === "folder" ? "" : typeOfExt(i.ext) + ":" + String(i.ext || "").toLowerCase()),
+  size: (i) => Number(i.size) || 0,
+  location: (i) => String(i.location || "").toLowerCase(),
 };
 
 /* Folders first, then by key; ties keep the server's order. sort: {key, dir: "asc" | "desc"} */

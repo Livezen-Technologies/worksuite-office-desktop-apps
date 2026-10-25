@@ -148,8 +148,9 @@ export function AccountPanel(props) {
       </Show>
 
       <Show when={!expired()}><span class="wsh-account-spacer" /></Show>
+      {props.tools}
       <Show when={expired()} fallback={
-        <IconButton icon="refresh" label={L.wshRefresh} busy={props.refreshing} onClick={props.onRefresh} />
+        <Show when={!props.noRefresh}><IconButton icon="refresh" label={L.wshRefresh} busy={props.refreshing} onClick={props.onRefresh} /></Show>
       }>
         <StatusBadge status={status()} />
         <WsButton variant="primary" small busy={props.reconnecting} onClick={props.onReconnect}>{L.wshReconnect}</WsButton>
