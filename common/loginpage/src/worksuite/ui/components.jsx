@@ -56,6 +56,13 @@ export function LockHint(props) {
   );
 }
 
+/* Desktop's avatarTone: the same colour for the same name */
+export function avatarTone(name) {
+  let h = 0;
+  for (const ch of String(name || "?")) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return h % 6;
+}
+
 export function Avatar(props) {
   const [broken, setBroken] = createSignal(false);
   createEffect(() => {
@@ -63,7 +70,7 @@ export function Avatar(props) {
     setBroken(false);
   });
   return (
-    <span class={"wsx-avatar" + (props.small ? " wsx-avatar-sm" : "")} aria-hidden="true">
+    <span class={"wsx-avatar" + (props.small ? " wsx-avatar-sm" : "")} data-tone={avatarTone(props.name)} aria-hidden="true">
       <Show when={props.src && !broken()} fallback={initials(props.name)}>
         <img src={props.src} alt="" draggable={false} onError={() => setBroken(true)} />
       </Show>
@@ -773,10 +780,135 @@ export function SkeletonRows(props) {
 export function EmptyState(props) {
   return (
     <div class="wsx-empty" role="status">
-      <Icon name={props.icon || "drive"} class="wsx-empty-icon" />
+      <span class="wsx-empty-icon" aria-hidden="true"><Icon name={props.icon || "drive"} /></span>
       <p class="wsx-empty-title">{props.title}</p>
       <Show when={props.text}><p class="wsx-hint">{props.text}</p></Show>
       <Show when={props.action}><div class="wsx-empty-action">{props.action}</div></Show>
     </div>
+  );
+}
+
+/* Desktop's Checkbox: a native box; a click on it does not reach the row. props: checked, indeterminate, label, onChange */
+export function Checkbox(props) {
+  let el;
+  createEffect(() => { if (el) el.indeterminate = !!props.indeterminate; });
+  return (
+    <input ref={(x) => (el = x)} type="checkbox" class={"wsx-checkbox " + (props.class || "")} checked={!!props.checked} tabindex={props.tabindex}
+           aria-label={props.label} disabled={props.disabled}
+           onClick={(e) => e.stopPropagation()} onDblClick={(e) => e.stopPropagation()}
+           onChange={(e) => props.onChange && props.onChange(e.currentTarget.checked, e)} />
+  );
+}
+
+/* Desktop's InfoBanner. props: tone (primary | warning | danger | success), icon, title, description, children (actions) */
+export function InfoBanner(props) {
+  return (
+    <div class={"wsx-infobanner " + (props.class || "")} data-tone={props.tone || "primary"} role={props.tone === "danger" ? "alert" : "status"}>
+      <span class="wsx-infobanner-mark" aria-hidden="true"><Icon name={props.icon || "info"} /></span>
+      <span class="wsx-infobanner-text">
+        <span class="wsx-infobanner-title">{props.title}</span>
+        <Show when={props.description}><span class="wsx-infobanner-desc">{props.description}</span></Show>
+      </span>
+      <Show when={props.children}><span class="wsx-infobanner-actions">{props.children}</span></Show>
+    </div>
+  );
+}
+
+/* Desktop's ConnectionWarning: a thin line while offline. props: when, text */
+export function ConnectionWarning(props) {
+  return (
+    <Show when={props.when}>
+      <div class="wsx-connwarn" role="status"><Icon name="warning" />{props.text}</div>
+    </Show>
+  );
+}
+
+/*
+ * Desktop's SyncButton: Refresh that shows it is working, then done or failed for a moment.
+ * props: onSync() → Promise, label, busyLabel, doneLabel, failedLabel, iconOnly
+ */
+export function SyncButton(props) {
+  const [state, setState] = createSignal("ready");
+  let timer;
+  onCleanup(() => clearTimeout(timer));
+  const words = () => ({ ready: props.label, syncing: props.busyLabel || props.label, done: props.doneLabel || props.label, failed: props.failedLabel || props.label });
+  async function click() {
+    if (state() === "syncing") return;
+    clearTimeout(timer);
+    setState("syncing");
+    let ok = true;
+    try { await props.onSync(); } catch { ok = false; }
+    setState(ok ? "done" : "failed");
+    timer = setTimeout(() => setState("ready"), 1600);
+  }
+  const icon = () => (state() === "done" ? "check" : state() === "failed" ? "warning" : "refresh");
+  return (
+    <Tooltip text={words()[state()]}>
+      <button type="button" class={"wsx-btn wsx-btn-secondary wsx-sync" + (props.iconOnly ? " wsx-btn-icon wsx-btn-square" : "")} data-state={state()}
+              aria-busy={state() === "syncing" ? "true" : undefined} aria-label={words()[state()]} onClick={click}>
+        <Icon name={icon()} />
+        <Show when={!props.iconOnly}><span>{words()[state()]}</span></Show>
+      </button>
+      <span class="wsx-visually-hidden" role="status" aria-live="polite">{state() === "ready" ? "" : words()[state()]}</span>
+    </Tooltip>
+  );
+}
+
+/*
+ * Desktop's Menu for the kit: a Popover of menu items with arrow keys, Home/End, Enter and Escape.
+ * props: open, anchor (element) or point {x, y}, onClose, label, items [{id, label, icon, danger, disabled, checked, separator, head}]
+ * and onSelect(item).
+ */
+export function Menu(props) {
+  let box;
+  const anchor = () => {
+    if (props.anchor) return props.anchor;
+    if (!props.point) return null;
+    return { getBoundingClientRect: () => ({ top: props.point.y, bottom: props.point.y, left: props.point.x, right: props.point.x, width: 0, height: 0 }),
+             contains: () => false, matches: () => false, querySelector: () => null };
+  };
+  const items = () => (box ? [...box.querySelectorAll("[role=menuitem],[role=menuitemcheckbox]")].filter((x) => x.getAttribute("aria-disabled") !== "true") : []);
+  createEffect(() => {
+    if (props.open) requestAnimationFrame(() => items()[0] && items()[0].focus());
+  });
+  function onKey(e) {
+    const list = items();
+    const i = list.indexOf(document.activeElement);
+    let j = -1;
+    if (e.key === "ArrowDown") j = (i + 1) % list.length;
+    else if (e.key === "ArrowUp") j = (i - 1 + list.length) % list.length;
+    else if (e.key === "Home") j = 0;
+    else if (e.key === "End") j = list.length - 1;
+    else if (e.key === "Tab") return props.onClose && props.onClose();
+    if (j < 0 || !list.length) return;
+    e.preventDefault();
+    list[j].focus();
+  }
+  const pick = (item) => {
+    if (item.disabled) return;
+    props.onClose && props.onClose();
+    props.onSelect && props.onSelect(item);
+  };
+  return (
+    <Popover open={props.open} anchor={anchor()} onClose={props.onClose} class={"wsx-menu " + (props.class || "")}>
+      <div role="menu" aria-label={props.label} ref={(el) => (box = el)} onKeyDown={onKey}>
+        <For each={props.items || []}>
+          {(item) => (
+            <Show when={!item.separator} fallback={<div class="wsx-menu-sep" role="separator" />}>
+              <Show when={!item.head} fallback={<div class="wsx-menu-head">{item.label}</div>}>
+                <button type="button" role={item.checked === undefined ? "menuitem" : "menuitemcheckbox"} tabindex="-1"
+                        class={"wsx-menu-item" + (item.danger ? " is-danger" : "")} aria-disabled={item.disabled ? "true" : undefined}
+                        aria-checked={item.checked === undefined ? undefined : item.checked ? "true" : "false"} title={item.reason}
+                        onClick={() => pick(item)}>
+                  <Show when={item.icon}><Icon name={item.icon} /></Show>
+                  <span class="wsx-ellipsis">{item.label}</span>
+                  <Show when={item.hint}><span class="wsx-menu-hint">{item.hint}</span></Show>
+                </button>
+              </Show>
+            </Show>
+          )}
+        </For>
+      </div>
+    </Popover>
   );
 }
