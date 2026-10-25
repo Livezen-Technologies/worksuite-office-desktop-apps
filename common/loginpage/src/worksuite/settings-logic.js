@@ -22,10 +22,23 @@ export function validateServer(input) {
  * A known account's status. Signing out removes an account (WorkSuite.signOut), so a listed account
  * marked signedOut is one whose session ended by itself (refresh refused, 401): "expired".
  */
-export function accountStatus(account) {
+export function accountStatus(account, unreachable) {
   if (!account) return "none";
   if (account.desktopOnly) return "desktop";
-  return account.signedOut ? "expired" : "signed-in";
+  if (account.signedOut) return account.signedOutBy === "user" ? "signed-out" : "expired";
+  return unreachable ? "unreachable" : "signed-in";
+}
+
+/* What a card offers, by status: the inline action and the menu (Switch to, Sign out, Remove) */
+export function accountActions(account, opts) {
+  opts = opts || {};
+  const status = accountStatus(account, opts.unreachable);
+  const primary = { desktop: "connect", "signed-out": "signin", expired: "reconnect", unreachable: "reconnect" }[status] || null;
+  const menu = [];
+  if (status === "signed-in" && !opts.isDefault && opts.multiple) menu.push("switch");
+  if (status === "signed-in" || status === "unreachable") menu.push("signout");
+  if (status !== "desktop") menu.push("remove");
+  return { status, primary, menu };
 }
 
 /*

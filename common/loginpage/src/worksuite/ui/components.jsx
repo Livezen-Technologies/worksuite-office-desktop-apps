@@ -6,7 +6,8 @@
 import { For, Show, createEffect, createMemo, createSignal, createUniqueId, onCleanup } from "solid-js";
 import { L } from "../lang.js";
 import { hostOf, initials } from "../cards.jsx";
-import { accountStatus, filterAccounts, nextIndex, validateServer } from "../settings-logic.js";
+import { accountActions, accountStatus, filterAccounts, nextIndex, validateServer } from "../settings-logic.js";
+import { DropdownMenu } from "@/components";
 import "./tokens.css";
 import "./components.css";
 
@@ -71,10 +72,11 @@ const STATUS_TEXT = {
   "signed-in": () => L.wsxSignedIn,
   expired: () => L.wsxSessionExpired,
   "signed-out": () => L.wsxSignedOut,
+  unreachable: () => L.wsxUnreachable,
   desktop: () => L.wsxViaDesktopAvailable,
   connecting: () => L.wsxConnecting,
 };
-const STATUS_TONE = { "signed-in": "success", expired: "warning", "signed-out": "neutral", desktop: "info", connecting: "info" };
+const STATUS_TONE = { "signed-in": "success", expired: "warning", "signed-out": "neutral", unreachable: "danger", desktop: "info", connecting: "info" };
 
 export function StatusBadge(props) {
   return (
@@ -222,14 +224,25 @@ export function Segmented(props) {
 }
 
 /*
- * One account: avatar (photo when the server gave one), name, server, status, and the actions the
- * backend has. props: account, isDefault, busy, error, onSignIn, onSignOut, onRemove, onSetDefault
+ * One account: avatar (photo when the server gave one), name, server, status, an inline action
+ * (Connect / Sign in / Reconnect) and a menu (Switch to, Sign out, Remove).
+ * props: account, isDefault, multiple, unreachable, busy, error, focused, onConnect, onSwitch, onSignOut, onRemove
  */
 export function AccountCard(props) {
   const a = () => props.account;
-  const status = () => (props.busy === "signin" ? "connecting" : accountStatus(a()));
+  const acts = () => accountActions(a(), { isDefault: props.isDefault, multiple: props.multiple, unreachable: props.unreachable });
+  const status = () => (props.busy === "signin" ? "connecting" : acts().status);
+  const primaryLabel = () => ({ connect: L.wsxConnect, signin: L.wsxStepAuth, reconnect: L.wsxReconnect })[acts().primary];
+  let el;
+  createEffect(() => {
+    if (props.focused && el) {
+      el.scrollIntoView({ block: "nearest" });
+      el.focus();
+    }
+  });
   return (
-    <div class="wsx-account" classList={{ "is-default": props.isDefault }}>
+    <div class="wsx-account" classList={{ "is-default": props.isDefault, "is-focused": props.focused }} ref={(e) => (el = e)} tabindex="-1"
+         data-account={a().id}>
       <Avatar name={a().user.name} src={a().user.avatar} />
       <div class="wsx-account-text">
         <div class="wsx-account-name">
@@ -240,23 +253,31 @@ export function AccountCard(props) {
           {[a().user.email, a().user.organization, hostOf(a().server)].filter(Boolean).join(" · ")}
         </div>
         <Show when={props.via}><div class="wsx-hint">{props.via}</div></Show>
+        <Show when={props.note}><div class="wsx-msg wsx-tone-info"><Icon name="about" />{props.note}</div></Show>
         <Show when={props.error}><div class="wsx-msg wsx-tone-danger" role="alert"><Icon name="alert" />{props.error}</div></Show>
       </div>
       <StatusBadge status={status()} />
       <div class="wsx-account-actions">
-        <Show when={!props.isDefault && status() === "signed-in" && props.onSetDefault}>
-          <WsButton small variant="ghost" disabled={!!props.busy} onClick={props.onSetDefault}>{L.wsxSetDefault}</WsButton>
+        <Show when={acts().primary}>
+          <WsButton small variant="primary" busy={props.busy === "signin"} disabled={!!props.busy} onClick={props.onConnect}>{primaryLabel()}</WsButton>
         </Show>
-        <Show when={status() === "expired" || status() === "connecting" || status() === "desktop"}>
-          <WsButton small variant="primary" busy={props.busy === "signin"} disabled={!!props.busy} onClick={props.onSignIn}>
-            {a().desktopOnly ? L.wsxConnect : L.wsxReconnect}
-          </WsButton>
-        </Show>
-        <Show when={!a().desktopOnly && (status() === "expired" || status() === "connecting")}>
-          <WsButton small variant="ghost" busy={props.busy === "remove"} disabled={!!props.busy} onClick={props.onRemove}>{L.wsxRemove}</WsButton>
-        </Show>
-        <Show when={status() === "signed-in"}>
-          <WsButton small variant="secondary" busy={props.busy === "signout"} disabled={!!props.busy} onClick={props.onSignOut}>{L.wsSignOutBtn}</WsButton>
+        <Show when={acts().menu.length}>
+          <DropdownMenu>
+            <DropdownMenu.Trigger class="wsx-btn wsx-btn-ghost wsx-btn-sm wsx-btn-icon" disabled={!!props.busy}
+                                  aria-label={L.wsxMoreActions.replace("$1", a().user.name)}>
+              <Show when={props.busy && props.busy !== "signin"} fallback={<Icon name="more" />}><Spinner /></Show>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content>
+              <For each={acts().menu}>
+                {(m) => (
+                  <DropdownMenu.Item class={m === "remove" ? "negative" : ""}
+                                     onSelect={() => ({ switch: props.onSwitch, signout: props.onSignOut, remove: props.onRemove })[m]()}>
+                    {({ switch: L.wsxSwitchTo, signout: L.wsSignOutBtn, remove: L.wsxRemoveAccount })[m]}
+                  </DropdownMenu.Item>
+                )}
+              </For>
+            </DropdownMenu.Content>
+          </DropdownMenu>
         </Show>
       </div>
     </div>

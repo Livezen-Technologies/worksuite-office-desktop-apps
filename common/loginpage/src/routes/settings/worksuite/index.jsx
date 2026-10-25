@@ -4,6 +4,7 @@ import { L } from "@/worksuite/lang.js";
 import "@/worksuite/core.js";
 import { hostOf } from "@/worksuite/cards.jsx";
 import { SignInDialog } from "@/worksuite/dialogs.jsx";
+import { AccountWizard } from "@/worksuite/account-wizard.jsx";
 import { versionInfo, updateStatus, execUpdateAction, openAbout } from "@/services/about";
 import { command } from "@/sdk/bridge";
 import {
@@ -58,6 +59,10 @@ export default function WorkSuiteSettings() {
   const [signingIn, setSigningIn] = createSignal(null); // {desktopAccount, id} while the sign-in dialog is open
   const [busy, setBusy] = createSignal({}); // account id → "signout" | "remove"
   const [errors, setErrors] = createSignal({});
+  const [cardNotes, setCardNotes] = createSignal({}); // account id → a note on its card ("already added")
+  const [unreachable, setUnreachable] = createSignal({}); // server → true when it did not answer
+  const [wizard, setWizard] = createSignal(null); // {server} while "Add account" is open
+  const [focusId, setFocusId] = createSignal(null);
   const [section, setSectionSig] = createSignal((() => {
     try { return sessionStorage.getItem(SECTION_KEY) || "accounts"; } catch { return "accounts"; }
   })());
@@ -78,16 +83,60 @@ export default function WorkSuiteSettings() {
     initWorkSuiteShell();
     ["signedin", "changed"].forEach((e) => WS().on(e, refresh));
     findDesktop();
+    probeServers();
   });
   onCleanup(() => ["signedin", "changed"].forEach((e) => WS().off(e, refresh)));
 
   const known = createMemo(() => mergeAccounts(accounts(), desktop()));
 
+  /* "Server unreachable": each signed-in account's server, asked once when the page opens */
+  function probeServers() {
+    const servers = WS().accounts().filter((a) => !a.signedOut).map((a) => a.server).filter((s, i, all) => all.indexOf(s) === i);
+    servers.forEach((server) => WS().checkServer(server).then(
+      () => setUnreachable({ ...unreachable(), [server]: false }),
+      () => setUnreachable({ ...unreachable(), [server]: true }),
+    ));
+  }
+
+  const setOne = (get, set, id, v) => set({ ...get(), [id]: v });
+
+  /* Reconnect: the kept session first (silent refresh), the wizard only when that is not enough */
+  async function connect(a) {
+    setOne(errors, setErrors, a.id, "");
+    if (a.desktopOnly) return setSigningIn({ desktopAccount: a.desktop, id: a.id });
+    setOne(busy, setBusy, a.id, "signin");
+    const r = await WS().reconnect(a).catch(() => ({ signIn: true }));
+    const b = { ...busy() };
+    delete b[a.id];
+    setBusy(b);
+    if (r.ok) {
+      setUnreachable({ ...unreachable(), [a.server]: false });
+      return refresh();
+    }
+    if (r.unreachable) {
+      setUnreachable({ ...unreachable(), [a.server]: true });
+      return setOne(errors, setErrors, a.id, L.wsxUnreachableMsg.replace("$1", hostOf(a.server)));
+    }
+    if (a.desktop) return setSigningIn({ desktopAccount: a.desktop, id: a.id });
+    setWizard({ server: a.server });
+  }
+
+  function wizardClosed(result) {
+    setWizard(null);
+    refresh();
+    findDesktop();
+    if (result && result.id) {
+      if (result.duplicate) setOne(cardNotes, setCardNotes, result.id, L.wsxAlreadyAdded);
+      setFocusId(null);
+      queueMicrotask(() => setFocusId(result.id));
+    }
+  }
+
   async function run(account, kind) {
     setBusy({ ...busy(), [account.id]: kind });
     setErrors({ ...errors(), [account.id]: "" });
     try {
-      await WS().signOut(account);
+      await (kind === "remove" ? WS().remove(account) : WS().signOutOnly(account));
     } catch (e) {
       setErrors({ ...errors(), [account.id]: (e && e.message) || L.wsErrServer });
     } finally {
@@ -128,24 +177,25 @@ export default function WorkSuiteSettings() {
       <SettingsLayout label={L.wsxSettingsNav} sections={sections()} active={section()} onSelect={setSection}>
         <Show when={section() === "accounts"}>
           <SettingsSection title={L.wsAccounts} description={L.wsxAccountsDesc}
-                           actions={<WsButton variant="primary" icon="accounts" disabled={!!signingIn()} onClick={() => setSigningIn({ desktopAccount: null })}>{L.wsxAddAccount}</WsButton>}>
+                           actions={<WsButton variant="primary" icon="plus" disabled={!!signingIn() || !!wizard()} onClick={() => setWizard({ server: "" })}>{L.wsxAddAccount}</WsButton>}>
             <Show when={known().length} fallback={
               <Show when={!looking()} fallback={<div class="wsx-skeleton" role="status" aria-label={L.wsLoading} />}>
                 <div class="wsx-empty">
                   {L.wsNoAccounts}
-                  <WsButton variant="link" onClick={() => setSigningIn({ desktopAccount: null })}>{L.wsSignInTitle}</WsButton>
+                  <WsButton variant="link" onClick={() => setWizard({ server: "" })}>{L.wsSignInTitle}</WsButton>
                 </div>
               </Show>
             }>
               <div class="wsx-accounts">
                 <For each={known()}>
                   {(a) => (
-                    <AccountCard account={a} isDefault={a.id === activeId() && !a.signedOut}
+                    <AccountCard account={a} isDefault={a.id === activeId() && !a.signedOut} multiple={accounts().filter((x) => !x.signedOut).length > 1}
+                                 unreachable={!a.signedOut && !a.desktopOnly && !!unreachable()[a.server]}
                                  busy={busy()[a.id] || (signingIn() && signingIn().id === a.id ? "signin" : null)}
-                                 error={errors()[a.id]}
+                                 error={errors()[a.id]} note={cardNotes()[a.id]} focused={focusId() === a.id}
                                  via={a.desktopOnly ? L.wsViaDesktop : a.signedOut ? (a.desktop ? L.wsViaDesktop : "") : via(a)}
-                                 onSetDefault={accounts().length > 1 ? () => WS().setActive(a.id) : null}
-                                 onSignIn={() => setSigningIn({ desktopAccount: a.desktop || null, id: a.id })}
+                                 onConnect={() => connect(a)}
+                                 onSwitch={() => WS().setActive(a.id)}
                                  onSignOut={() => run(a, "signout")}
                                  onRemove={() => run(a, "remove")} />
                   )}
@@ -153,7 +203,7 @@ export default function WorkSuiteSettings() {
               </div>
               <Show when={looking()}><p class="wsx-hint" role="status">{L.wsxLookingDesktop}</p></Show>
             </Show>
-            <p class="wsx-hint">{L.wsxSignOutNote}</p>
+            <p class="wsx-hint">{L.wsxSignOutNote2}</p>
           </SettingsSection>
         </Show>
 
@@ -242,6 +292,11 @@ export default function WorkSuiteSettings() {
         </Show>
       </SettingsLayout>
 
+      <Show when={wizard()}>
+        <AccountWizard server={serverLocked() ? policy().server : wizard().server} locked={serverLocked()} desktop={desktop()}
+                       known={[...accounts().map((a) => a.server), ...desktop().map((d) => d.server), WS().DEFAULT_SERVER]}
+                       onClose={wizardClosed} />
+      </Show>
       <Show when={signingIn()}>
         <SignInDialog desktopAccount={signingIn().desktopAccount} onClose={() => { setSigningIn(null); refresh(); findDesktop(); }} />
       </Show>

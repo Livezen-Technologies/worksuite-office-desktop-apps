@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { validateServer, accountStatus, updatePhase, mergeAccounts, filterAccounts, nextIndex } from "./settings-logic.js";
+import { validateServer, accountStatus, accountActions, updatePhase, mergeAccounts, filterAccounts, nextIndex } from "./settings-logic.js";
 
 test("server addresses: hosts and https URLs pass, http and junk do not", () => {
   assert.deepEqual(validateServer("app.worksuite.lk"), { ok: true, value: "https://app.worksuite.lk" });
@@ -50,4 +50,15 @@ test("arrow keys wrap", () => {
   assert.equal(nextIndex("ArrowLeft", 0, 3), 2);
   assert.equal(nextIndex("End", 0, 3), 2);
   assert.equal(nextIndex("a", 1, 3), 1);
+});
+
+test("signed out by the person vs expired vs unreachable, and what each card offers", () => {
+  assert.equal(accountStatus({ signedOut: true, signedOutBy: "user" }), "signed-out");
+  assert.equal(accountStatus({ signedOut: false }, true), "unreachable");
+  assert.deepEqual(accountActions({ signedOut: false }, { multiple: true }), { status: "signed-in", primary: null, menu: ["switch", "signout", "remove"] });
+  assert.deepEqual(accountActions({ signedOut: false }, { multiple: true, isDefault: true }).menu, ["signout", "remove"]);
+  assert.deepEqual(accountActions({ signedOut: true }), { status: "expired", primary: "reconnect", menu: ["remove"] });
+  assert.deepEqual(accountActions({ signedOut: true, signedOutBy: "user" }), { status: "signed-out", primary: "signin", menu: ["remove"] });
+  assert.deepEqual(accountActions({ desktopOnly: true }), { status: "desktop", primary: "connect", menu: [] });
+  assert.equal(accountActions({ signedOut: false }, { unreachable: true }).primary, "reconnect");
 });
