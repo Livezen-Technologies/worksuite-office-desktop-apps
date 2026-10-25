@@ -52,6 +52,8 @@ const utils = { Lang: L, defines: { FileFormat } };
  * and every save is a new version of the same Drive file.
  */
 
+import { driveCacheKey } from './clouds-logic.js';
+
 +function () {
     'use strict';
 
@@ -996,49 +998,69 @@ const utils = { Lang: L, defines: { FileFormat } };
             org: f.org_id === undefined ? undefined : f.org_id,
             folder: f.folder_id === undefined ? undefined : f.folder_id,
             version: f.version === undefined ? undefined : f.version,
+            size: typeof f.size === 'number' ? f.size : (f.size ? Number(f.size) : undefined),
+            mime: f.mime_type || '',
+            shared: !!f.shared,
+            access: f.access && typeof f.access === 'object' ? f.access : undefined,
+            ownerId: f.owner_id === undefined ? undefined : f.owner_id,
+            deleted: f.deleted_at || '',
+            daysLeft: f.days_left === undefined ? undefined : f.days_left,
         };
     }
 
     function shapeFolder(f) {
         return { kind: 'folder', id: f.id, name: f.name || '', owner: f.owner_name || '', modified: f.updated_at || '',
-                 org: f.org_id === undefined ? undefined : f.org_id };
+                 org: f.org_id === undefined ? undefined : f.org_id, location: f.path || '', shared: !!f.shared,
+                 access: f.access && typeof f.access === 'object' ? f.access : undefined, ownerId: f.owner_id,
+                 size: f.total_size === undefined ? undefined : Number(f.total_size), count: f.file_count === undefined ? undefined : Number(f.file_count),
+                 locked: !!f.is_locked };
     }
 
     /*
-     * One list: 'recent' | 'shared' | 'starred' | 'drive' (with folder) | 'search' (with q).
-     * Only Office files and PDFs are listed, with folders where browsing.
+     * One list: 'recent' | 'shared' | 'starred' | 'trash' | 'drive' (with folder) | 'search' (with q), for the
+     * account's organisation (org_id). Home lists only Office files and PDFs (folders where browsing); Clouds
+     * passes `all` for every file. `page` pages Drive's lists (per_page 100): {items, total, page, more}.
+     * `access` is the reader's access to the folder shown (null at the top of My Drive).
      */
     async function list(account, view, opts) {
         opts = opts || {};
-        let data, items, breadcrumb = null;
+        let data, items, breadcrumb = null, total = null, folderAccess = null, company = null;
         const org = companyOf(account);
         const orgQ = org ? '&org_id=' + encodeURIComponent(org) : '';
+        const page = Math.max(1, opts.page || 1);
 
         if (view === 'drive') {
             data = await api(account, 'GET', '/api/files/browse?' + (opts.folder ? 'folder_id=' + encodeURIComponent(opts.folder) : '') + orgQ);
             items = (data.folders || []).map(shapeFolder).concat((data.files || []).map(shapeFile));
             breadcrumb = data.breadcrumb || [];
+            folderAccess = data.access || null;
+            company = data.company || null;
+            if (data.locked) folderAccess = Object.assign({}, folderAccess, { locked: true });
         } else
         if (view === 'search') {
             data = await api(account, 'GET', '/api/files/search?limit=100&q=' + encodeURIComponent(opts.q || '') + orgQ);
             items = (data.files || []).map(shapeFile);
         } else {
             const sort = view === 'recent' ? '&sort=opened&dir=desc' : '&sort=modified&dir=desc';
-            data = await api(account, 'GET', '/api/drive/list?per_page=100&view=' + encodeURIComponent(view) + sort + orgQ);
+            data = await api(account, 'GET', '/api/drive/list?per_page=100&counts=0&page=' + page + '&view=' + encodeURIComponent(view) + sort + orgQ);
             items = (data.files || []).map(shapeFile);
+            total = typeof data.total === 'number' ? data.total : null;
         }
 
-        items = items.filter(i => (i.kind === 'folder' || OFFICE_EXT.includes(i.ext)) && inCompany(org, i));
-        const result = { items: items, breadcrumb: breadcrumb, at: Date.now() };
+        items = items.filter(i => (opts.all || i.kind === 'folder' || OFFICE_EXT.includes(i.ext)) && inCompany(org, i));
+        const result = { items: items, breadcrumb: breadcrumb, access: folderAccess, company: company, total: total, page: page,
+                         more: total !== null && page * 100 < total, at: Date.now() };
 
         if (view !== 'search')
             writeJson(localStorage, cacheKey(account, view, opts), result);
         return result;
     }
 
+    /* the account's own prefix (Sign out / Remove drop it), then the account, server, organisation and place */
     function cacheKey(account, view, opts) {
-        const org = companyOf(account);
-        return LS_CACHE + account.id + ':' + view + (view === 'drive' ? ':' + (opts.folder || 'root') : '') + (org ? '@' + org : '');
+        opts = opts || {};
+        return LS_CACHE + account.id + ':' + driveCacheKey({ server: account.server, user: account.user && account.user.id, org: companyOf(account),
+                                                              view: view + (opts.all ? '+all' : ''), folder: opts.folder, page: opts.page });
     }
 
     function cached(account, view, opts) {
@@ -1219,7 +1241,105 @@ const utils = { Lang: L, defines: { FileFormat } };
     }
 
     function star(account, file, on) {
-        return api(account, 'POST', '/api/drive/star', { type: 'file', id: file.id, on: !!on });
+        return api(account, 'POST', '/api/drive/star', { type: file.kind === 'folder' ? 'folder' : 'file', id: file.id, on: !!on });
+    }
+
+    /* ------------------------------------------------------------------ *
+     * Clouds › WorkSuite Drive: folders, the bin, preview, download, upload, activity
+     * ------------------------------------------------------------------ */
+
+    /* POST /api/folders {name, parent_id}: needs "add_files" on the parent */
+    function createFolder(account, name, parent) {
+        return api(account, 'POST', '/api/folders', { name: name, parent_id: parent || null }).then(d => shapeFolder(d || {}));
+    }
+
+    /* DELETE /api/files/{id}/purge: out of the bin for good (the server refuses under a legal hold) */
+    function purge(account, file) {
+        return api(account, 'DELETE', '/api/files/' + encodeURIComponent(file.id) + '/purge');
+    }
+
+    const absolute = (account, u) => (typeof u === 'string' && u ? (u.charAt(0) === '/' ? account.server + u : u) : null);
+
+    /*
+     * GET /api/drive/preview/{id}: the viewer's signed addresses (/media/<token>, good for an hour or two).
+     * {url (a PDF, an image…), download (null when the reader may not download), kind, mime, size}
+     */
+    async function preview(account, file) {
+        const d = await api(account, 'GET', '/api/drive/preview/' + encodeURIComponent(file.id));
+        const url = absolute(account, d && d.url);
+        const download = absolute(account, d && d.download_url);
+        return { url: pictureUrl(account, url), download: pictureUrl(account, download), kind: (d && d.preview) || '', mime: (d && d.mime) || '', size: (d && d.size) || 0 };
+    }
+
+    /* GET /api/drive/activity/{file|folder}/{id}: the item's timeline as the reader may see it */
+    async function activity(account, item) {
+        const d = await api(account, 'GET', '/api/drive/activity/' + (item.kind === 'folder' ? 'folder' : 'file') + '/' + encodeURIComponent(item.id));
+        return ((d && d.activity) || []).map(a => ({ id: a.id, summary: String(a.summary || ''), actor: a.actor && a.actor.name ? String(a.actor.name) : '',
+                                                     at: a.at || a.created_at || '', kind: a.kind || '' }));
+    }
+
+    /*
+     * Upload one file into a folder (Drive's resumable uploads): POST /api/uploads/init, each part through the app
+     * (worksuite:transfer, a multipart POST to /api/uploads/{id}/chunk with the token, which this file:// page
+     * cannot make itself), then POST /api/uploads/{id}/complete (202 while the server assembles it: asked again).
+     * `send(part)` is the page's transfer: (url, token, index, base64) → {status, body}. `onProgress(bytes)`.
+     * `cancelled()` stops between parts and aborts the session.
+     */
+    async function upload(account, blob, folder, hooks) {
+        hooks = hooks || {};
+        const size = blob.size || 0;
+        const chunk = hooks.chunk || 1024 * 1024;
+        const total = Math.max(1, Math.ceil(size / chunk));
+        const started = await api(account, 'POST', '/api/uploads/init', {
+            filename: blob.name, total_size: size, chunk_size: chunk, total_chunks: total, folder_id: folder || null,
+            mime_type: blob.type || null, client_key: hooks.key || null,
+        });
+        const id = started && started.upload_id;
+        if (!id || !/^[0-9a-f-]{36}$/i.test(id)) throw new Error(utils.Lang.wsErrServer);
+        const have = new Set((started.received_chunks || []).map(Number));
+        let sent = 0;
+        for (let i = 0; i < total; i++) {
+            const end = Math.min(size, (i + 1) * chunk);
+            if (hooks.cancelled && hooks.cancelled()) {
+                api(account, 'POST', '/api/uploads/' + id + '/abort', {}).catch(() => {});
+                const e = new Error('cancelled');
+                e.cancelled = true;
+                throw e;
+            }
+            if (!have.has(i)) {
+                const part = await readBase64(blob.slice(i * chunk, end));
+                let r = await hooks.send(account.server + '/api/uploads/' + id + '/chunk', await token(account), i, part);
+                if (r.status === 401) {
+                    delete access[account.id];
+                    r = await hooks.send(account.server + '/api/uploads/' + id + '/chunk', await refresh(account), i, part);
+                }
+                if (r.status < 200 || r.status >= 300) {
+                    let json = null;
+                    try { json = JSON.parse(r.body || 'null'); } catch (e) { /* not JSON */ }
+                    throw apiError({ status: r.status, json: json });
+                }
+            }
+            sent = end;
+            hooks.onProgress && hooks.onProgress(sent);
+        }
+        hooks.onFinishing && hooks.onFinishing();
+        for (let round = 0; round < 60; round++) {
+            const res = await http('POST', account.server + '/api/uploads/' + id + '/complete', {}, { 'Authorization': 'Bearer ' + await token(account) });
+            if (res.status === 202) { await new Promise(ok => setTimeout(ok, 1500)); continue; }
+            if (res.status < 200 || res.status >= 300 || !res.json || res.json.status === 'error') throw apiError(res);
+            const d = res.json.data || {};
+            return { id: d.file_id, name: d.name || blob.name, size: d.size, quarantined: !!d.quarantined };
+        }
+        throw new Error(utils.Lang.wsErrServer);
+    }
+
+    function readBase64(blob) {
+        return new Promise((resolve, reject) => {
+            const r = new FileReader();
+            r.onload = () => resolve(String(r.result).replace(/^data:[^,]*,/, ''));
+            r.onerror = () => reject(new Error(utils.Lang.wsErrServer));
+            r.readAsDataURL(blob);
+        });
     }
 
     function requestEdit(account, file) {
@@ -1232,6 +1352,8 @@ const utils = { Lang: L, defines: { FileFormat } };
 
     /* PUT /api/files/{id} {name}: needs "rename"; the open editor tabs take the new title (office/meta) */
     async function rename(account, file, name) {
+        if (file.kind === 'folder')
+            return api(account, 'PUT', '/api/folders/' + encodeURIComponent(file.id), { name: name }).then(d => shapeFolder(d || {}));
         const data = await api(account, 'PUT', '/api/files/' + encodeURIComponent(file.id), { name: name });
         api(account, 'POST', '/api/files/' + encodeURIComponent(file.id) + '/office/meta', {}).catch(() => {});
         return shapeFile(data || {});
@@ -1239,20 +1361,26 @@ const utils = { Lang: L, defines: { FileFormat } };
 
     /* PUT /api/files/{id} {folder_id}: needs "move" here and "add_files" there; null is the top of My Drive */
     function move(account, file, folder) {
+        if (file.kind === 'folder')
+            return api(account, 'POST', '/api/folders/' + encodeURIComponent(file.id) + '/move', { parent_id: folder || null }).then(d => shapeFolder(d || {}));
         return api(account, 'PUT', '/api/files/' + encodeURIComponent(file.id), { folder_id: folder || null }).then(d => shapeFile(d || {}));
     }
 
     /* POST /api/files/{id}/copy: "<name> (copy)" beside it, or at the top of My Drive where it may not add */
     function copy(account, file) {
+        if (file.kind === 'folder')
+            return api(account, 'POST', '/api/folders/' + encodeURIComponent(file.id) + '/copy', {}).then(d => shapeFolder((d && d.folder) || d || {}));
         return api(account, 'POST', '/api/files/' + encodeURIComponent(file.id) + '/copy', {}).then(d => shapeFile(d || {}));
     }
 
     /* DELETE /api/files/{id}: to the bin (soft); POST /api/files/{id}/restore takes it back */
     function trash(account, file) {
+        if (file.kind === 'folder') return api(account, 'DELETE', '/api/folders/' + encodeURIComponent(file.id));
         return api(account, 'DELETE', '/api/files/' + encodeURIComponent(file.id));
     }
 
     function untrash(account, file) {
+        if (file.kind === 'folder') return api(account, 'POST', '/api/folders/' + encodeURIComponent(file.id) + '/restore', {});
         return api(account, 'POST', '/api/files/' + encodeURIComponent(file.id) + '/restore', {});
     }
 
@@ -1570,6 +1698,11 @@ const utils = { Lang: L, defines: { FileFormat } };
         inCompany: inCompany,
         templates: templates,
         createFromTemplate: createFromTemplate,
+        createFolder: createFolder,
+        purge: purge,
+        preview: preview,
+        activity: activity,
+        upload: upload,
         _parseOpenLink: (link) => { const u = new URL(link); return parseOpenLink(u, (u.host + u.pathname).replace(/\/+$/, '')); },
         openApp: openApp,
         /* set by the start page (shell.js): (toAccount, fromAccount) -> Promise<boolean> */

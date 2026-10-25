@@ -1,21 +1,67 @@
 /*
- * WorkSuite design tokens for the start page's WorkSuite screens (Settings › WorkSuite, the Drive connect card).
- * Modelled on WorkSuite Desktop (navy/indigo brand, quiet greys, 8px grid); surfaces follow the host theme
- * (tokens.css) so the screens sit on the start page's own background in every theme.
+ * WorkSuite design tokens for the start page's WorkSuite screens (Home's Drive panel, Clouds › WorkSuite Drive,
+ * Settings › WorkSuite). The values are WorkSuite Desktop's own (worksuite-desktop src/styles.css, `--ws-*` in
+ * :root, [data-theme='dark'] and the high-contrast variants), so the two apps look like one product. The `--ws-*`
+ * names are defined here too and the `--wsx-*` names the start page uses are aliases of them.
+ * The host's theme classes stand in for Desktop's attributes: .theme-type-dark = [data-theme='dark'],
+ * .theme-contrast-dark = high contrast on dark, prefers-contrast: more = high contrast.
  */
 :root {
-  /* type scale */
+  /* ---- WorkSuite Desktop, light ---- */
+  --ws-navy: #0f1b3d;
+  --ws-navy-2: #17264f;
+  --ws-navy-3: #22335f;
+  --ws-navy-ink: #c9d1ea;
+  --ws-indigo: #23349e;
+  --ws-on-primary: #ffffff;
+  --ws-indigo-hover: #16236e;
+  --ws-brand: #3b5bdb;
+  --ws-teal: #0e7c86;
+  --ws-ground: #f4f5f9;
+  --ws-surface: #ffffff;
+  --ws-line: #e3e6ee;
+  --ws-subtle: #eef0f6;
+  --ws-selection: #eef1fd;
+  --ws-ink: #151a2d;
+  --ws-ink-2: #4a5168;
+  --ws-ink-3: #5b6275;
+  --ws-success: #1f7a4d;
+  --ws-success-bg: #e7f4ed;
+  --ws-warning: #b45309;
+  --ws-warning-bg: #fdf1e3;
+  --ws-warning-ink: #9a4a06;
+  --ws-rail: #fbfbfd;
+  --ws-danger: #b42318;
+  --ws-danger-bg: #fdecea;
+  --ws-badge: #e0522f;
+  --ws-focus: #3b5bdb;
+  --ws-row: 36px;
+  --ws-pad: 16px;
+  --ws-shadow-rgb: 15 27 61;
+  --ws-edge: rgba(15, 27, 61, 0.07);
+  --ws-well: #f4f5f9;
+  --ws-note-bg: #fdf1e3;
+  --ws-note-line: #f6d7b0;
+  --ws-scrim: rgba(0, 0, 0, 0.45);
+  --ws-cb-border: #8a91a6;
+  --ws-cb-border-hover: #5b6275;
+  --ws-cb-mark: #ffffff;
+  /* Desktop's starred mark (modules/files: text-[#E9A23B]) */
+  --ws-star: #e9a23b;
+
+  /* ---- type (Desktop: body 13px / 1.45, 600–700 weights, 11px uppercase column heads) ---- */
   --wsx-font-xs: 11px;
   --wsx-font-sm: 12px;
   --wsx-font-md: 13px;
   --wsx-font-lg: 15px;
   --wsx-font-xl: 20px;
   --wsx-line-tight: 1.3;
-  --wsx-line: 1.5;
+  --wsx-line: 1.45;
   --wsx-weight-medium: 500;
   --wsx-weight-strong: 600;
+  --wsx-weight-bold: 700;
 
-  /* spacing (4px base) */
+  /* ---- spacing (Tailwind's 4px steps, as Desktop) ---- */
   --wsx-space-1: 4px;
   --wsx-space-2: 8px;
   --wsx-space-3: 12px;
@@ -24,7 +70,7 @@
   --wsx-space-6: 24px;
   --wsx-space-8: 32px;
 
-  /* radii, borders: whole pixels only, so hairlines never vanish at 125/150 % */
+  /* ---- radii and sizes (Desktop: --radius-control 8px, --radius-card 12px, chips 6px, buttons h-8) ---- */
   --wsx-radius-sm: 6px;
   --wsx-radius-md: 8px;
   --wsx-radius-lg: 12px;
@@ -32,60 +78,122 @@
   --wsx-border-w: 1px;
   --wsx-focus-w: 2px;
   --wsx-control-h: 32px;
+  --wsx-row: var(--ws-row);
+  --wsx-pad: var(--ws-pad);
   --wsx-content-max: 880px;
+  --wsx-z-pop: 400; /* above dialogs (200/201) and menus (300) */
 
-  /* colours, light */
-  --wsx-brand: #3b5bdb;
-  --wsx-brand-hover: #2f4ec4;
-  --wsx-brand-pressed: #23349e;
-  --wsx-on-brand: #ffffff;
-  --wsx-brand-soft: #eef1fd;
-  --wsx-brand-ink: #23349e;
-  --wsx-surface: var(--background-normal-element-light, #ffffff);
-  --wsx-surface-raised: #ffffff;
-  --wsx-surface-sunken: #f4f5f9;
-  --wsx-ink: #151a2d;
-  --wsx-ink-2: #4a5168;
-  --wsx-ink-3: #6b7287;
-  --wsx-line: #dfe3ec;
-  --wsx-line-strong: #b9c0d0;
-  --wsx-hover: rgba(15, 27, 61, 0.05);
-  --wsx-pressed: rgba(15, 27, 61, 0.1);
-  --wsx-focus: #3b5bdb;
-  --wsx-success: #1f7a4d;
-  --wsx-success-bg: #e7f4ed;
-  --wsx-warning: #9a4a06;
-  --wsx-warning-bg: #fdf1e3;
-  --wsx-danger: #b42318;
-  --wsx-danger-bg: #fdecea;
-  --wsx-shadow: 0 1px 2px rgba(15, 27, 61, 0.06), 0 1px 1px rgba(15, 27, 61, 0.04);
+}
+
+/* Aliases are declared again on body, where the host puts its theme class, so they follow the theme there */
+:root, body {
+  /* ---- the start page's names for Desktop's colours ---- */
+  --wsx-navy: var(--ws-navy);
+  --wsx-brand: var(--ws-indigo);          /* Desktop's "primary" */
+  --wsx-brand-hover: var(--ws-indigo-hover);
+  --wsx-brand-pressed: var(--ws-indigo-hover);
+  --wsx-accent: var(--ws-brand);          /* Desktop's accent gradient colour */
+  --wsx-on-brand: var(--ws-on-primary);
+  --wsx-brand-soft: var(--ws-selection);
+  --wsx-brand-ink: var(--ws-indigo);
+  --wsx-ground: var(--ws-ground);
+  --wsx-surface: var(--ws-surface);
+  --wsx-surface-raised: var(--ws-surface);
+  --wsx-surface-sunken: var(--ws-well);
+  --wsx-subtle: var(--ws-subtle);
+  --wsx-rail: var(--ws-rail);
+  --wsx-ink: var(--ws-ink);
+  --wsx-ink-2: var(--ws-ink-2);
+  --wsx-ink-3: var(--ws-ink-3);
+  --wsx-line: var(--ws-line);
+  --wsx-line-strong: var(--ws-cb-border);
+  --wsx-hover: var(--ws-subtle);
+  --wsx-pressed: var(--ws-line);
+  --wsx-selected: var(--ws-selection);
+  --wsx-focus: var(--ws-focus);
+  --wsx-success: var(--ws-success);
+  --wsx-success-bg: var(--ws-success-bg);
+  --wsx-warning: var(--ws-warning-ink);
+  --wsx-warning-bg: var(--ws-warning-bg);
+  --wsx-danger: var(--ws-danger);
+  --wsx-danger-bg: var(--ws-danger-bg);
+  --wsx-edge: var(--ws-edge);
+  --wsx-shadow: 0 1px 2px rgb(var(--ws-shadow-rgb) / 0.06);
+  --wsx-shadow-pop: 0 16px 40px rgb(var(--ws-shadow-rgb) / 0.28);
+  --wsx-tip-bg: var(--ws-navy);
+  --wsx-tip-ink: var(--ws-on-primary);
+  --wsx-star: var(--ws-star);
+  /* document types, as Desktop's FileBadge: DOC indigo, XLS success, PPT warning, PDF danger */
+  --wsx-type-word: var(--ws-indigo);
+  --wsx-type-cell: var(--ws-success);
+  --wsx-type-slide: var(--ws-warning);
+  --wsx-type-pdf: var(--ws-danger);
+  --wsx-type-template: var(--ws-ink-3);
+  --wsx-on-type: var(--ws-on-primary);
 }
 
 .theme-type-dark {
   color-scheme: dark;
-  --wsx-brand: #5c7cfa;
-  --wsx-brand-hover: #748ffc;
-  --wsx-brand-pressed: #8da2fb;
-  --wsx-on-brand: #0b1124;
-  --wsx-brand-soft: rgba(92, 124, 250, 0.18);
-  --wsx-brand-ink: #b4c2fd;
-  --wsx-surface: rgba(255, 255, 255, 0.04);
-  --wsx-surface-raised: rgba(255, 255, 255, 0.06);
-  --wsx-surface-sunken: rgba(0, 0, 0, 0.18);
-  --wsx-ink: #eceef4;
-  --wsx-ink-2: #c3c7d2;
-  --wsx-ink-3: #a3a8b6;
-  --wsx-line: rgba(255, 255, 255, 0.14);
-  --wsx-line-strong: rgba(255, 255, 255, 0.28);
-  --wsx-hover: rgba(255, 255, 255, 0.07);
-  --wsx-pressed: rgba(255, 255, 255, 0.12);
-  --wsx-focus: #8da2fb;
-  --wsx-success: #6cd3a0;
-  --wsx-success-bg: rgba(67, 181, 129, 0.16);
-  --wsx-warning: #f3b56d;
-  --wsx-warning-bg: rgba(240, 160, 75, 0.16);
-  --wsx-danger: #f59a92;
-  --wsx-danger-bg: rgba(240, 113, 103, 0.16);
+  --ws-indigo: #5c7cfa;
+  --ws-indigo-hover: #748ffc;
+  --ws-teal: #2aa6b0;
+  --ws-ground: #0b1124;
+  --ws-surface: #121a34;
+  --ws-line: #253052;
+  --ws-subtle: #192343;
+  --ws-selection: #1c2a5e;
+  --ws-ink: #e8ebf5;
+  --ws-ink-2: #b6bdd4;
+  --ws-ink-3: #9aa3bd;
+  --ws-success: #43b581;
+  --ws-success-bg: #12301f;
+  --ws-warning: #f0a04b;
+  --ws-warning-bg: #36240f;
+  --ws-warning-ink: #f0a04b;
+  --ws-rail: #121a34;
+  --ws-danger: #f07167;
+  --ws-danger-bg: #3a1614;
+  --ws-focus: #8da2fb;
+  --ws-shadow-rgb: 0 0 0;
+  --ws-edge: rgba(160, 176, 225, 0.16);
+  --ws-well: #1a2447;
+  --ws-note-bg: #36240f;
+  --ws-note-line: #5a3b14;
+  --ws-cb-border: #6b779c;
+  --ws-cb-border-hover: #9aa3bd;
+  --ws-cb-mark: #0b1124;
+  --wsx-tip-bg: var(--ws-ink);
+  --wsx-tip-ink: var(--ws-ground);
   --wsx-shadow: none;
 }
 .theme-type-light { color-scheme: light; }
+
+[data-wsx-density="compact"] {
+  --ws-row: 30px;
+  --ws-pad: 12px;
+}
+
+/* High contrast, as Desktop's prefers-contrast and html[data-contrast='more'] */
+@media (prefers-contrast: more) {
+  :root {
+    --ws-line: #6b7287;
+    --ws-ink-2: #262b3d;
+    --ws-ink-3: #303649;
+    --ws-focus: #1a2a8c;
+    --ws-cb-border: #5b6275;
+    --wsx-focus-w: 3px;
+  }
+  .theme-type-dark {
+    --ws-line: #a7b0c9;
+    --ws-ink-2: #e6e9f2;
+    --ws-ink-3: #d3d8e5;
+    --ws-focus: #b4c3ff;
+  }
+}
+.theme-contrast-dark {
+  --ws-line: #a7b0c9;
+  --ws-ink-2: #e6e9f2;
+  --ws-ink-3: #d3d8e5;
+  --ws-focus: #b4c3ff;
+  --wsx-focus-w: 3px;
+}

@@ -1673,6 +1673,97 @@ static NSDictionary * workSuiteAiLiveEndpoint() {
     dispatch_semaphore_wait(done, dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.6 * NSEC_PER_SEC)));
     if (queueDepth == 0)
         kill(pid, SIGTERM);
+
+/// Clouds › WorkSuite Drive (the file:// start page cannot send bytes itself), answers "worksuite:transfer":
+/// "chunk": one upload part (base64) as multipart "chunk" + "chunk_index" to https://<server>/api/uploads/<uuid>/chunk;
+/// "download": https://<server>/media/<token> into ~/Downloads with progress; "cancel"; "reveal" (a file in Downloads).
+static NSMutableDictionary<NSString *, NSURLSessionTask *> * workSuiteDownloads = nil;
+
+- (void)workSuiteTransfer:(NSDictionary *)json {
+    NSString * op = [json[@"op"] isKindOfClass:[NSString class]] ? json[@"op"] : @"";
+    NSString * req = [json[@"req"] isKindOfClass:[NSString class]] ? json[@"req"] : @"";
+    if (req.length > 64) req = [req substringToIndex:64];
+    void (^send)(NSDictionary *) = ^(NSDictionary * out) {
+        dispatch_async(dispatch_get_main_queue(), ^{ [self sendToStartPage:@"worksuite:transfer" param:[out jsonString]]; });
+    };
+    if (!workSuiteDownloads) workSuiteDownloads = [NSMutableDictionary dictionary];
+    NSString * downloadsDir = [[NSSearchPathForDirectoriesInDomains(NSDownloadsDirectory, NSUserDomainMask, YES) firstObject] stringByResolvingSymlinksInPath];
+
+    if ([op isEqualToString:@"cancel"]) {
+        [workSuiteDownloads[req] cancel];
+        return;
+    }
+    if ([op isEqualToString:@"reveal"]) {
+        NSString * path = [json[@"path"] isKindOfClass:[NSString class]] ? [json[@"path"] stringByResolvingSymlinksInPath] : nil;
+        if (path && downloadsDir && [path hasPrefix:[downloadsDir stringByAppendingString:@"/"]])
+            [[NSWorkspace sharedWorkspace] activateFileViewerSelectingURLs:@[[NSURL fileURLWithPath:path]]];
+        return;
+    }
+
+    NSURL * url = [json[@"url"] isKindOfClass:[NSString class]] ? [NSURL URLWithString:json[@"url"]] : nil;
+    BOOL https = url && [url.scheme isEqualToString:@"https"] && !url.user && url.host.length > 0 && url.path;
+
+    if ([op isEqualToString:@"chunk"]) {
+        NSRegularExpression * re = [NSRegularExpression regularExpressionWithPattern:@"^/api/uploads/[0-9a-fA-F-]{36}/chunk$" options:0 error:nil];
+        NSString * token = [json[@"token"] isKindOfClass:[NSString class]] ? json[@"token"] : nil;
+        NSInteger index = [json[@"index"] respondsToSelector:@selector(integerValue)] ? [json[@"index"] integerValue] : -1;
+        NSData * data = [json[@"data"] isKindOfClass:[NSString class]] ? [[NSData alloc] initWithBase64EncodedString:json[@"data"] options:0] : nil;
+        if (!https || url.query || [re numberOfMatchesInString:url.path options:0 range:NSMakeRange(0, url.path.length)] != 1 ||
+            token.length == 0 || [token containsString:@"\n"] || index < 0 || !data || data.length > 16 * 1024 * 1024) {
+            send(@{@"req": req, @"status": @400, @"body": @""});
+            return;
+        }
+        NSString * boundary = [NSString stringWithFormat:@"ws-%@", [[NSUUID UUID] UUIDString]];
+        NSMutableData * body = [NSMutableData data];
+        [body appendData:[[NSString stringWithFormat:@"--%@\r\nContent-Disposition: form-data; name=\"chunk_index\"\r\n\r\n%ld\r\n", boundary, (long)index] dataUsingEncoding:NSUTF8StringEncoding]];
+        [body appendData:[[NSString stringWithFormat:@"--%@\r\nContent-Disposition: form-data; name=\"chunk\"; filename=\"%ld.part\"\r\nContent-Type: application/octet-stream\r\n\r\n", boundary, (long)index] dataUsingEncoding:NSUTF8StringEncoding]];
+        [body appendData:data];
+        [body appendData:[[NSString stringWithFormat:@"\r\n--%@--\r\n", boundary] dataUsingEncoding:NSUTF8StringEncoding]];
+        NSMutableURLRequest * request = [NSMutableURLRequest requestWithURL:url];
+        request.HTTPMethod = @"POST";
+        [request setValue:[@"Bearer " stringByAppendingString:token] forHTTPHeaderField:@"Authorization"];
+        [request setValue:@"application/json" forHTTPHeaderField:@"Accept"];
+        [request setValue:[NSString stringWithFormat:@"multipart/form-data; boundary=%@", boundary] forHTTPHeaderField:@"Content-Type"];
+        [[[NSURLSession sharedSession] uploadTaskWithRequest:request fromData:body completionHandler:^(NSData * d, NSURLResponse * r, NSError * e) {
+            NSString * text = d ? ([[NSString alloc] initWithData:d encoding:NSUTF8StringEncoding] ?: @"") : @"";
+            send(@{@"req": req, @"status": @(e ? 0 : [(NSHTTPURLResponse *)r statusCode]), @"body": text});
+        }] resume];
+        return;
+    }
+
+    if ([op isEqualToString:@"download"]) {
+        NSRegularExpression * re = [NSRegularExpression regularExpressionWithPattern:@"^/media/[A-Za-z0-9._~-]{8,2048}$" options:0 error:nil];
+        if (!https || [re numberOfMatchesInString:url.path options:0 range:NSMakeRange(0, url.path.length)] != 1 ||
+            (url.query && ![url.query isEqualToString:@"download=1"]) || !downloadsDir || req.length == 0) {
+            send(@{@"req": req, @"status": @400, @"done": @YES});
+            return;
+        }
+        NSString * raw = [json[@"name"] isKindOfClass:[NSString class]] ? json[@"name"] : @"";
+        NSCharacterSet * bad = [NSCharacterSet characterSetWithCharactersInString:@"/\\:*?\"<>|"];
+        NSString * name = [[[raw componentsSeparatedByCharactersInSet:bad] componentsJoinedByString:@"_"] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+        if (name.length > 180) name = [name substringToIndex:180];
+        if (name.length == 0 || [name hasPrefix:@"."]) name = [@"download" stringByAppendingString:name];
+        NSString * path = [downloadsDir stringByAppendingPathComponent:name];
+        for (int n = 2; [[NSFileManager defaultManager] fileExistsAtPath:path] && n < 1000; n++) {
+            NSString * ext = name.pathExtension.length ? [@"." stringByAppendingString:name.pathExtension] : @"";
+            path = [downloadsDir stringByAppendingPathComponent:[NSString stringWithFormat:@"%@ (%d)%@", name.stringByDeletingPathExtension, n, ext]];
+        }
+        __block NSTimer * timer = nil;
+        NSURLSessionDownloadTask * task = [[NSURLSession sharedSession] downloadTaskWithURL:url completionHandler:^(NSURL * location, NSURLResponse * r, NSError * e) {
+            dispatch_async(dispatch_get_main_queue(), ^{ [timer invalidate]; [workSuiteDownloads removeObjectForKey:req]; });
+            NSInteger status = e ? (e.code == NSURLErrorCancelled ? 499 : 0) : [(NSHTTPURLResponse *)r statusCode];
+            if (!e && status >= 200 && status < 300 && location && [[NSFileManager defaultManager] moveItemAtURL:location toURL:[NSURL fileURLWithPath:path] error:nil])
+                send(@{@"req": req, @"status": @(status), @"done": @YES, @"path": path});
+            else
+                send(@{@"req": req, @"status": @(status), @"done": @YES});
+        }];
+        workSuiteDownloads[req] = task;
+        timer = [NSTimer scheduledTimerWithTimeInterval:0.3 repeats:YES block:^(NSTimer * t) {
+            send(@{@"req": req, @"received": @(task.countOfBytesReceived), @"total": @(MAX(0, task.countOfBytesExpectedToReceive))});
+        }];
+        [task resume];
+        return;
+    }
 }
 
 /// The start page's WorkSuite section: sign-ins kept in the Keychain ("worksuite:secret"), the accounts
@@ -1719,6 +1810,11 @@ static NSDictionary * workSuiteAiLiveEndpoint() {
 
     if ([info[@"command"] isEqualToString:@"worksuite:upload"]) {
         [self workSuiteUpload:[info[@"param"] dictionary]];
+        return;
+    }
+
+    if ([info[@"command"] isEqualToString:@"worksuite:transfer"]) {
+        [self workSuiteTransfer:[info[@"param"] dictionary]];
         return;
     }
 

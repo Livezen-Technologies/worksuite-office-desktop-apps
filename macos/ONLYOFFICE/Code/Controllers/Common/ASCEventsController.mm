@@ -524,7 +524,8 @@ public:
                         if (cmd.compare(L"worksuite:secret") == 0 || cmd.compare(L"worksuite:desktop") == 0 || cmd.compare(L"worksuite:app") == 0 ||
                             cmd.compare(L"worksuite:open") == 0 || cmd.compare(L"worksuite:share") == 0 || cmd.compare(L"worksuite:policy") == 0 ||
                             cmd.compare(L"worksuite:updates") == 0 || cmd.compare(L"worksuite:upload") == 0 ||
-                            cmd.compare(L"ws-ai:endpoint") == 0) {
+                            cmd.compare(L"ws-ai:endpoint") == 0 ||
+                            cmd.compare(L"worksuite:transfer") == 0) {
                             [[NSNotificationCenter defaultCenter] postNotificationName:CEFEventNameWorkSuiteSecret
                                                                                 object:nil
                                                                               userInfo:@{

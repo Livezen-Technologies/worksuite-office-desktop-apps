@@ -1,4 +1,5 @@
 .menu {
+  z-index: 300;
   --border-color: #B2B2B2;
   background: var(--background-action-panel);
   border-radius: 8px;

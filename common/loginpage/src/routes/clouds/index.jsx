@@ -4,6 +4,7 @@ import { relpath } from "@/sdk/portals.js";
 import { command } from "@/sdk/bridge.js";
 import { t } from "@/services/l10n.js";
 import { Button, Dialog, DropdownMenu, TextField } from "@/components";
+import CloudsDrive from "@/worksuite/CloudsDrive.jsx";
 import "./clouds.css";
 
 function ProviderIcon(props) {
@@ -305,13 +306,22 @@ export default function Clouds() {
     }, REMOVE_DELAY);
   }
 
+  /* WorkSuite Drive is the page itself (CloudsDrive); other clouds, when the organisation allows any, stay below it */
+  const hasWorkSuite = createMemo(() => providers().some((p) => p.provider === "worksuite"));
+  const otherPortals = createMemo(() => portals().filter((p) => p.provider.toLowerCase() !== "worksuite"));
+  const otherProviders = createMemo(() => visibleProviders().filter((p) => p.provider !== "worksuite"));
+
   return (
-    <div class="clouds-page">
-      <Show when={portals().length > 0}>
-        <section>
+    <div class="clouds-page" classList={{ "has-drive": hasWorkSuite() }}>
+      <Show when={hasWorkSuite()}>
+        <CloudsDrive />
+      </Show>
+
+      <Show when={otherPortals().length > 0}>
+        <section class="clouds-other">
           <h2 class="clouds-section-title">{t("portalListTitle")}</h2>
           <div class="portal-list">
-            <For each={portals()}>
+            <For each={otherPortals()}>
               {(portal) => (
                 <div class="portal-item-wrap" classList={{ removing: removingIds().has(portal.portal) }}>
                   <PortalRow portal={portal} onRemove={handleRemove} />
@@ -322,14 +332,16 @@ export default function Clouds() {
         </section>
       </Show>
 
-      <section>
-        <h2 class="clouds-section-title">{t("portalAvailableTitle", "Available clouds")}</h2>
-        <div class="provider-list">
-          <For each={visibleProviders()}>
-            {(provider) => <ProviderItem provider={provider} onConnect={setConnectingProvider} />}
-          </For>
-        </div>
-      </section>
+      <Show when={otherProviders().length > 0}>
+        <section class="clouds-other">
+          <h2 class="clouds-section-title">{t("portalAvailableTitle", "Available clouds")}</h2>
+          <div class="provider-list">
+            <For each={otherProviders()}>
+              {(provider) => <ProviderItem provider={provider} onConnect={setConnectingProvider} />}
+            </For>
+          </div>
+        </section>
+      </Show>
 
       <ConnectDialog provider={connectingProvider()} onClose={() => setConnectingProvider(null)} />
     </div>

@@ -397,6 +397,14 @@ bool CAscApplicationManagerWrapper::processCommonEvent(NSEditorApi::CAscCefMenuE
                 });
             return true;
         } else
+        if ( cmd.compare(L"worksuite:transfer") == 0 ) {
+            // Clouds › WorkSuite Drive: upload parts and downloads for the start page; answers come later
+            if ( m_pMainWindow && event->get_SenderId() == m_pMainWindow->startPanelId() )
+                CWorkSuite::transfer(QString::fromStdWString(pData->get_Param()), [](const QString& answer) {
+                    sendCommandTo(SEND_TO_ALL_START_PAGE, L"worksuite:transfer", answer.toStdWString());
+                });
+            return true;
+        } else
         if ( cmd.compare(L"worksuite:updates") == 0 ) {
             // SHL-08, SHL-09: Settings › WorkSuite › Updates and the Update ready banner
             if ( m_pMainWindow && event->get_SenderId() == m_pMainWindow->startPanelId() ) {
