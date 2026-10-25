@@ -1,4 +1,5 @@
 import { render } from "solid-js/web";
+import { WorkSuiteSplash } from "./splash/splash.js";
 import App from "./app.jsx";
 import "../noconnect/styles.css";
 import "./services/noconnect-init.js";
@@ -34,8 +35,12 @@ document.getElementById("wrap").ondragover = function (e) {
 
 onNativeMessage((cmd) => {
   if (cmd === "app:ready") {
-    const mask = document.getElementById("loading-mask");
-    if (mask) mask.style.display = "none";
+    // fades the WorkSuite loading screen out (it hides itself once the fade ends)
+    if (WorkSuiteSplash) WorkSuiteSplash.done();
+    else {
+      const mask = document.getElementById("loading-mask");
+      if (mask) mask.style.display = "none";
+    }
   }
 });
 

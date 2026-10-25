@@ -41,7 +41,7 @@ export default function About() {
             <div class="about-content">
               <section class="about-approw">
                 <div class={`about-logo ${versionInfo().logocls ?? ""}`}>
-                  <svg class="ver-logo" viewBox="0 0 52 45">
+                  <svg class="ver-logo" viewBox="0 0 44 44">
                     <use href="#idx-logo"/>
                   </svg>
                 </div>
