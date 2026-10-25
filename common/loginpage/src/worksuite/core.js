@@ -343,7 +343,7 @@ const utils = { Lang: L, defines: { FileFormat } };
                 // The old refresh token is spent: keep the new one before anything else.
                 await secret('set', secretKey(account), tokens.refresh_token);
                 access[account.id] = { token: tokens.access_token, exp: Date.now() + (tokens.expires_in || 3600) * 1000 };
-                if (account.signedOut) updateAccount(account.id, { signedOut: false });
+                if (account.signedOut || account.signedOutBy) updateAccount(account.id, { signedOut: false, signedOutBy: undefined });
                 return tokens.access_token;
             }
 
@@ -362,7 +362,8 @@ const utils = { Lang: L, defines: { FileFormat } };
 
     function signedOut(account) {
         delete access[account.id];
-        updateAccount(account.id, { signedOut: true });
+        // ended by the server (refresh refused): "session expired"; a person's own Sign out sets signedOutBy: 'user'
+        updateAccount(account.id, { signedOut: true, signedOutBy: account.signedOutBy === 'user' ? 'user' : undefined });
         fire('changed');
         const err = new Error(utils.Lang.wsErrSignedOut);
         err.signedOut = true;
@@ -753,6 +754,53 @@ const utils = { Lang: L, defines: { FileFormat } };
         }
     }
 
+    /*
+     * Accounts are keyed by (server origin, user id): accountId(), secretKey(). Two accounts never share a
+     * refresh token (one secure-store entry each), an access token (access[id]) or a Drive cache (LS_CACHE + id),
+     * and an account's token is only ever sent to its own server (api()).
+     *
+     * signOut(account) above is "Remove": it revokes the session and deletes everything this computer keeps
+     * for the account. signOutOnly() is "Sign out": it revokes the session and deletes the tokens, and keeps
+     * the account (who, which server, its Drive cache) so it can be signed in again from its card.
+     */
+    async function signOutOnly(account) {
+        if (account.broker) return forgetBrokerAccount(account);
+        try {
+            const stored = await secret('get', secretKey(account)).catch(() => null);
+            const bearer = access[account.id] ? { 'Authorization': 'Bearer ' + access[account.id].token } : {};
+            await http('POST', account.server + '/api/auth/logout', stored && stored.ok ? { refresh_token: stored.value } : {}, bearer).catch(() => null);
+        } finally {
+            await secret('delete', secretKey(account)).catch(() => null);
+            delete access[account.id];
+            updateAccount(account.id, { signedOut: true, signedOutBy: 'user' });
+            const list = accounts();
+            if (!list.some(a => a.server === account.server && !a.signedOut))
+                window.sdk && window.sdk.execCommand && window.sdk.execCommand('portal:logout', JSON.stringify({ domain: account.server }));
+            if (localStorage.getItem(LS_ACTIVE) === account.id) {
+                const other = list.find(a => !a.signedOut);
+                if (other) localStorage.setItem(LS_ACTIVE, other.id);
+            }
+            fire('changed');
+        }
+    }
+
+    /*
+     * Reconnect: the kept refresh token first, silently; {ok: true} when that worked, {signIn: true} when
+     * the person has to sign in again, {unreachable: true} when the server could not be asked.
+     */
+    async function reconnect(account) {
+        const current = accounts().find(a => a.id === account.id) || account;
+        if (current.signedOutBy === 'user') return { signIn: true };
+        try {
+            await refresh(Object.assign({}, current, { signedOut: true }));
+            fire('changed');
+            return { ok: true };
+        } catch (e) {
+            if (e && e.signedOut) return { signIn: true };
+            return { unreachable: true, message: e && e.message };
+        }
+    }
+
     /* ------------------------------------------------------------------ *
      * WorkSuite OS: the OS credentials broker
      *
@@ -856,7 +904,7 @@ const utils = { Lang: L, defines: { FileFormat } };
             try {
                 const t = await brokerToken(account.broker, force);
                 access[account.id] = t;
-                if (account.signedOut) updateAccount(account.id, { signedOut: false });
+                if (account.signedOut || account.signedOutBy) updateAccount(account.id, { signedOut: false, signedOutBy: undefined });
                 return t.token;
             } catch (e) {
                 // the broker lost the grant: sign in again through it; locked or not running: the session stands
@@ -1402,6 +1450,9 @@ const utils = { Lang: L, defines: { FileFormat } };
         cancelSignIn: cancelSignIn,
         pendingSignIn: pendingSignIn,
         signOut: signOut,
+        remove: signOut,
+        signOutOnly: signOutOnly,
+        reconnect: reconnect,
         checkServer: checkServer,
         capability: capability,
         has: has,
@@ -1450,6 +1501,8 @@ const utils = { Lang: L, defines: { FileFormat } };
         token: token,
         api: api,
         /* for tests */
+        _remember: remember,
+        _secretKey: secretKey,
         _sha256Ascii: sha256Ascii,
         _capabilityOf: capabilityOf,
         _compareVersions: compareVersions,
