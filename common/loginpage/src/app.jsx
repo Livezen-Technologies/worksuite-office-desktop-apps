@@ -103,6 +103,8 @@ const routes = [
     children: [
       { path: "/general", component: lazy(() => import("./routes/settings/general/index.jsx")) },
       { path: "/worksuite", component: lazy(() => import("./routes/settings/worksuite/index.jsx")) },
+      /* Local AI hook: Settings › AI Models (src/settings/ai-models) — keep when the settings redesign lands */
+      { path: "/ai-models", component: lazy(() => import("./settings/ai-models/AiModelsPage.jsx")) },
       { path: "/plugin/:pluginId/:section", component: lazy(() => import("./routes/settings/plugin/index.jsx")) },
     ],
   },
