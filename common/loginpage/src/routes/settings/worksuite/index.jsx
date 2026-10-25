@@ -7,6 +7,10 @@ import { SignInDialog } from "@/worksuite/dialogs.jsx";
 import { AccountWizard } from "@/worksuite/account-wizard.jsx";
 import { versionInfo, updateStatus, execUpdateAction, openAbout } from "@/services/about";
 import { command } from "@/sdk/bridge";
+import { t } from "@/services/l10n";
+import { settings, setSettings } from "@/stores/settings";
+import { isOptsChanged, applySettings, pendingApplyText, needsRestart } from "@/services/settings-sync";
+import { DOC_PREFS, docPrefOptions, setDocPref } from "@/worksuite/doc-prefs.js";
 import {
   policy, serverLocked, updates, updateReady, updateProgress, setUpdateChannel, setUpdateAuto, checkForUpdates, restartToUpdate,
   downloadUpdate, cancelUpdateDownload,
@@ -153,6 +157,7 @@ export default function WorkSuiteSettings() {
     { id: "general", label: L.wsxNavGeneral, icon: "general", href: "/settings/general" },
     { id: "accounts", label: L.wsAccounts, icon: "accounts" },
     { id: "drive", label: L.wsTitle, icon: "drive" },
+    { id: "documents", label: L.wsxNavDocuments, icon: "documents" },
     { id: "updates", label: L.wsUpdates, icon: "updates" },
     { id: "advanced", label: L.wsxNavAdvanced, icon: "advanced" },
     { id: "about", label: L.wsxNavAbout, icon: "about" },
@@ -234,6 +239,32 @@ export default function WorkSuiteSettings() {
                            { value: "browser", label: L.wsOpenInBrowser, description: L.wsxOpenInBrowserDesc },
                          ]} />
             </div>
+          </SettingsSection>
+        </Show>
+
+        <Show when={section() === "documents"}>
+          {/* the same store and Apply as Settings › General (worksuite/doc-prefs.js): no copy of the values */}
+          <SettingsSection title={L.wsxNavDocuments} description={L.wsxDocumentsDesc}>
+            <For each={DOC_PREFS}>
+              {(pref) => (
+                <SettingsRow label={t(pref.labelKey)} labelId={"wss-doc-" + pref.key}
+                             hint={pref.key === "launchMode" ? L.wsxDocOpenHint : L.wsxDocSpellHint}>
+                  <Segmented labelledBy={"wss-doc-" + pref.key} value={settings[pref.key]}
+                             onChange={(v) => setDocPref(setSettings, pref.key, v)}
+                             options={docPrefOptions(pref.key, t)} />
+                </SettingsRow>
+              )}
+            </For>
+            <div class="wss-apply" role="status" aria-live="polite">
+              <div class="wss-apply-text">
+                <Show when={isOptsChanged()}><span class="wsx-hint">{L.wsxDocPending}</span></Show>
+                <Show when={needsRestart()}><span class="wsx-hint wss-restart">{L.wsxDocRestart}</span></Show>
+              </div>
+              <WsButton variant="primary" disabled={!isOptsChanged()} onClick={applySettings}>{pendingApplyText() ?? t("setBtnApply")}</WsButton>
+            </div>
+            <p class="wsx-hint">
+              {L.wsxDocInGeneral}: <a class="wsx-link" href="#/settings/general">{L.wsxNavGeneral}</a>
+            </p>
           </SettingsSection>
         </Show>
 

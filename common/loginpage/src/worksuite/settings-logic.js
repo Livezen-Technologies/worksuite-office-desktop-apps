@@ -130,7 +130,7 @@ export function filterAccounts(list, query) {
 }
 
 /* The settings sub-navigation's sections, in order; "general" links out to Settings › General */
-export const SETTINGS_SECTIONS = ["general", "accounts", "drive", "updates", "advanced", "about"];
+export const SETTINGS_SECTIONS = ["general", "accounts", "drive", "documents", "updates", "advanced", "about"];
 
 /* next index for arrow keys / Home / End in a radiogroup or listbox (wraps) */
 export function nextIndex(key, i, n) {
