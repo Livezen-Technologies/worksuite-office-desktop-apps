@@ -59,6 +59,18 @@
   --wsx-danger: #b42318;
   --wsx-danger-bg: #fdecea;
   --wsx-shadow: 0 1px 2px rgba(15, 27, 61, 0.06), 0 1px 1px rgba(15, 27, 61, 0.04);
+  --wsx-z-pop: 400; /* above dialogs (200/201) and menus (300) */
+  --wsx-tip-bg: #1c2133;
+  --wsx-tip-ink: #ffffff;
+  --wsx-selected: rgba(59, 91, 219, 0.1);
+  /* document types: the Create new tiles and file-type marks */
+  --wsx-type-word: #318ac5;
+  --wsx-type-cell: #259d5b;
+  --wsx-type-slide: #e87838;
+  --wsx-type-pdf: #df5252;
+  --wsx-type-template: #5b6275;
+  --wsx-on-type: #ffffff;
+  --wsx-star: #e8a317;
 }
 
 .theme-type-dark {
@@ -87,5 +99,10 @@
   --wsx-danger: #f59a92;
   --wsx-danger-bg: rgba(240, 113, 103, 0.16);
   --wsx-shadow: none;
+  --wsx-tip-bg: #eceef4;
+  --wsx-tip-ink: #151a2d;
+  --wsx-selected: rgba(92, 124, 250, 0.2);
+  --wsx-type-template: #6b7287;
+  --wsx-star: #f3c04d;
 }
 .theme-type-light { color-scheme: light; }

@@ -1,8 +1,11 @@
+/* the home screen has ONE scroll container: this one (no nested scrolling lists, no fixed heights) */
 .home-page {
-  display: flex;
-  flex-direction: column;
+  display: block;
   height: 100%;
+  overflow-x: hidden;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-padding-block: 24px;
   container: work-area / inline-size;
 }
 
@@ -51,10 +54,5 @@
 }
 
 .file-list-section {
-  flex: 1;
-  min-height: 200px;
-  overflow-y: auto;
   position: relative;
-  margin-inline: 32px;
-  margin-bottom: 32px;
 }

@@ -61,6 +61,43 @@ credentials (WorkSuite Desktop's "Continue as" when that account is there, other
 server) only when the refresh token is refused or there is none. A network failure shows *Server
 unreachable* and does not discard anything.
 
+## The home screen's Drive account panel
+
+`WorkSuiteSection.jsx` and `connect.jsx` show the default account (`ws:active`) in one of three states
+(`accountPanelState()` in `home-logic.js`):
+
+| State | When | Panel |
+|---|---|---|
+| Connected | the account is not `signedOut` | name, server, "Connected", the organisation picker, Refresh, the Drive browser |
+| Session expired | `signedOut` and not `signedOutBy: "user"` (refresh refused, 401) | a compact warning, the "Session expired" badge and **Reconnect**; no Drive list |
+| Not connected | no account, or signed out by the person | the "Connect your WorkSuite account" card |
+
+An expired or signed-out account is never shown as connected, and its Drive list is not loaded. Local recent
+files are not affected by the state of any WorkSuite account.
+
+**Reconnect** (home screen) re-authenticates the *same saved account*; it never removes it:
+
+1. `WorkSuite.reconnect(account)` tries the kept refresh token silently. On success the panel turns
+   "Connected" and the Drive list and organisations load (`changed`).
+2. When the token is refused, a sign-in opens for that account only: WorkSuite Desktop's "Continue as"
+   when that account is signed in there, otherwise the browser sign-in straight on the account's server
+   (`SignInDialog` with `server`). The finished sign-in updates the existing entry (same key
+   `server|user id`), then `signedin` refreshes the panel and the Drive list.
+3. A network failure shows "<server> did not answer" next to Reconnect and keeps everything.
+
+Reconnect is a small state machine (`reconnectStep()`: idle → refreshing → signing-in → idle, or error).
+While it is refreshing or a sign-in is open, further clicks do nothing, so only one login window can be
+opened. Cancelling the sign-in returns to idle with the account still expired.
+
+**The account menu** (the name in the panel) lists the other accounts on this computer (switching makes one
+the default; one only on WorkSuite Desktop starts its "Continue as"), **Add another account**, **Manage
+accounts…** (Settings › WorkSuite › Accounts) and **Disconnect…**. Disconnect asks first, then signs out
+(`signOutOnly`): the account stays, as "Signed out", to sign in again in one click. Removing an account is
+done in Manage accounts.
+
+**The organisation picker** lists only the organisations the server returned for this account
+(`/api/drive/sharing/companies`, kept in the account's profile), plus All companies, and can be searched.
+
 ## Account data isolation
 
 **Key.** Each account is identified by `server origin + "|" + user id`
@@ -93,12 +130,12 @@ server and user id it came from and is saved back only through that account.
 `/api/auth/refresh` and `/api/auth/logout`. Adding an account writes only its own secure-store entry. Adding
 the same account again replaces only that account's entry.
 
-**Sign out** (`WorkSuite.signOutOnly`) revokes the session on its server (`/api/auth/logout`), deletes the
+**Sign out** (`WorkSuite.signOutOnly`, also the home screen's **Disconnect…**, after a confirmation) revokes the session on its server (`/api/auth/logout`), deletes the
 account's secure-store entry and its access token, and marks it *signed out by the person*. Its profile and
 Drive cache stay so it can be signed in again from its card. Editor tabs of that server are signed out
 (`portal:logout`) only when no other signed-in account uses that server.
 
-**Remove** (`WorkSuite.remove`, also the Drive section's Disconnect) does the same and also deletes the
+**Remove** (`WorkSuite.remove`, Settings › WorkSuite › Accounts) does the same and also deletes the
 account's profile entry and its `ws:cache:<id>:…` data. Other accounts are not touched.
 
 **Limitation.** The app uses one CEF request context. Editor tabs opened for two accounts **on the same
@@ -146,6 +183,16 @@ Unless a platform is named, each criterion holds on Windows, macOS and Linux.
 16. The wizard and the account menu work with the keyboard alone: Tab, Enter and Space, Esc, and the arrow
     keys in menus.
 
-`npm test` covers 2, 3, 5, 7, 9–11 and 14 (`test/accounts.test.mjs`,
-`src/worksuite/account-wizard-logic.test.mjs`, `src/worksuite/settings-logic.test.mjs`). The others are
+17. Home screen: with the default account's session expired, the Drive panel shows "Session expired" and
+    **Reconnect**, never "Connected" and never the Drive list. Local recent files are still listed.
+18. Reconnect with a working refresh token turns the panel "Connected" and loads the Drive files without a
+    sign-in window. With a refused token it opens exactly one sign-in, for that account's server (or
+    WorkSuite Desktop's "Continue as" for it), however often Reconnect is clicked. The saved account is
+    not removed; after the sign-in the same entry is "Signed in" and the Drive files load.
+19. **Disconnect…** in the account menu asks first, then signs the account out and keeps it as "Signed out".
+20. The organisation picker lists only the account's organisations and filters them as you type.
+
+`npm test` covers 2, 3, 5, 7, 9–11, 14 and the state rules of 17–18
+(`test/accounts.test.mjs`, `src/worksuite/account-wizard-logic.test.mjs`, `src/worksuite/settings-logic.test.mjs`,
+`src/worksuite/home-logic.test.mjs`). The others are
 checked by hand on each platform.

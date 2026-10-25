@@ -30,7 +30,7 @@ export function Frame(props) {
 }
 
 export function SignInDialog(props) {
-  const [server, setServer] = createSignal(WS().DEFAULT_SERVER);
+  const [server, setServer] = createSignal(props.server || WS().DEFAULT_SERVER);
   const [error, setError] = createSignal("");
   const [custom, setCustom] = createSignal(false);
   const [url, setUrl] = createSignal("");
@@ -126,6 +126,8 @@ export function SignInDialog(props) {
     });
 
     if (props.desktopAccount) startDesktop(props.desktopAccount);
+    /* Reconnect of a saved account: straight to that account's server, no choosing */
+    else if (props.server) start(props.server);
   });
 
   return (

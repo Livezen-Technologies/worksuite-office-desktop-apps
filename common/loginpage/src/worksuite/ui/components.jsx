@@ -4,7 +4,10 @@
  * symbols (res/img/common-svg/ws-*.svg).
  */
 import { For, Show, createEffect, createMemo, createSignal, createUniqueId, onCleanup } from "solid-js";
+import { Portal } from "solid-js/web";
 import { L } from "../lang.js";
+import { filterCompanies, placePopover } from "../home-logic.js";
+import { Frame } from "../dialogs.jsx";
 import { hostOf, initials } from "../cards.jsx";
 import { accountActions, accountStatus, filterAccounts, nextIndex, validateServer } from "../settings-logic.js";
 import { DropdownMenu } from "@/components";
@@ -449,16 +452,13 @@ export function AccountCombobox(props) {
   const status = (a) => (a.desktopOnly ? "desktop" : accountStatus(a));
 
   const close = () => { setOpen(false); setQuery(""); };
-  const outside = (e) => root && !root.contains(e.target) && close();
   createEffect(() => {
     if (open()) {
-      document.addEventListener("mousedown", outside);
       const i = list().findIndex((a) => a.id === props.selectedId);
       setHi(i < 0 ? 0 : i);
       queueMicrotask(() => input && input.focus());
-    } else document.removeEventListener("mousedown", outside);
+    }
   });
-  onCleanup(() => document.removeEventListener("mousedown", outside));
 
   function choose(i) {
     if (i < list().length) props.onSelect(list()[i]);
@@ -493,8 +493,8 @@ export function AccountCombobox(props) {
         </Show>
         <Icon name="chevron" class="wsx-combo-caret" />
       </button>
-      <Show when={open()}>
-        <div class="wsx-combo-pop">
+      <Popover open={open()} anchor={root} onClose={close} matchWidth class="wsx-combo-pop">
+        <div>
           <div class="wsx-combo-search">
             <Icon name="search" />
             <input ref={(el) => (input = el)} role="combobox" aria-expanded="true" aria-controls={id} aria-autocomplete="list"
@@ -530,7 +530,253 @@ export function AccountCombobox(props) {
             </For>
           </ul>
         </div>
+      </Popover>
+    </div>
+  );
+}
+
+/*
+ * The one floating surface of the WorkSuite screens (pickers, tooltips): portalled to <body> so no panel
+ * clips it, placed under its anchor and flipped above when it does not fit (placePopover), above dialogs
+ * (--wsx-z-pop). Closes on a click outside it and its anchor, and on Escape (focus goes back to the anchor).
+ * props: open, anchor (element), onClose, class, role, matchWidth, passive (a tooltip: no focus, no closing rules)
+ */
+export function Popover(props) {
+  let pop = null;
+  const [pos, setPos] = createSignal({ top: -9999, left: -9999, maxHeight: 400, placement: "bottom" });
+  const place = () => {
+    if (!pop || !props.anchor) return;
+    const r = props.anchor.getBoundingClientRect();
+    setPos(placePopover(r, { width: pop.offsetWidth, height: pop.offsetHeight }, { width: window.innerWidth, height: window.innerHeight },
+                        { rtl: document.body.classList.contains("rtl") }));
+  };
+  createEffect(() => {
+    if (!props.open) return;
+    requestAnimationFrame(place);
+    const down = (e) => {
+      if (pop && !pop.contains(e.target) && !(props.anchor && props.anchor.contains(e.target))) props.onClose && props.onClose();
+    };
+    const key = (e) => {
+      if (e.key !== "Escape") return;
+      e.stopPropagation();
+      props.onClose && props.onClose();
+      const focusable = props.anchor && (props.anchor.matches("button") ? props.anchor : props.anchor.querySelector("button"));
+      focusable && focusable.focus();
+    };
+    if (!props.passive) {
+      document.addEventListener("mousedown", down, true);
+      document.addEventListener("keydown", key, true);
+    }
+    window.addEventListener("resize", place);
+    document.addEventListener("scroll", place, true);
+    onCleanup(() => {
+      document.removeEventListener("mousedown", down, true);
+      document.removeEventListener("keydown", key, true);
+      window.removeEventListener("resize", place);
+      document.removeEventListener("scroll", place, true);
+    });
+  });
+  return (
+    <Show when={props.open}>
+      <Portal>
+        <div ref={(el) => (pop = el)} class={"wsx-pop " + (props.class || "")} role={props.role} id={props.id}
+             data-placement={pos().placement}
+             style={{ top: pos().top + "px", left: pos().left + "px", "max-height": props.passive ? undefined : pos().maxHeight + "px",
+                      "min-width": props.matchWidth && props.anchor ? props.anchor.offsetWidth + "px" : undefined }}>
+          {props.children}
+        </div>
+      </Portal>
+    </Show>
+  );
+}
+
+/* A tooltip anchored to its trigger (never to the mouse): hover or keyboard focus, after a short delay */
+export function Tooltip(props) {
+  const id = createUniqueId();
+  const [open, setOpen] = createSignal(false);
+  let host = null, timer;
+  const show = () => { clearTimeout(timer); timer = setTimeout(() => setOpen(true), 350); };
+  const hide = () => { clearTimeout(timer); setOpen(false); };
+  onCleanup(() => clearTimeout(timer));
+  return (
+    <span class="wsx-tip-host" ref={(el) => (host = el)} onMouseEnter={show} onMouseLeave={hide} onFocusIn={show} onFocusOut={hide}
+          onMouseDown={hide} onKeyDown={(e) => e.key === "Escape" && hide()}>
+      {props.children}
+      <Popover open={open() && !!props.text} anchor={host} passive class="wsx-tip" role="tooltip" id={id}>{props.text}</Popover>
+    </span>
+  );
+}
+
+/* An icon-only button: its label is the accessible name and the anchored tooltip */
+export function IconButton(props) {
+  return (
+    <Tooltip text={props.label}>
+      <button type="button" class={"wsx-btn wsx-btn-ghost wsx-btn-sm wsx-btn-icon" + (props.class ? " " + props.class : "")}
+              aria-label={props.label} aria-pressed={props.pressed === undefined ? undefined : props.pressed ? "true" : "false"}
+              disabled={props.disabled} onClick={(e) => props.onClick && props.onClick(e)}>
+        <Show when={props.busy} fallback={<Icon name={props.icon} />}><Spinner /></Show>
+      </button>
+    </Tooltip>
+  );
+}
+
+/* List / grid, as two pressed-state buttons */
+export function LayoutToggle(props) {
+  return (
+    <div class="wsx-toggle-group" role="group" aria-label={L.wshLayout}>
+      <IconButton icon="list" label={L.wshListView} pressed={props.value === "list"} onClick={() => props.onChange("list")} />
+      <IconButton icon="grid" label={L.wshGridView} pressed={props.value === "grid"} onClick={() => props.onChange("grid")} />
+    </div>
+  );
+}
+
+/* A search box; onSearch is called debounced (props.delay, default 250 ms), Escape clears it */
+export function SearchBox(props) {
+  const [text, setText] = createSignal(props.value || "");
+  let timer;
+  onCleanup(() => clearTimeout(timer));
+  const emit = (v, now) => {
+    clearTimeout(timer);
+    if (now) props.onSearch(v);
+    else timer = setTimeout(() => props.onSearch(v), props.delay ?? 250);
+  };
+  return (
+    <div class={"wsx-searchbox " + (props.class || "")}>
+      <Icon name="search" />
+      <input type="search" spellcheck={false} placeholder={props.placeholder} aria-label={props.placeholder} value={text()}
+             onInput={(e) => { setText(e.currentTarget.value); emit(e.currentTarget.value.trim()); }}
+             onKeyDown={(e) => {
+               if (e.key === "Enter") emit(text().trim(), true);
+               if (e.key === "Escape" && text()) { e.stopPropagation(); setText(""); emit("", true); }
+             }} />
+      <Show when={text()}>
+        <button type="button" class="wsx-searchbox-clear" aria-label={L.wshClearSearch} onClick={() => { setText(""); emit("", true); }}>
+          <Icon name="x" />
+        </button>
       </Show>
+    </div>
+  );
+}
+
+/* Type chips: All, Documents, Spreadsheets, Presentations, PDF */
+export function TypeChips(props) {
+  const types = () => [["all", L.wsAll], ["word", L.wsDocuments], ["cell", L.wsSpreadsheets], ["slide", L.wsPresentations], ["pdf", "PDF"]];
+  return (
+    <div class="wsx-chips" role="group" aria-label={L.wshFileType}>
+      <For each={types()}>
+        {([value, label]) => (
+          <button type="button" class={"wsx-chip-btn wsx-chip-" + value} aria-pressed={props.value === value ? "true" : "false"}
+                  onClick={() => props.onChange(value)}>{label}</button>
+        )}
+      </For>
+    </div>
+  );
+}
+
+/*
+ * The organisation selector: only the organisations the server lists for this account, searchable.
+ * props: companies [{id, name}], value (id | null = all), onChange(id | null)
+ */
+export function OrgPicker(props) {
+  const id = createUniqueId();
+  const [open, setOpen] = createSignal(false);
+  const [query, setQuery] = createSignal("");
+  const [hi, setHi] = createSignal(0);
+  let root = null, input = null;
+  const options = createMemo(() => {
+    const found = filterCompanies(props.companies, query());
+    return (query() ? [] : [{ id: null, name: L.wsAllCompanies }]).concat(found);
+  });
+  const current = () => (props.companies || []).find((c) => String(c.id) === String(props.value));
+  const close = () => { setOpen(false); setQuery(""); };
+  const choose = (o) => { props.onChange(o.id === null ? null : o.id); close(); };
+  createEffect(() => {
+    if (!open()) return;
+    setHi(0);
+    queueMicrotask(() => input && input.focus());
+  });
+  function onKey(e) {
+    if (["ArrowDown", "ArrowUp", "Home", "End"].includes(e.key)) {
+      e.preventDefault();
+      const n = options().length;
+      if (!n) return;
+      const i = hi();
+      setHi(e.key === "ArrowDown" ? (i + 1) % n : e.key === "ArrowUp" ? (i - 1 + n) % n : e.key === "Home" ? 0 : n - 1);
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      const o = options()[hi()];
+      o && choose(o);
+    } else if (e.key === "Tab") close();
+  }
+  return (
+    <div class="wsx-org" ref={(el) => (root = el)}>
+      <button type="button" class="wsx-org-trigger" aria-haspopup="listbox" aria-expanded={open() ? "true" : "false"}
+              aria-label={L.wsCompany} onClick={() => setOpen(!open())}>
+        <Icon name="building" />
+        <span class="wsx-ellipsis">{current() ? current().name : L.wsAllCompanies}</span>
+        <span class="wsx-org-count">{(props.companies || []).length}</span>
+        <Icon name="chevron" class="wsx-combo-caret" />
+      </button>
+      <Popover open={open()} anchor={root} onClose={close} matchWidth class="wsx-combo-pop">
+        <div class="wsx-combo-search">
+          <Icon name="search" />
+          <input ref={(el) => (input = el)} role="combobox" aria-expanded="true" aria-controls={id} aria-autocomplete="list"
+                 aria-activedescendant={options().length ? id + "-" + hi() : undefined} aria-label={L.wshSearchCompanies}
+                 placeholder={L.wshSearchCompanies} value={query()} spellcheck={false}
+                 onInput={(e) => { setQuery(e.currentTarget.value); setHi(0); }} onKeyDown={onKey} />
+        </div>
+        <ul role="listbox" id={id} class="wsx-combo-list" aria-label={L.wsCompany}>
+          <For each={options()}>
+            {(o, i) => {
+              const selected = () => (o.id === null ? props.value === null || props.value === undefined : String(o.id) === String(props.value));
+              return (
+                <li role="option" id={id + "-" + i()} aria-selected={selected() ? "true" : "false"}
+                    classList={{ "is-hi": hi() === i(), "is-selected": selected() }}
+                    onMouseEnter={() => setHi(i())} onMouseDown={(e) => e.preventDefault()} onClick={() => choose(o)}>
+                  <span class="wsx-ellipsis wsx-org-name">{o.name}</span>
+                  <Show when={selected()}><Icon name="check" class="wsx-combo-check" /></Show>
+                </li>
+              );
+            }}
+          </For>
+          <Show when={!options().length}><li class="wsx-combo-empty" role="presentation">{L.wshNoCompany}</li></Show>
+        </ul>
+      </Popover>
+    </div>
+  );
+}
+
+/* "Are you sure?" with the action named on its button. props: title, text, confirmLabel, danger, busy, onConfirm, onClose */
+export function ConfirmDialog(props) {
+  return (
+    <Frame title={props.title} onClose={props.onClose}>
+      <p class="ws-dlg-descr">{props.text}</p>
+      <div class="wsx-confirm-actions">
+        <WsButton variant="secondary" onClick={props.onClose}>{L.wsCancel}</WsButton>
+        <WsButton variant={props.danger ? "danger" : "primary"} busy={props.busy} onClick={props.onConfirm}>{props.confirmLabel}</WsButton>
+      </div>
+    </Frame>
+  );
+}
+
+export function SkeletonRows(props) {
+  return (
+    <div class="wsx-skeleton" aria-hidden="true">
+      <For each={Array.from({ length: props.count || 4 })}>
+        {() => <div class="wsx-skeleton-row"><span class="wsx-skeleton-icon" /><span class="wsx-skeleton-line" /><span class="wsx-skeleton-line short" /></div>}
+      </For>
+    </div>
+  );
+}
+
+/* props: icon, title, text, action (element) */
+export function EmptyState(props) {
+  return (
+    <div class="wsx-empty" role="status">
+      <Icon name={props.icon || "drive"} class="wsx-empty-icon" />
+      <p class="wsx-empty-title">{props.title}</p>
+      <Show when={props.text}><p class="wsx-hint">{props.text}</p></Show>
+      <Show when={props.action}><div class="wsx-empty-action">{props.action}</div></Show>
     </div>
   );
 }
