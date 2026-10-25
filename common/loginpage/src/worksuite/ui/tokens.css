@@ -1,0 +1,91 @@
+/*
+ * WorkSuite design tokens for the start page's WorkSuite screens (Settings › WorkSuite, the Drive connect card).
+ * Modelled on WorkSuite Desktop (navy/indigo brand, quiet greys, 8px grid); surfaces follow the host theme
+ * (tokens.css) so the screens sit on the start page's own background in every theme.
+ */
+:root {
+  /* type scale */
+  --wsx-font-xs: 11px;
+  --wsx-font-sm: 12px;
+  --wsx-font-md: 13px;
+  --wsx-font-lg: 15px;
+  --wsx-font-xl: 20px;
+  --wsx-line-tight: 1.3;
+  --wsx-line: 1.5;
+  --wsx-weight-medium: 500;
+  --wsx-weight-strong: 600;
+
+  /* spacing (4px base) */
+  --wsx-space-1: 4px;
+  --wsx-space-2: 8px;
+  --wsx-space-3: 12px;
+  --wsx-space-4: 16px;
+  --wsx-space-5: 20px;
+  --wsx-space-6: 24px;
+  --wsx-space-8: 32px;
+
+  /* radii, borders: whole pixels only, so hairlines never vanish at 125/150 % */
+  --wsx-radius-sm: 6px;
+  --wsx-radius-md: 8px;
+  --wsx-radius-lg: 12px;
+  --wsx-radius-pill: 999px;
+  --wsx-border-w: 1px;
+  --wsx-focus-w: 2px;
+  --wsx-control-h: 32px;
+  --wsx-content-max: 880px;
+
+  /* colours, light */
+  --wsx-brand: #3b5bdb;
+  --wsx-brand-hover: #2f4ec4;
+  --wsx-brand-pressed: #23349e;
+  --wsx-on-brand: #ffffff;
+  --wsx-brand-soft: #eef1fd;
+  --wsx-brand-ink: #23349e;
+  --wsx-surface: var(--background-normal-element-light, #ffffff);
+  --wsx-surface-raised: #ffffff;
+  --wsx-surface-sunken: #f4f5f9;
+  --wsx-ink: #151a2d;
+  --wsx-ink-2: #4a5168;
+  --wsx-ink-3: #6b7287;
+  --wsx-line: #dfe3ec;
+  --wsx-line-strong: #b9c0d0;
+  --wsx-hover: rgba(15, 27, 61, 0.05);
+  --wsx-pressed: rgba(15, 27, 61, 0.1);
+  --wsx-focus: #3b5bdb;
+  --wsx-success: #1f7a4d;
+  --wsx-success-bg: #e7f4ed;
+  --wsx-warning: #9a4a06;
+  --wsx-warning-bg: #fdf1e3;
+  --wsx-danger: #b42318;
+  --wsx-danger-bg: #fdecea;
+  --wsx-shadow: 0 1px 2px rgba(15, 27, 61, 0.06), 0 1px 1px rgba(15, 27, 61, 0.04);
+}
+
+.theme-type-dark {
+  color-scheme: dark;
+  --wsx-brand: #5c7cfa;
+  --wsx-brand-hover: #748ffc;
+  --wsx-brand-pressed: #8da2fb;
+  --wsx-on-brand: #0b1124;
+  --wsx-brand-soft: rgba(92, 124, 250, 0.18);
+  --wsx-brand-ink: #b4c2fd;
+  --wsx-surface: rgba(255, 255, 255, 0.04);
+  --wsx-surface-raised: rgba(255, 255, 255, 0.06);
+  --wsx-surface-sunken: rgba(0, 0, 0, 0.18);
+  --wsx-ink: #eceef4;
+  --wsx-ink-2: #c3c7d2;
+  --wsx-ink-3: #a3a8b6;
+  --wsx-line: rgba(255, 255, 255, 0.14);
+  --wsx-line-strong: rgba(255, 255, 255, 0.28);
+  --wsx-hover: rgba(255, 255, 255, 0.07);
+  --wsx-pressed: rgba(255, 255, 255, 0.12);
+  --wsx-focus: #8da2fb;
+  --wsx-success: #6cd3a0;
+  --wsx-success-bg: rgba(67, 181, 129, 0.16);
+  --wsx-warning: #f3b56d;
+  --wsx-warning-bg: rgba(240, 160, 75, 0.16);
+  --wsx-danger: #f59a92;
+  --wsx-danger-bg: rgba(240, 113, 103, 0.16);
+  --wsx-shadow: none;
+}
+.theme-type-light { color-scheme: light; }

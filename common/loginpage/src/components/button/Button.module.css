@@ -8,6 +8,11 @@
   cursor: pointer;
   outline: none;
 
+  &:focus-visible {
+    outline: 2px solid var(--border-control-focus);
+    outline-offset: 2px;
+  }
+
   &:disabled {
     cursor: default;
     opacity: 0.5;
@@ -59,6 +64,7 @@
 .btnOutline {
   background: transparent;
   border: 1px solid var(--border-regular-control);
+  color: var(--text-normal);
 
   &:hover {
     background-color: var(--highlight-button-hover);
