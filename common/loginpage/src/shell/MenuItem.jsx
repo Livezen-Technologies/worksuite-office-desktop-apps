@@ -3,7 +3,7 @@ import { A } from "@solidjs/router";
 import { usePngIcons } from "@/services/display";
 
 export function MenuItem(props) {
-  const [local] = splitProps(props, ["href", "onClick", "icon", "label", "end", "hidden", "action", "class", "isActive"]);
+  const [local] = splitProps(props, ["href", "onClick", "icon", "label", "end", "hidden", "action", "class", "isActive", "title"]);
 
   const [pngvisible, setPngVisible] = createSignal();
 
@@ -11,7 +11,7 @@ export function MenuItem(props) {
     <li class="menu-item" classList={{ hidden: local.hidden }}>
       <Switch>
         <Match when={local.href}>
-          <A href={local.href} onClick={local.onClick} activeClass={local.isActive ? "" : "selected"} end={local.end} action={local.action} class={local.class} classList={local.isActive ? { selected: local.isActive() } : undefined}>
+          <A href={local.href} title={local.title} onClick={local.onClick} activeClass={local.isActive ? "" : "selected"} end={local.end} action={local.action} class={local.class} classList={local.isActive ? { selected: local.isActive() } : undefined}>
             <Show when={local.icon}>
               <div class="icon-inner-box">
                 <Show when={usePngIcons()} fallback={<svg class="icon"><use href={local.icon} /></svg>}>
@@ -23,7 +23,7 @@ export function MenuItem(props) {
           </A>
         </Match>
         <Match when={local.onClick}>
-          <button class="menu-btn" onClick={local.onClick} class={local.class}>
+          <button class={`menu-btn${local.class ? ` ${local.class}` : ""}`} title={local.title} onClick={local.onClick}>
             <Show when={local.icon}>
               <div class="icon-inner-box">
                 <Show when={usePngIcons()} fallback={<svg class="icon"><use href={local.icon} /></svg>}>

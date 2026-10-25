@@ -15,7 +15,9 @@ let _pendingUpdateAction = null;
 
 export { aboutOpen, aboutVisible, versionInfo, updatesOn, updateStatus, addonInfo };
 
-export function openAbout() {
+/* fallback: the version the start page already knows, for when app:version never arrived */
+export function openAbout(fallback) {
+  if (!versionInfo() && fallback?.version) setVersionInfo(fallback);
   setAboutOpen(true);
 }
 

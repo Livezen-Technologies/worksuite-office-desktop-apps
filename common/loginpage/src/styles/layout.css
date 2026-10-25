@@ -100,6 +100,15 @@ h4 {
     overflow: hidden;
   }
 
+  /* the WorkSuite "Update ready" banner sits above the panel instead of taking a panel's full height */
+  &:has(> .ws-update-banner) {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    > div:not(.ws-update-banner) { height: auto; flex: 1 1 0; min-height: 0; }
+    > .ws-update-banner { height: auto; flex: none; border-bottom: 0; }
+  }
+
   body.rtl & {
     padding: 8px 0 8px 8px;
   }

@@ -4,6 +4,7 @@ import { aboutOpen, closeAbout, versionInfo, updatesOn, updateStatus, execUpdate
 import { Dialog, Button } from "@/components";
 import "./about.css";
 import { command } from "@/sdk/bridge";
+import { L } from "@/worksuite/lang.js";
 
 function parseLicenseInfo(html) {
   if (!html) return null;
@@ -41,7 +42,7 @@ export default function About() {
             <div class="about-content">
               <section class="about-approw">
                 <div class={`about-logo ${versionInfo().logocls ?? ""}`}>
-                  <svg class="ver-logo" viewBox="0 0 52 45">
+                  <svg class="ver-logo" viewBox="0 0 44 44">
                     <use href="#idx-logo"/>
                   </svg>
                 </div>
@@ -130,15 +131,14 @@ export default function About() {
                     </a>
                   </div>
                 </Show>
+                <div class="about-field about-company">{L.wsxDevelopedBy}</div>
                 <div class="about-footer-row">
-                  <Show when={versionInfo().rights}>
-                    <div class="about-field about-rights">{versionInfo().rights}</div>
-                  </Show>
-                  <Show when={versionInfo().link}>
-                    <a class="about-link about-field" href={versionInfo().link} target="_blank" rel="noreferrer">
-                      {versionInfo().site}
-                    </a>
-                  </Show>
+                  <div class="about-field about-rights">
+                    {versionInfo().rights || L.wsxCopyright.replace("$1", new Date().getFullYear())}
+                  </div>
+                  <a class="about-link about-field" href={versionInfo().link || "https://worksuitecloud.com"} target="_blank" rel="noreferrer">
+                    {versionInfo().site || "worksuitecloud.com"}
+                  </a>
                 </div>
               </div>
             </div>

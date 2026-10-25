@@ -4,14 +4,16 @@
  * with type filters, for the selected WorkSuite account. Signed out, it offers
  * "Sign in to WorkSuite". See core.js for how signing in and opening work.
  */
-import { For, Show, createSignal, onCleanup, onMount } from "solid-js";
+import { For, Show, createMemo, createSignal, onCleanup, onMount } from "solid-js";
 import { ContextMenu, DropdownMenu } from "@/components";
 import { usePngIcons } from "@/services/display";
 import { L } from "./lang.js";
 import "./core.js";
 import { SignInDialog, NewDialog } from "./dialogs.jsx";
 import { MoveDialog, VersionsDialog, ShareDialog, OpenLinkDialog } from "./drive.jsx";
-import { ContinueCard, hostOf, initials, when } from "./cards.jsx";
+import { hostOf, when } from "./cards.jsx";
+import { ConnectCard, ConnectionSummary } from "./connect.jsx";
+import { mergeAccounts } from "./settings-logic.js";
 import { PlatformNotices } from "./notices.jsx"; // oda-platform hook (G-01, G-04)
 import "./worksuite.css";
 import { PolicyBanner, PolicyCard } from "./ShellParts.jsx"; // oda-shell (ADM-01)
@@ -57,10 +59,13 @@ export default function WorkSuiteSection() {
   const [renaming, setRenaming] = createSignal(null); // the id of the file renamed in place
   const [companies, setCompanies] = createSignal([]);
   const [dialog, setDialog] = createSignal(null); // { kind: 'signin', desktopAccount } | { kind: 'new', type }
-  const [desktop, setDesktop] = createSignal(null); // a WorkSuite Desktop account to continue as
+  const [, setDesktop] = createSignal(null); // a WorkSuite Desktop account to continue as
   const [os, setOs] = createSignal(null); // WorkSuite OS's credentials broker
   const [osBusy, setOsBusy] = createSignal(false);
   const [osError, setOsError] = createSignal("");
+  const [desktopList, setDesktopList] = createSignal([]); // every WorkSuite Desktop account, for the account picker
+  const [picked, setPicked] = createSignal(null); // the account chosen in the connect card
+  const [disconnecting, setDisconnecting] = createSignal(false);
 
   let seq = 0, where = "", lastOpen = 0, pendingLink = null, osTried = false;
 
@@ -90,6 +95,7 @@ export default function WorkSuiteSection() {
   function findDesktop() {
     const liveIds = WS().accounts().filter((a) => !a.signedOut).map((a) => a.id);
     WS().desktopAccounts().then((list) => {
+      setDesktopList(list || []);
       if (os() && os().available) return;
       setDesktop(list.find((x) => !liveIds.includes(x.server + "|" + x.user.id)) || null);
     });
@@ -116,9 +122,10 @@ export default function WorkSuiteSection() {
     }
   }
 
-  function signIn(desktopAccount) {
+  function signIn(desktopAccount, other) {
     if (dialog() || osBusy()) return;
-    if (!desktopAccount && os() && os().available) return signInOs();
+    say("");
+    if (!desktopAccount && !other && os() && os().available) return signInOs();
     setDialog({ kind: "signin", desktopAccount: desktopAccount || null });
   }
 
@@ -372,50 +379,47 @@ export default function WorkSuiteSection() {
     return c ? c.name : companies().length > 1 ? L.wsAllCompanies : account() ? account().user.organization : "";
   };
 
+  /* ---- the account area (connect.jsx) ---- */
+  const known = createMemo(() => mergeAccounts(accounts(), desktopList()));
+  const connectAccount = () => {
+    const o = os();
+    if (o && o.available) {
+      const b = o.account;
+      return { id: "os", os: true, server: b ? b.server : "", user: { name: (b && b.state === "signed_in" && b.name) || (b ? hostOf(b.server) : L.wsOsSignIn) } };
+    }
+    const list = known();
+    return list.find((a) => a.id === picked()) || list.find((a) => a.desktopOnly || a.desktop) || (account() && list.find((a) => a.id === account().id)) || list[0] || null;
+  };
+  const connecting = () => osBusy() || !!(dialog() && dialog().kind === "signin");
+  const connectError = () => osError() || (state().error ? state().text : "");
+
+  function chooseAccount(a) {
+    if (!a.desktopOnly && !a.signedOut) {
+      setPicked(null);
+      WS().setActive(a.id);
+    } else setPicked(a.id);
+  }
+  function continueAs() {
+    const a = connectAccount();
+    if (!a) return signIn();
+    if (a.os) return signInOs();
+    signIn(a.desktop || null);
+  }
+  async function disconnect() {
+    setDisconnecting(true);
+    try {
+      await WS().signOut(account());
+    } catch (e) {
+      say(e.message, true);
+    } finally {
+      setDisconnecting(false);
+    }
+  }
+
   return (
     <section class="ws-section" classList={{ "signed-in": !!live() }}>
       <div class="ws-head">
         <h3 class="list-section-title ws-title">{L.wsTitle}</h3>
-        <Show when={accounts().length && account()}>
-          <DropdownMenu>
-            <DropdownMenu.Trigger class="ws-account-btn" title={account().user.email || ""}>
-              <span class="ws-avatar small" aria-hidden="true">{initials(account().user.name)}</span>
-              <span class="ws-account-name">{account().user.name}</span>
-              <span class="ws-account-org">{[companyName(), hostOf(account().server)].filter(Boolean).join(" · ")}</span>
-              <svg class="ws-caret" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" /></svg>
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Content class="ws-switcher">
-              <For each={accounts()}>
-                {(x) => (
-                  <>
-                    <DropdownMenu.Item class={x.id === account().id ? "checked" : ""} onSelect={() => WS().setActive(x.id)}>
-                      {x.user.name + " · " + hostOf(x.server) + (x.signedOut ? " (" + L.wsSignedOutShort + ")" : "")}
-                    </DropdownMenu.Item>
-                    <Show when={x.id === account().id && !x.signedOut && companies().length > 1}>
-                      <>
-                        <div class="ws-menu-label" role="presentation">{L.wsCompany}</div>
-                        <For each={companies()}>
-                          {(c) => (
-                            <DropdownMenu.Item class={"ws-company" + (String(WS().companyOf(x)) === String(c.id) ? " checked" : "")}
-                                               onSelect={() => WS().setCompany(x, c.id)}>{c.name}</DropdownMenu.Item>
-                          )}
-                        </For>
-                        <DropdownMenu.Item class={"ws-company" + (WS().companyOf(x) === null ? " checked" : "")}
-                                           onSelect={() => WS().setCompany(x, null)}>{L.wsAllCompanies}</DropdownMenu.Item>
-                      </>
-                    </Show>
-                  </>
-                )}
-              </For>
-              <DropdownMenu.Separator />
-              <DropdownMenu.Item onSelect={() => signIn()}>{L.wsAddAccount}</DropdownMenu.Item>
-              <DropdownMenu.Item onSelect={() => WS().openInBrowser(account(), "/files")}>{L.wsOpenWeb}</DropdownMenu.Item>
-              <DropdownMenu.Item class="negative" onSelect={() => WS().signOut(account())}>
-                {L.wsSignOut.replace("$1", account().user.name + " (" + hostOf(account().server) + ")")}
-              </DropdownMenu.Item>
-            </DropdownMenu.Content>
-          </DropdownMenu>
-        </Show>
         <span class="ws-spacer" />
         <Show when={live()}>
           <div class="ws-tools">
@@ -445,32 +449,16 @@ export default function WorkSuiteSection() {
       {/* oda-platform hook: server too old (G-01), sign-in kept in a file (G-04) */}
       <PlatformNotices account={account()} />
 
+      <Show when={live()}>
+        <ConnectionSummary account={account()} known={known()} company={companyName()} companies={companies()}
+                           companyId={WS().companyOf(account())} onCompany={(id) => WS().setCompany(account(), id)}
+                           onSelect={chooseAccount} onAdd={() => signIn()} disconnecting={disconnecting()}
+                           onOpenWeb={() => WS().openInBrowser(account(), "/files")} onDisconnect={disconnect} />
+      </Show>
+
       <Show when={!live()}>
-        <div class="ws-signedout">
-          <div class="ws-signedout-art" aria-hidden="true">
-            <svg viewBox="72 72 880 880"><rect x="72" y="72" width="880" height="880" rx="200" fill="var(--ws-brand)" />
-              <path d="M302 365 395 660 512 437 628 660 722 365" fill="none" stroke="#fff" stroke-width="70" stroke-linecap="round" stroke-linejoin="round" /></svg>
-          </div>
-          <div class="ws-signedout-body">
-            <p class="ws-signedout-text">{L.wsSignedOutDescr}</p>
-            <div class="ws-signedout-actions">
-              <Show when={os() && os().available}
-                    fallback={<Show when={desktop()}>
-                      <ContinueCard primary name={desktop().user.name}
-                                    org={[desktop().user.organization, hostOf(desktop().server)].filter(Boolean).join(" · ")}
-                                    via={L.wsViaDesktop} onClick={() => signIn(desktop())} />
-                    </Show>}>
-                <ContinueCard primary disabled={osBusy()}
-                              name={os().account && os().account.state === "signed_in" ? os().account.name || hostOf(os().account.server) : L.wsOsSignIn}
-                              org={os().account ? hostOf(os().account.server) : ""} via={L.wsViaOs} onClick={signInOs} />
-              </Show>
-              <Show when={!(os() && os().available)}>
-                <button class="ws-btn" classList={{ "ws-btn-primary": !desktop(), "ws-btn-secondary": !!desktop() }} onClick={() => signIn()}>{L.wsSignInTitle}</button>
-              </Show>
-            </div>
-            <Show when={osError()}><p class="ws-error">{osError()}</p></Show>
-          </div>
-        </div>
+        <ConnectCard known={known()} selected={connectAccount()} connecting={connecting()} error={connectError()}
+                     onSelect={chooseAccount} onContinue={continueAs} noOther={!!(os() && os().available)} onOtherAccount={() => signIn(null, true)} />
       </Show>
       <Show when={!live()}><PolicyCard /></Show>{/* oda-shell (ADM-01) */}
 

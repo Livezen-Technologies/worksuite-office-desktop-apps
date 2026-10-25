@@ -6,26 +6,31 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=IE8" />
     <meta name="description" content="" />
     <meta name="keywords" content="" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%221024%22 height=%221024%22 viewBox=%220 0 1024 1024%22%3E%3Crect width=%221024%22 height=%221024%22 rx=%22230%22 fill=%22#001842%22/%3E%3Crect x=%22272%22 y=%22260%22 width=%22400%22 height=%22520%22 rx=%2244%22 fill=%22#00DAF2%22 transform=%22rotate%28-14 472 520%29%22/%3E%3Crect x=%22352%22 y=%22260%22 width=%22400%22 height=%22520%22 rx=%2244%22 fill=%22#0A6CFF%22 transform=%22rotate%2814 552 520%29%22/%3E%3Cpath d=%22M350 242 L622 242 L722 342 L722 734 Q722 782 674 782 L350 782 Q302 782 302 734 L302 290 Q302 242 350 242 Z%22 fill=%22#FFFFFF%22/%3E%3Cpath d=%22M622 242 L622 300 Q622 342 664 342 L722 342 Z%22 fill=%22#C9D0DA%22/%3E%3Crect x=%22362%22 y=%22330%22 width=%22190%22 height=%2236%22 rx=%2218%22 fill=%22#0A6CFF%22/%3E%3Crect x=%22362%22 y=%22410%22 width=%22300%22 height=%2224%22 rx=%2212%22 fill=%22#B7C3D6%22/%3E%3Crect x=%22362%22 y=%22460%22 width=%22300%22 height=%2224%22 rx=%2212%22 fill=%22#B7C3D6%22/%3E%3Crect x=%22362%22 y=%22510%22 width=%22220%22 height=%2224%22 rx=%2212%22 fill=%22#B7C3D6%22/%3E%3Crect x=%22362%22 y=%22580%22 width=%22300%22 height=%22140%22 rx=%2218%22 fill=%22#00DAF2%22/%3E%3Crect x=%22459%22 y=%22580%22 width=%226%22 height=%22140%22 fill=%22#FFFFFF%22/%3E%3Crect x=%22559%22 y=%22580%22 width=%226%22 height=%22140%22 fill=%22#FFFFFF%22/%3E%3Crect x=%22362%22 y=%22647%22 width=%22300%22 height=%226%22 fill=%22#FFFFFF%22/%3E%3C/svg%3E" />
+    <style>
+      /* WorkSuite loading screen: navy in light and dark themes alike, painted before any script runs */
+      #loading-mask.ws-splash {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #001842;
+        z-index: 1000;
+        transition: opacity 0.45s ease;
+      }
+      #loading-mask.ws-splash--hide { opacity: 0; pointer-events: none; }
+      .ws-splash__anim { width: min(640px, 92vw); aspect-ratio: 640 / 400; }
+      @media (prefers-reduced-motion: reduce) { #loading-mask.ws-splash { transition: none; } }
+    </style>
   </head>
   <body>
     <div id="wrap">
-      <div id="loading-mask" class="loadmask">
-        <div id="stage" class="loader-page">
-          <div class="roller">
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-          </div>
-        </div>
+      <div id="loading-mask" class="loadmask ws-splash" role="status" aria-label="Loading WorkSuite Office">
+        <div id="ws-splash-anim" class="ws-splash__anim"></div>
       </div>
       <div id="root"></div>
     </div>
 
+    <script src="../res/vendor/lottie-web/lottie_light.min.js"></script>
     <script type="module" src="./main.jsx"></script>
   </body>
 </html>

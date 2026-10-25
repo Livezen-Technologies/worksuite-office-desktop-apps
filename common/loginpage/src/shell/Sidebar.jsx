@@ -65,17 +65,7 @@ export default function Sidebar() {
       <MenuItem href="/open" icon="#folder" label={t("actOpenLocal")} />
       <MenuItem action="templates" href="/templates" icon="#templates" label={t("actTemplates")} />
       <MenuItem action="clouds" href="/clouds" icon="#cloud" label={t("actClouds")} />
-      <li class="menu-item ws-app-item">
-        <button class="menu-btn" title={L.wsAppTip} onClick={() => window.WorkSuite.openApp()}>
-          <div class="icon-inner-box">
-            <svg class="ws-app-logo" viewBox="72 72 880 880" aria-hidden="true">
-              <rect x="72" y="72" width="880" height="880" rx="200" fill="#3f5be0" />
-              <path d="M302 365 395 660 512 437 628 660 722 365" fill="none" stroke="#fff" stroke-width="70" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-          </div>
-          <span class="text">{L.wsApp}</span>
-        </button>
-      </li>
+      <MenuItem onClick={() => window.WorkSuite.openApp()} icon="#worksuite" label={L.wsApp} title={L.wsAppTip} />
       <Show when={appliedUseAi()}>
         <MenuItem href="/aitools" onClick={clickAiTools} icon="#aitools" label={t("actAiTools", "AI Tools")} />
       </Show>

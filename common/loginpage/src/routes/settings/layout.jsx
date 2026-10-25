@@ -95,7 +95,7 @@ export default function SettingsLayout(props) {
       <div class={styles.contentWrap}>
         <Show when={!isIframePage()}>
           <header class={styles.header}>
-            <div class={styles.headerInner}>
+            <div class={styles.headerInner} classList={{ [styles.headerInnerWide]: isWorkSuitePage() }}>
               <h1 class={styles.headerTitle}>{headerTitle()}</h1>
             </div>
           </header>

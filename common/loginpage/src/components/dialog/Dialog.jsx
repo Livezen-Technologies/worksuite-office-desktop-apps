@@ -8,11 +8,13 @@ function Root(props) {
 }
 
 function Content(props) {
-  const [local, rest] = splitProps(props, ["class"]);
+  // classList is merged, not passed on: a caller's classList used to replace the panel's own classes,
+  // leaving the dialog unpositioned under its overlay (WorkSuite's Sign in dialog never showed)
+  const [local, rest] = splitProps(props, ["class", "classList"]);
   return (
     <DialogPrimitive.Portal>
       <DialogPrimitive.Overlay class={styles.overlay} />
-      <DialogPrimitive.Content classList={mergeClass(styles.content, local.class)} {...rest} />
+      <DialogPrimitive.Content classList={{ ...mergeClass(styles.content, local.class), ...local.classList }} {...rest} />
     </DialogPrimitive.Portal>
   );
 }

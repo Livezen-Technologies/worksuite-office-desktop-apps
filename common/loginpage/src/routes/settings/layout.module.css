@@ -25,6 +25,10 @@
   margin-inline: auto;
 }
 
+.headerInnerWide {
+  max-width: 1104px;
+}
+
 .headerTitle {
   font-weight: 700;
   font-size: 20px;
