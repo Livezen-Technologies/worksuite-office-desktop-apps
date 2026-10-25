@@ -280,6 +280,7 @@
 .wsx-progress { height: 6px; border-radius: var(--wsx-radius-pill); background: var(--wsx-surface-sunken); overflow: hidden; }
 .wsx-progress-bar { height: 100%; background: var(--wsx-brand); border-radius: inherit; transition: width .3s; }
 .wsx-progress-bar.is-indeterminate { animation: wsx-slide 1.2s ease-in-out infinite; }
+.wsx-progress-meta { display: flex; justify-content: space-between; gap: 12px; margin-top: 6px; font-variant-numeric: tabular-nums; }
 @keyframes wsx-slide { from { transform: translateX(-100%); } to { transform: translateX(340%); } }
 .wsx-disclosure {
   align-self: flex-start; display: inline-flex; align-items: center; gap: var(--wsx-space-1);

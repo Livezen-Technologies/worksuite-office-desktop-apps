@@ -5,10 +5,15 @@
  *
  * Native contract (win-linux CWorkSuite, macos ASCCommonViewController), start page only:
  *   "worksuite:policy"  ""                                   → {"managed","source","policy":{…}}
- *   "worksuite:updates" {"op":"get|set|check|restart","channel","auto"}
+ *   "worksuite:updates" {"op":"get|set|check|download|cancel|restart","channel","auto"}
  *                                                            → {"available","version","channel","auto",
- *                                                               "lastCheck","host","busy","text"}
+ *                                                               "lastCheck","host","busy","text",
+ *                                                               "found":{"version","size"},"download"}
  *   native → "worksuite:update-ready" {"version","channel","verified","signer","signatureChecked","notes"}
+ *   native → "worksuite:update-progress" {"state":"found|downloading|verifying|extracting|installing|ready|error|idle",
+ *                                         "received","total","version","cancellable","reason"}
+ *            (macOS: Sparkle's user driver; Windows: the app's own signed download; Linux reports
+ *             progress through "updates:status")
  *   native → "worksuite:offline" {"state":"offline|online","file":{id,name,ext},"server","uid",
  *                                 "baseVersion","path","changed"}
  *   "worksuite:upload"  {"req","url","token","path","fields":{…},"name"} → {"req","status","body"}
@@ -64,7 +69,8 @@ function applyPolicy(raw) {
 
 const [updates, setUpdates] = createSignal({ available: false });
 const [updateReady, setUpdateReady] = createSignal(null);
-export { updates, updateReady };
+const [updateProgress, setUpdateProgress] = createSignal(null);
+export { updates, updateReady, updateProgress };
 
 export function setUpdateChannel(channel) {
   if (policy().locked.updateChannel) return;
@@ -78,8 +84,17 @@ export function setUpdateAuto(auto) {
   send("worksuite:updates", { op: "set", auto: !!auto });
 }
 
-export const checkForUpdates = () => send("worksuite:updates", { op: "check" });
+export const checkForUpdates = () => {
+  setUpdateProgress(null);
+  send("worksuite:updates", { op: "check" });
+};
 export const restartToUpdate = () => send("worksuite:updates", { op: "restart" });
+/* the Updates card's Download and Cancel (the app downloads and checks the signature, with progress) */
+export const downloadUpdate = () => {
+  setUpdateProgress(null);
+  send("worksuite:updates", { op: "download" });
+};
+export const cancelUpdateDownload = () => send("worksuite:updates", { op: "cancel" });
 export const dismissUpdateReady = () => setUpdateReady({ ...updateReady(), dismissed: true });
 
 /* ---- Drive preferences ----------------------------------------------- */
@@ -212,6 +227,11 @@ export function initWorkSuiteShell() {
         try { setUpdates({ ...updates(), ...JSON.parse(param) }); } catch {}
       } else if (cmd === "worksuite:update-ready") {
         try { setUpdateReady(JSON.parse(param)); } catch {}
+      } else if (cmd === "worksuite:update-progress") {
+        try {
+          const p = JSON.parse(param);
+          setUpdateProgress(p && p.state && p.state !== "idle" ? p : null);
+        } catch {}
       } else if (cmd === "worksuite:upload") {
         let r = null;
         try { r = JSON.parse(param); } catch { return; }
@@ -232,4 +252,4 @@ export function initWorkSuiteShell() {
 }
 
 /* for tests and the dev server */
-export const _test = { applyPolicy, setUpdateReady, setOfflineChoice };
+export const _test = { applyPolicy, setUpdateReady, setUpdateProgress, setOfflineChoice };

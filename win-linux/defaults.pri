@@ -112,6 +112,8 @@ HEADERS += \
     $$PWD/src/cproviders.h \
     $$PWD/src/cworksuite.h \
     $$PWD/src/cwinsparkle.h \
+    $$PWD/src/cwsupdatedownload.h \
+    $$PWD/src/cwsed25519.h \
     $$PWD/src/cscalingwrapper.h \
     $$PWD/src/ctabundockevent.h \
     $$PWD/src/ccefeventsgate.h \
@@ -155,6 +157,8 @@ SOURCES += \
     $$PWD/src/cproviders.cpp \
     $$PWD/src/cworksuite.cpp \
     $$PWD/src/cwinsparkle.cpp \
+    $$PWD/src/cwsupdatedownload.cpp \
+    $$PWD/src/cwsed25519.cpp \
     $$PWD/src/cscalingwrapper.cpp \
     $$PWD/src/ctabundockevent.cpp \
     $$PWD/src/ccefeventsgate.cpp \

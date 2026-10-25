@@ -8,7 +8,8 @@ import { AccountWizard } from "@/worksuite/account-wizard.jsx";
 import { versionInfo, updateStatus, execUpdateAction, openAbout } from "@/services/about";
 import { command } from "@/sdk/bridge";
 import {
-  policy, serverLocked, updates, updateReady, setUpdateChannel, setUpdateAuto, checkForUpdates, restartToUpdate,
+  policy, serverLocked, updates, updateReady, updateProgress, setUpdateChannel, setUpdateAuto, checkForUpdates, restartToUpdate,
+  downloadUpdate, cancelUpdateDownload,
   openIn, setOpenIn, prefServer, setPrefServer, initWorkSuiteShell,
 } from "@/worksuite/shell.js";
 import { parseReleaseNotes } from "@/worksuite/shell-logic.js";
@@ -161,7 +162,9 @@ export default function WorkSuiteSettings() {
   const versions = () => splitVersion(versionInfo()?.version || updates().version || "");
   const channel = () => policy().updateChannel || updates().channel || "stable";
   const auto = () => (policy().updateAuto !== undefined ? policy().updateAuto : !!updates().auto);
-  const phase = () => updatePhase(updates(), updateReady(), updateStatus());
+  const phase = () => updatePhase(updates(), updateReady(), updateStatus(), updateProgress());
+  /* "ws-download": the app's own download with progress (macOS Sparkle, Windows); others: the update service */
+  const updateAction = (action) => (action === "ws-download" ? downloadUpdate() : execUpdateAction());
   const lastCheck = () => updates().lastCheck
     ? L.wsLastChecked.replace("$1", when(updates().lastCheck)).replace("$2", updates().host || "download.worksuitecloud.com")
     : L.wsNeverChecked;
@@ -243,7 +246,8 @@ export default function WorkSuiteSettings() {
               </>
             }>
               <UpdateCard phase={phase()} version={versions().version} build={versions().build} lastCheck={lastCheck()} notes={notes()}
-                          onCheck={checkForUpdates} onRestart={restartToUpdate} onAction={() => execUpdateAction()} />
+                          onCheck={checkForUpdates} onRestart={restartToUpdate} onAction={updateAction}
+                          onCancel={cancelUpdateDownload} />
               <SettingsRow label={L.wsUpdateChannel} locked={policy().locked.updateChannel} hint={L.wsxChannelHint} labelId="wss-channel">
                 <Segmented labelledBy="wss-channel" value={channel()} disabled={policy().locked.updateChannel}
                            onChange={(v) => setUpdateChannel(v)}
