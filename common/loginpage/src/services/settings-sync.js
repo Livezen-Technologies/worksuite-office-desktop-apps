@@ -10,6 +10,7 @@ import { aichat, closeSidePanel } from "@/stores/aichat";
 import { sendTemplatesSettings, sendTemplatesTheme } from "@/routes/templates";
 import { TemplatesCountrySet } from "@/data/countries";
 import { setAddonNeedRestart } from "./about";
+import { docPrefsPayload } from "@/worksuite/doc-prefs.js";
 
 
 function injectCustomThemeCss(id, colors) {
@@ -126,10 +127,12 @@ export { availableLangs, langRestartPending, customThemes, systemThemeEnabled, i
 let _applySettings = () => {};
 let _removeAddon = () => {};
 let _textDirectionChanged = () => {};
+let _needsRestart = () => false;
 
 export const applySettings = () => _applySettings();
 export const uninstallAddon = () => _removeAddon();
 export const textDirectionChanged = () => _textDirectionChanged();
+export const needsRestart = () => _needsRestart();
 
 export function initSettingsSync() {
   const [nativeSnapshot, setNativeSnapshot] = createSignal(null);
@@ -167,6 +170,16 @@ export function initSettingsSync() {
     return isRTL(settings.lang) !== isRTL(snap.locale?.current ?? settings.lang);
   })
 
+
+  /* a pending change that takes effect after a restart (General's "*" options) */
+  _needsRestart = createMemo(() => {
+    const snap = nativeSnapshot();
+    if (snap === null) return false;
+    return (aichat.available && settings.useai !== !!snap.useai) ||
+           (!!settings.scaling && settings.scaling !== nativeScalingToStore(snap.uiscaling)) ||
+           settings.gpuMode !== !!snap.usegpu ||
+           _textDirectionChanged() || (langRestartPending() && snap.locale.current != settings.lang);
+  });
 
   _removeAddon = () => {
     command("addon:action", "uninstall");
@@ -209,17 +222,10 @@ export function initSettingsSync() {
     const lang = settings.lang;
     const scaling = settings.scaling;
     const updates = settings.checkUpdates;
-    const launch = settings.launchMode;
-    const spell = settings.spellCheck;
     const country= settings.country;
 
-    let restart = false;
+    const restart = _needsRestart();
     if (snap !== null) {
-      restart = (aichat.available && settings.useai !== !!snap.useai) ||
-                  (!!scaling && scaling !== nativeScalingToStore(snap.uiscaling)) ||
-                  settings.gpuMode !== !!snap.usegpu ||
-                  textDirectionChanged() || (langRestartPending() && snap.locale.current != lang);
-
       if (snap.useai != settings.useai){
         setAddonNeedRestart(true);
       }
@@ -234,8 +240,8 @@ export function initSettingsSync() {
       username: settings.userName,
       langid: settings.lang,
       uitheme: settings.theme,
-      editorwindowmode: launch == settDefs.EDITOR_MODE_WINDOW,
-      spellcheckdetect: spell,
+      // Settings › General and Settings › WorkSuite › Document Preferences (one store, one Apply)
+      ...docPrefsPayload(settings),
       usegpu: settings.gpuMode,
       useai: settings.useai,
       restart: restart,

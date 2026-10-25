@@ -28,12 +28,14 @@
 #ifdef WS_WINSPARKLE
 
 #include "cworksuite.h"
+#include "cwsupdatedownload.h"
 #include "cascapplicationmanagerwrapper.h"
 #include "clangater.h"
 #include "defines.h"
 #include "utils.h"
 #include "version.h"
 #include <QApplication>
+#include <QDateTime>
 #include <QFileInfo>
 #include <QMetaObject>
 #include <QMutex>
@@ -44,6 +46,9 @@
 #include <cstring>
 #include <windows.h>
 #include <winsparkle.h>
+#if __has_include(<winsparkle-version.h>)
+# include <winsparkle-version.h>
+#endif
 
 #ifndef WS_EDDSA_PUBLIC_KEY
 # define WS_EDDSA_PUBLIC_KEY ""
@@ -58,6 +63,9 @@ namespace {
     QString g_installer;    // the downloaded, verified installer (guarded by g_lock)
     QString g_readyVersion;
     bool g_relaunch = false; // "Restart to update": open the app again after the update
+    /* the start page's own download, with progress (Qt thread only) */
+    CWsUpdateDownload * g_download = nullptr;
+    QJsonObject g_found;     // {"version","size"}: the update the appcast offers, for the Download button
 
     /* run `fn` on the Qt thread; WinSparkle calls back from its own threads */
     template<typename F> void onQtThread(F fn, bool wait = false)
@@ -105,6 +113,24 @@ namespace {
         return QString("%1.%2.%3").arg(HIWORD(info->dwProductVersionMS)).arg(LOWORD(info->dwProductVersionMS))
                                   .arg(HIWORD(info->dwProductVersionLS));
     }
+
+    /* the build WinSparkle compares with the appcast's sparkle:version */
+    QString currentBuild()
+    {
+        return *WS_BUILD_NUMBER ? QString::fromUtf8(WS_BUILD_NUMBER) : QString(VER_FILEVERSION_STR);
+    }
+
+    /* "worksuite:update-progress" {state: downloading|verifying|ready|error|idle, received, total, version,
+       cancellable, reason}: the Updates card's progress bar (Settings › WorkSuite) */
+    void sendProgress(const QString& st, qint64 received = 0, qint64 total = 0, const QString& reason = QString())
+    {
+        QJsonObject p{{"state", st}, {"received", double(received)}, {"total", double(total)},
+                      {"version", g_found.value("version").toString()}, {"cancellable", st == "downloading"}};
+        if ( !reason.isEmpty() ) p["reason"] = reason;
+        AscAppManager::sendCommandTo(SEND_TO_ALL_START_PAGE, "worksuite:update-progress", Utils::stringifyJson(p));
+    }
+
+    void sendState();
 
     void sendReady()
     {
@@ -156,7 +182,68 @@ namespace {
                        {"lastCheck", double(last > 0 ? last : 0)},
                        {"host", "download.worksuitecloud.com"}};
         if ( busy ) st["busy"] = true;
+        if ( !g_found.isEmpty() ) st["found"] = g_found;
+        st["download"] = true;      // the start page may download it itself ("op":"download")
+        if ( g_download && g_download->busy() ) st["downloading"] = true;
         return Utils::stringifyJson(st);
+    }
+
+    void sendState()
+    {
+        AscAppManager::sendCommandTo(SEND_TO_ALL_START_PAGE, "worksuite:updates", state());
+    }
+
+    /* what the appcast offers now, without WinSparkle's window (for the card's Download button) */
+    void probe(bool force = false)
+    {
+        static qint64 last = 0;
+        const qint64 now = QDateTime::currentSecsSinceEpoch();
+        if ( !force && last && now - last < 600 )
+            return;     // the settings page opens often; the appcast is asked at most every 10 minutes
+        last = now;
+        if ( g_download && !g_download->busy() )
+            g_download->probe(QUrl(QString::fromUtf8(appcastUrl(channel()))), currentBuild());
+    }
+
+    /* WinSparkle callbacks (its threads): keep the card in step with WinSparkle's own window */
+    void __cdecl didFindUpdate() { onQtThread([]() { probe(true); }); }
+    void __cdecl didNotFindUpdate() { onQtThread([]() { g_found = QJsonObject(); sendState(); }); }
+    void __cdecl updateSkipped() { onQtThread([]() { g_found = QJsonObject(); sendState(); }); }
+
+    void createDownload()
+    {
+        g_download = new CWsUpdateDownload(qApp);
+        QObject::connect(g_download, &CWsUpdateDownload::found, qApp, [](const WsAppcastItem& item) {
+            g_found = QJsonObject{{"version", item.shortVersion.isEmpty() ? item.version : item.shortVersion},
+                                  {"size", double(item.length)}};
+            sendState();
+        });
+        QObject::connect(g_download, &CWsUpdateDownload::upToDate, qApp, []() {
+            g_found = QJsonObject();
+            sendState();
+        });
+        QObject::connect(g_download, &CWsUpdateDownload::progress, qApp, [](const QString& st, qint64 received, qint64 total) {
+            sendProgress(st, received, total);
+        });
+        QObject::connect(g_download, &CWsUpdateDownload::ready, qApp, [](const QString& path, const WsAppcastItem& item) {
+            {
+                QMutexLocker l(&g_lock);
+                g_installer = path;     // length and Ed25519 signature checked (CWsUpdateDownload::checkFile)
+                g_readyVersion = item.shortVersion.isEmpty() ? versionOf(path) : item.shortVersion;
+            }
+            sendProgress("ready", item.length, item.length);
+            sendReady();
+        });
+        QObject::connect(g_download, &CWsUpdateDownload::failed, qApp, [](const QString& reason) {
+            if ( reason == "cancelled" ) {
+                sendProgress("idle");
+                return;
+            }
+            sendProgress("error", 0, 0, reason);
+            // our download failed or was refused: WinSparkle's own window downloads and checks it again
+            if ( g_active && reason != "appcast" )
+                win_sparkle_check_update_with_ui();
+        });
     }
 }
 
@@ -182,6 +269,13 @@ void CWinSparkle::init()
     win_sparkle_set_can_shutdown_callback(canShutdown);
     win_sparkle_set_shutdown_request_callback(shutdownRequest);
     win_sparkle_set_user_run_installer_callback(runInstaller);
+    win_sparkle_set_did_find_update_callback(didFindUpdate);
+    win_sparkle_set_did_not_find_update_callback(didNotFindUpdate);
+#if defined(WIN_SPARKLE_CHECK_VERSION) && WIN_SPARKLE_CHECK_VERSION(0,7,0)
+    win_sparkle_set_update_skipped_callback(updateSkipped);
+#else
+    (void)updateSkipped;
+#endif
 
     // ADM-01: the organisation may set automatic checks; otherwise the person's choice (default on)
     const QJsonObject policy = CWorkSuite::policy();
@@ -193,6 +287,7 @@ void CWinSparkle::init()
 
     win_sparkle_init();
     g_active = true;
+    createDownload();
 }
 
 void CWinSparkle::cleanup()
@@ -200,6 +295,10 @@ void CWinSparkle::cleanup()
     if ( !g_active )
         return;
     g_active = false;
+    if ( g_download ) {
+        delete g_download;  // stops a download in progress and deletes its partial file
+        g_download = nullptr;
+    }
     win_sparkle_cleanup();
 
     QMutexLocker l(&g_lock);
@@ -234,6 +333,21 @@ QString CWinSparkle::command(const QJsonObject& in)
         win_sparkle_check_update_with_ui();
         return state(true);
     } else
+    if ( op == "download" ) {
+        // the Updates card's Download: ours, with progress; WinSparkle's window if it fails
+        bool ready;
+        {
+            QMutexLocker l(&g_lock);
+            ready = !g_installer.isEmpty();
+        }
+        if ( ready )
+            onQtThread([]() { sendReady(); });
+        else if ( g_download && !g_download->busy() )
+            g_download->start(QUrl(QString::fromUtf8(appcastUrl(channel()))), currentBuild(), QByteArray(WS_EDDSA_PUBLIC_KEY));
+    } else
+    if ( op == "cancel" ) {
+        if ( g_download ) g_download->cancel();
+    } else
     if ( op == "restart" ) {
         bool ready;
         {
@@ -245,8 +359,10 @@ QString CWinSparkle::command(const QJsonObject& in)
             AscAppManager::closeAppWindows();   // asks about unsaved documents; the update runs at exit
         else win_sparkle_check_update_with_ui();
     } else {
-        // "get": also repeats a pending "update ready" for a start page that loaded after it
+        // "get": also repeats a pending "update ready" for a start page that loaded after it, and asks the
+        // appcast what it offers, so the card can show Download
         onQtThread([]() { sendReady(); });
+        if ( g_found.isEmpty() ) probe();
     }
     return state();
 }

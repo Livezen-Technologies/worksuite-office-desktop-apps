@@ -84,7 +84,9 @@ servers, are two accounts.
 WorkSuite OS accounts (`broker`) keep no token here: the OS credentials broker holds it.
 
 **What is shared:** UI preferences only: the default server (`ws:pref:server`), "Open WorkSuite Drive
-documents in" (`ws:pref:openIn`), update settings and the theme. Local recent files and offline
+documents in" (`ws:pref:openIn`), update settings and the theme. The web cookies of editor tabs are one
+store for the app: see *Editor tabs and web cookies* for how a server's tabs are kept to one account
+(`ws:tab-owner`). Local recent files and offline
 working copies belong to the computer's user, not to a WorkSuite account. An offline copy records the
 server and user id it came from and is saved back only through that account.
 
@@ -95,17 +97,58 @@ the same account again replaces only that account's entry.
 
 **Sign out** (`WorkSuite.signOutOnly`) revokes the session on its server (`/api/auth/logout`), deletes the
 account's secure-store entry and its access token, and marks it *signed out by the person*. Its profile and
-Drive cache stay so it can be signed in again from its card. Editor tabs of that server are signed out
-(`portal:logout`) only when no other signed-in account uses that server.
+Drive cache stay so it can be signed in again from its card. The server's editor tabs are signed out
+(`portal:logout`: they close and the server's cookies are deleted) when they are this account's tabs (see
+*Editor tabs and web cookies*), or when no other signed-in account uses that server.
 
 **Remove** (`WorkSuite.remove`, also the Drive section's Disconnect) does the same and also deletes the
 account's profile entry and its `ws:cache:<id>:…` data. Other accounts are not touched.
 
-**Limitation.** The app uses one CEF request context. Editor tabs opened for two accounts **on the same
-server** share that server's web cookies. Documents are opened with a one-time hand-off of the chosen
-account (`/api/auth/apps/handoff`), so each tab opens as its own account. A separate cookie partition per
-account would need per-account CEF request contexts in the native shell, and that is not part of this
-change.
+## Editor tabs and web cookies
+
+**What was asked.** A CEF request context per account (its own cache folder and cookie store under the
+account's data folder, keyed by server + user id), used by the editor tabs opened from that account; Sign
+out clears that context's cookies and Remove deletes its folder.
+
+**Why that is not possible in this repository.** The app does not create browsers or see CEF: the ONLYOFFICE
+desktop SDK (`desktop-sdk`, `ChromiumBasedEditors/lib`) does, and it gives every view the one global context:
+
+| Where (desktop-sdk `ChromiumBasedEditors/lib`) | What blocks |
+|---|---|
+| `src/cefview.cpp`, `CCefView::load()` (`CefBrowserHost::CreateBrowser` / `CreateBrowserSync`) | the browser is created with `request_context` = `nullptr`, i.e. the global context, for every tab |
+| `include/cefview.h` `CCefView::load(const std::wstring&)`, `include/applicationmanager.h` `CreateCefView()` / `CreateCefEditor()` | no way to pass a context (or a key for one); no CEF type is exposed, and the app is built without CEF headers |
+| `src/cefapplication.cpp` (`settings.cache_path` from `m_oSettings.cache_path`), `include/applicationmanager.h` `cache_path` / `cookie_path` | one cache and cookie folder for the whole process |
+| `src/cefview.cpp` (`is_cookie_present`, `on_check_auth`, `set_cookie`), `src/cookiesworker.h`, `src/applicationmanager_p.h` `Logout()`, `src/applicationmanager.cpp` `CAscApplicationManager::Logout()` | cookies are read, set and deleted through `CefCookieManager::GetGlobalManager()`, never a tab's own context |
+| `src/cors_resource_hanler.h` | its requests use `CefRequestContext::GetGlobalContext()` |
+
+An SDK change would be: `CCefView::load(url, contextKey)` creating `CefRequestContext::CreateContext()` with
+`cache_path = <app data>/accounts/<hash of key>` (cached per key, reused), the cookie helpers and `Logout()`
+taking the view's `GetRequestContext()->GetCookieManager()`, and `CAscApplicationManager::ClearContext(key,
+deleteFolder)` for Sign out and Remove. With that, the start page would pass the account id in
+`open:recent` (it already passes `cloud`).
+
+**What is done instead: one account per server in the editor tabs.** All tabs share one cookie store, so
+the tabs of a server belong to one account at a time, and the server's cookies are always that account's
+(`core.js`, `claimServerTabs()`, `ws:tab-owner` in the start page's `localStorage`: server → account id,
+no secret):
+
+- Opening a WorkSuite document records its account as the owner of that server's tabs.
+- Opening a document of that server as **another** account asks first ("Open as <name>?", the start page's
+  `AccountSwitchDialog`). On Close them and open, the server's web session ends (`portal:logout`, the same
+  native path as before on Windows, Linux and macOS): its tabs close, asking to save unsaved changes, and
+  its cookies are deleted (`CAscApplicationManager::Logout`). Only then does the new account's hand-off open
+  the tab. Cancel, or keeping a tab with unsaved changes (`portal:logout:cancel`; macOS now sends it too),
+  opens nothing and leaves the other account's tabs as they were.
+- **Sign out** and **Remove** of the owner end the server's web session even when another account of that
+  server is still signed in. For any other account the rule is as before (only when no other signed-in
+  account uses the server). Nothing per account is kept on disk by CEF, so there is no folder to delete.
+
+**Limits.** Two accounts of one server cannot have documents open side by side; switching closes the
+other account's tabs. Other servers are not affected: two accounts on two servers keep their tabs open
+together. A server's tabs that were open before this version have no recorded owner: the first document
+opened afterwards takes them without asking. Documents opened in the browser ("Open WorkSuite Drive
+documents in" the browser) use the browser's own cookies and are not affected. While a `portal:logout` runs,
+another open on that server waits for it (at most 2 minutes, then it is cancelled).
 
 ## Acceptance criteria
 
@@ -145,7 +188,17 @@ Unless a platform is named, each criterion holds on Windows, macOS and Linux.
 15. A server locked by managed configuration fills step 1 read-only, with "set by your organisation".
 16. The wizard and the account menu work with the keyboard alone: Tab, Enter and Space, Esc, and the arrow
     keys in menus.
+17. Two accounts X and Y on one server: opening a document as X, then one as Y, asks "Open as Y?". Close them
+    and open closes X's tabs of that server (asking to save changes first), and Y's document opens signed in as
+    Y: the editor shows Y's name, and reloading it does not bring X back.
+18. Cancel in that dialog, or Cancel in the unsaved-changes question, opens nothing; X's tabs stay open and
+    signed in as X.
+19. Opening another document as the same account on that server asks nothing and closes nothing. Tabs of
+    other servers are never closed by a switch.
+20. Sign out or Remove of the account whose tabs are open closes that server's tabs and deletes its cookies,
+    even when another account of the server stays signed in. Sign out of an account whose tabs are not open
+    closes nothing.
 
-`npm test` covers 2, 3, 5, 7, 9–11 and 14 (`test/accounts.test.mjs`,
+`npm test` covers 2, 3, 5, 7, 9–11, 14 and the start page's side of 17–20 (`test/accounts.test.mjs`,
 `src/worksuite/account-wizard-logic.test.mjs`, `src/worksuite/settings-logic.test.mjs`). The others are
 checked by hand on each platform.

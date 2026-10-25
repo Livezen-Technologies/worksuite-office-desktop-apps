@@ -701,7 +701,7 @@
                     </connections>
                 </customObject>
                 <customObject id="Ady-hI-5gd" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
-                <customObject id="mg6-13-ksd" customClass="SUUpdater"/>
+                <customObject id="mg6-13-ksd" customClass="ASCWorkSuiteUpdater"/>
             </objects>
             <point key="canvasLocation" x="-153" y="-84"/>
         </scene>

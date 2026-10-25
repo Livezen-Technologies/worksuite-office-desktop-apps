@@ -72,7 +72,7 @@
 #import "ASCLicenseController.h"
 #import <Carbon/Carbon.h>
 #import <Security/Security.h>
-#import <Sparkle/SUUpdater.h>
+#import "ASCWorkSuiteUpdater.h"
 #import <QuartzCore/QuartzCore.h>
 
 
@@ -147,6 +147,7 @@ static BOOL workSuiteKeychainDelete(NSString * key) {
     
     addObserverFor(ASCEventNameMainWindowLoaded, @selector(onWindowLoaded:));
     addObserverFor(ASCEventNameOpenAppLinks, @selector(onOpenAppLink));
+    addObserverFor(ASCWorkSuiteUpdateProgressNotification, @selector(onWorkSuiteUpdateProgress:));
     addObserverFor(CEFEventNameTabEditorNameChanged, @selector(onCEFChangedTabEditorName:));
     addObserverFor(CEFEventNameTabEditorType, @selector(onCEFChangedTabEditorType:));
     addObserverFor(CEFEventNameSave, @selector(onCEFSave:));
@@ -1004,6 +1005,13 @@ static BOOL workSuiteKeychainDelete(NSString * key) {
                         self.tabsWithChanges = [NSMutableArray arrayWithArray:tabsWithChanges];
                         [self safeCloseTabsWithChanges];
                     } else if (result == NSAlertSecondButtonReturn) {
+                        // kept: tell the start page, as Windows and Linux do (a WorkSuite account switch waits for it)
+                        NSEditorApi::CAscExecCommandJS * pCommand = new NSEditorApi::CAscExecCommandJS;
+                        pCommand->put_Command(L"portal:logout:cancel");
+                        pCommand->put_Param([[@{@"domain": portal} jsonString] stdwstring]);
+                        NSEditorApi::CAscMenuEvent * pEvent = new NSEditorApi::CAscMenuEvent(ASC_MENU_EVENT_TYPE_CEF_EXECUTE_COMMAND_JS);
+                        pEvent->m_pData = pCommand;
+                        [self.cefStartPageView apply:pEvent];
                         return;
                     } else {
                         // "Delete and Quit" clicked
@@ -1315,10 +1323,32 @@ static BOOL workSuiteKeychainDelete(NSString * key) {
     return out;
 }
 
-/// SHL-08: Settings › WorkSuite › Updates, through Sparkle. The channel is the feed address's
-/// /channels/<channel>/ part (build-mac.yml stamps it into SUFeedURL).
+/// Sparkle's progress (ASCWorkSuiteUpdater) for the Updates card: "worksuite:update-progress"
+/// {state, received, total, version, cancellable}; once ready, also "worksuite:update-ready" (Sparkle has
+/// checked the EdDSA signature and the code signature before it reports ready).
+- (void)onWorkSuiteUpdateProgress:(NSNotification *)notification {
+    NSDictionary * p = notification.userInfo ?: @{};
+    if (!self.cefStartPageView)
+        return;
+    [self sendToStartPage:@"worksuite:update-progress" param:[p jsonString]];
+    if ([p[@"state"] isEqualToString:@"ready"]) {
+        SPUUpdater * updater = [ASCWorkSuiteUpdater sharedUpdater].updater;
+        NSArray * parts = updater.feedURL.path.pathComponents;
+        NSUInteger i = [parts indexOfObject:@"channels"];
+        NSString * channel = (i != NSNotFound && i + 1 < parts.count) ? [parts[i + 1] lowercaseString] : @"stable";
+        [self sendToStartPage:@"worksuite:update-ready" param:[@{@"version": p[@"version"] ?: @"", @"channel": channel,
+                                                                 @"verified": @YES, @"signatureChecked": @YES,
+                                                                 @"signer": @"WorkSuite", @"notes": @""} jsonString]];
+    }
+}
+
+/// SHL-08: Settings › WorkSuite › Updates, through Sparkle 2 (ASCWorkSuiteUpdater). The channel is the feed
+/// address's /channels/<channel>/ part (build-mac.yml stamps it into SUFeedURL).
+///   op "download": Install in Sparkle's "update found" step (Sparkle downloads, with progress); without one,
+///                  a check (Sparkle's window). "cancel": stops the download. "restart": Install and Relaunch.
 - (NSString *)workSuiteUpdates:(NSDictionary *)json {
-    SUUpdater * updater = [SUUpdater sharedUpdater];
+    ASCWorkSuiteUpdater * ws = [ASCWorkSuiteUpdater sharedUpdater];
+    SPUUpdater * updater = ws.updater;
     NSDictionary * policy = [self workSuitePolicy];
     NSString * op = [json[@"op"] isKindOfClass:[NSString class]] ? json[@"op"] : @"get";
 
@@ -1332,7 +1362,7 @@ static BOOL workSuiteKeychainDelete(NSString * key) {
         NSString * from = [NSString stringWithFormat:@"/channels/%@/", channelOf(updater.feedURL)];
         if (c && [c.path containsString:from]) {
             c.path = [c.path stringByReplacingOccurrencesOfString:from withString:[NSString stringWithFormat:@"/channels/%@/", channel]];
-            if (c.URL) updater.feedURL = c.URL;
+            if (c.URL) [updater setFeedURL:c.URL];
         }
     };
 
@@ -1354,17 +1384,36 @@ static BOOL workSuiteKeychainDelete(NSString * key) {
             updater.automaticallyDownloadsUpdates = [json[@"auto"] boolValue];
         }
     } else if ([op isEqualToString:@"check"]) {
-        [updater checkForUpdates:nil];
+        [updater checkForUpdates];
+    } else if ([op isEqualToString:@"download"]) {
+        if (![ws startDownload])
+            [updater checkForUpdates];
+    } else if ([op isEqualToString:@"cancel"]) {
+        [ws cancelDownload];
+    } else if ([op isEqualToString:@"restart"]) {
+        if (![ws installAndRelaunch])
+            [updater checkForUpdates];
+    } else {
+        // "get": repeat the progress for a start page that loaded after it
+        NSDictionary * last = ws.lastProgress;
+        if (last.count && ![last[@"state"] isEqualToString:@"idle"]) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [[NSNotificationCenter defaultCenter] postNotificationName:ASCWorkSuiteUpdateProgressNotification object:nil userInfo:last];
+            });
+        }
     }
 
-    NSDictionary * state = @{
+    NSMutableDictionary * state = [@{
         @"available": @(updater.feedURL != nil),
         @"version": [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"] ?: @"",
         @"channel": channelOf(updater.feedURL),
         @"auto": @(updater.automaticallyDownloadsUpdates),
         @"lastCheck": @(updater.lastUpdateCheckDate ? (long long)updater.lastUpdateCheckDate.timeIntervalSince1970 : 0),
         @"host": updater.feedURL.host ?: @"download.worksuitecloud.com",
-    };
+        @"download": @YES,
+    } mutableCopy];
+    if (ws.foundVersion)
+        state[@"found"] = @{@"version": ws.foundVersion};
     return [state jsonString];
 }
 

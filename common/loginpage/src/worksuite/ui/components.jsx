@@ -6,7 +6,7 @@
 import { For, Show, createEffect, createMemo, createSignal, createUniqueId, onCleanup } from "solid-js";
 import { L } from "../lang.js";
 import { hostOf, initials } from "../cards.jsx";
-import { accountActions, accountStatus, filterAccounts, nextIndex, validateServer } from "../settings-logic.js";
+import { accountActions, accountStatus, filterAccounts, formatBytes, nextIndex, updateErrorKind, validateServer } from "../settings-logic.js";
 import { DropdownMenu } from "@/components";
 import "./tokens.css";
 import "./components.css";
@@ -363,10 +363,19 @@ export function UpdateCard(props) {
   const title = () => {
     switch (p().phase) {
       case "ready": return L.wsxReady.replace("$1", p().version || "");
-      case "downloading": return p().text || L.wsxDownloading;
-      case "available": return p().text || L.wsxAvailable;
+      case "downloading":
+        if (p().text) return p().text;
+        if (p().stage === "verifying") return L.wsxVerifyingUpdate;
+        if (p().stage === "extracting") return L.wsxExtracting;
+        if (p().stage === "installing") return L.wsxInstalling;
+        return p().version ? L.wsxDownloadingVersion.replace("$1", p().version) : L.wsxDownloading;
+      case "available": return p().text || (p().version ? L.wsxAvailableVersion.replace("$1", p().version) : L.wsxAvailable);
       case "checking": return L.wsxChecking;
-      case "error": return p().text || L.wsxUpdateError;
+      case "error": {
+        if (p().text) return p().text;
+        const kind = updateErrorKind(p().reason);
+        return kind === "refused" ? L.wsxUpdateRefused : kind === "failed" ? L.wsxUpdateFailed : L.wsxUpdateError;
+      }
       default: return L.wsxUpToDate;
     }
   };
@@ -384,6 +393,9 @@ export function UpdateCard(props) {
             {L.wsxInstalled.replace("$1", props.version || "—")}
             <Show when={props.build}>{" · " + L.wsxBuild.replace("$1", props.build)}</Show>
           </div>
+          <Show when={p().phase === "available" && p().size}>
+            <div class="wsx-hint">{L.wsxUpdateSize.replace("$1", formatBytes(p().size))}</div>
+          </Show>
           <div class="wsx-hint">{props.lastCheck}</div>
         </div>
         <div class="wsx-update-actions">
@@ -393,8 +405,8 @@ export function UpdateCard(props) {
           <Show when={p().phase === "available" && p().action}>
             <WsButton variant="primary" onClick={() => props.onAction(p().action)}>{L.wsxDownload}</WsButton>
           </Show>
-          <Show when={p().phase === "downloading" && p().action === "abort"}>
-            <WsButton variant="ghost" onClick={() => props.onAction("abort")}>{L.wsCancel}</WsButton>
+          <Show when={p().phase === "downloading" && p().cancellable}>
+            <WsButton variant="ghost" onClick={() => (p().action === "abort" ? props.onAction("abort") : props.onCancel && props.onCancel())}>{L.wsCancel}</WsButton>
           </Show>
           <Show when={p().phase === "error"}>
             <WsButton variant="primary" icon="updates" onClick={props.onCheck}>{L.wsxRetry}</WsButton>
@@ -409,6 +421,12 @@ export function UpdateCard(props) {
              aria-valuenow={p().percent ?? undefined}>
           <div class="wsx-progress-bar" classList={{ "is-indeterminate": p().percent == null }} style={{ width: p().percent == null ? "30%" : p().percent + "%" }} />
         </div>
+        <Show when={p().total > 0 || p().percent != null}>
+          <div class="wsx-progress-meta wsx-hint">
+            <span>{p().total > 0 ? L.wsxBytesOf.replace("$1", formatBytes(p().received)).replace("$2", formatBytes(p().total)) : ""}</span>
+            <span>{p().percent != null ? p().percent + "%" : ""}</span>
+          </div>
+        </Show>
       </Show>
       <Show when={props.notes && props.notes.length}>
         <button type="button" class="wsx-disclosure" aria-expanded={open() ? "true" : "false"} onClick={() => setOpen(!open())}>
