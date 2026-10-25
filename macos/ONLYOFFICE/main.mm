@@ -42,6 +42,7 @@
 //
 
 #import <Cocoa/Cocoa.h>
+#include <vector>
 #include "mac_application.h"
 #include "ASCApplicationManager.h"
 #import "NSString+Extensions.h"
@@ -123,8 +124,24 @@ int main(int argc, const char * argv[]) {
     // Create CEF event listener
     [ASCEventsController sharedInstance];
 
+    // Local AI voice typing (docs/local-ai-bridge.md): CEF grants getUserMedia only with --enable-media-stream;
+    // left out when the configuration profile turns AI or speech to text off
+    std::vector<const char *> cefArgv(argv, argv + argc);
+    {
+        CFStringRef app = (__bridge CFStringRef)([[NSBundle mainBundle] bundleIdentifier] ?: @"lk.worksuite.office");
+        id aiFunctions = CFPreferencesAppValueIsForced(CFSTR("aiFunctions"), app) ? CFBridgingRelease(CFPreferencesCopyAppValue(CFSTR("aiFunctions"), app)) : nil;
+        id speech = CFPreferencesAppValueIsForced(CFSTR("aiSpeechToText"), app) ? CFBridgingRelease(CFPreferencesCopyAppValue(CFSTR("aiSpeechToText"), app)) : nil;
+        NSString * speechText = speech ? [[NSString stringWithFormat:@"%@", speech] lowercaseString] : nil;
+        BOOL speechOff = speechText && ([speechText isEqualToString:@"0"] || [speechText isEqualToString:@"false"] || [speechText isEqualToString:@"no"] || [speechText isEqualToString:@"off"]);
+        BOOL aiOff = [aiFunctions isKindOfClass:[NSString class]] && [[aiFunctions lowercaseString] isEqualToString:@"off"];
+        if (!aiOff && !speechOff)
+            cefArgv.push_back("--enable-media-stream");
+    }
+    int cefArgc = (int)cefArgv.size();
+    cefArgv.push_back(nullptr);
+
     //[worker Start:argc :argv];
-    [worker Start:argc argv:argv];
+    [worker Start:cefArgc argv:cefArgv.data()];
     int result = NSApplicationMain(argc, argv);
     [worker End];
     return result;

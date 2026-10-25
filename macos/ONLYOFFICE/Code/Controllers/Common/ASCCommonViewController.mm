@@ -44,6 +44,9 @@
 #import "ASCCommonViewController.h"
 #import "applicationmanager.h"
 #import "mac_application.h"
+#import "ASCApplicationManager.h"
+#include <signal.h>
+#include <errno.h>
 #import "ASCTabView.h"
 #import "ASCTitleWindowController.h"
 #import "ASCHelper.h"
@@ -163,6 +166,8 @@ static BOOL workSuiteKeychainDelete(NSString * key) {
     addObserverFor(CEFEventNameStartPageReady, @selector(onCEFStartPageReady:));
     addObserverFor(ASCEventNameWorkSuiteLinks, @selector(onWorkSuiteLinks));
     addObserverFor(CEFEventNameWorkSuiteSecret, @selector(onCEFWorkSuiteSecret:));
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onWorkSuiteAiTerminate:)
+                                                 name:NSApplicationWillTerminateNotification object:nil];
     addObserverFor(CEFEventNameEditorAppReady, @selector(onCEFEditorAppReady:));
     addObserverFor(CEFEventNameEditorAppActionRequest, @selector(onCEFEditorAppActionRequest:));
     addObserverFor(CEFEventNameEditorOpenFolder, @selector(onCEFEditorOpenFolder:));
@@ -1472,11 +1477,213 @@ static BOOL workSuiteKeychainDelete(NSString * key) {
     }] resume];
 }
 
+/* ---- Local AI (docs/local-ai-bridge.md) ------------------------------------------------------------------ */
+
+static pid_t s_workSuiteAiLaunchedPid = 0;
+static BOOL s_workSuiteAiStarting = NO;
+static NSMutableArray<void (^)(NSDictionary *)> * s_workSuiteAiWaiting = nil;
+
+static BOOL workSuiteAiPidAlive(pid_t pid) {
+    return pid > 0 && (kill(pid, 0) == 0 || errno == EPERM);
+}
+
+/// ~/.worksuite/ai/endpoint.json when it names a live worksuite-ai, else nil
+static NSDictionary * workSuiteAiLiveEndpoint() {
+    NSString * path = [NSHomeDirectory() stringByAppendingPathComponent:@".worksuite/ai/endpoint.json"];
+    NSDictionary * attrs = [[NSFileManager defaultManager] attributesOfItemAtPath:path error:nil];
+    if (!attrs || [attrs fileSize] > 16 * 1024)
+        return nil;
+    NSData * data = [NSData dataWithContentsOfFile:path];
+    id json = data ? [NSJSONSerialization JSONObjectWithData:data options:0 error:nil] : nil;
+    if (![json isKindOfClass:[NSDictionary class]])
+        return nil;
+    NSInteger port = [json[@"port"] respondsToSelector:@selector(integerValue)] ? [json[@"port"] integerValue] : 0;
+    NSString * token = [json[@"token"] isKindOfClass:[NSString class]] ? json[@"token"] : nil;
+    pid_t pid = [json[@"pid"] respondsToSelector:@selector(intValue)] ? [json[@"pid"] intValue] : 0;
+    if (port <= 0 || port > 65535 || token.length == 0 || token.length > 512 || !workSuiteAiPidAlive(pid))
+        return nil;
+    return @{@"port": @(port), @"token": token, @"pid": @(pid),
+             @"apiVersion": [NSString stringWithFormat:@"%@", json[@"apiVersion"] ?: @""],
+             @"base": [NSString stringWithFormat:@"http://127.0.0.1:%ld/v1", (long)port]};
+}
+
+/// The AI keys of the configuration profile (lk.worksuite.office), in GET /v1/policy's shape
+- (NSDictionary *)workSuiteAiPolicy {
+    CFStringRef app = (__bridge CFStringRef)([[NSBundle mainBundle] bundleIdentifier] ?: @"lk.worksuite.office");
+    id (^forced)(NSString *) = ^id(NSString * key) {
+        if (!CFPreferencesAppValueIsForced((__bridge CFStringRef)key, app))
+            return nil;
+        return CFBridgingRelease(CFPreferencesCopyAppValue((__bridge CFStringRef)key, app));
+    };
+    BOOL (^boolOf)(id) = ^BOOL(id v) {
+        if ([v isKindOfClass:[NSNumber class]]) return [v boolValue];
+        NSString * s = [[NSString stringWithFormat:@"%@", v] lowercaseString];
+        return [s isEqualToString:@"1"] || [s isEqualToString:@"true"] || [s isEqualToString:@"yes"] || [s isEqualToString:@"on"];
+    };
+    BOOL off = [[[NSString stringWithFormat:@"%@", [self workSuitePolicy][@"aiFunctions"] ?: @""] lowercaseString] isEqualToString:@"off"];
+    BOOL managed = off;
+
+    NSMutableDictionary * features = [NSMutableDictionary dictionary];
+    NSDictionary * featureKeys = @{@"aiSpeechToText": @"stt", @"aiSuggestions": @"suggestions", @"aiCorrection": @"correction",
+                                   @"aiTranslation": @"translate", @"aiReadAloud": @"tts", @"aiAssistant": @"assistant"};
+    for (NSString * key in featureKeys) {
+        id v = forced(key);
+        if (v) managed = YES;
+        if (off || v) features[featureKeys[key]] = @(off ? NO : boolOf(v));
+    }
+
+    NSMutableArray * approved = [NSMutableArray array];
+    id models = forced(@"aiApprovedModels");
+    if ([models isKindOfClass:[NSArray class]]) {
+        for (id m in models) if ([m isKindOfClass:[NSString class]] && [m length]) [approved addObject:m];
+    } else if ([models isKindOfClass:[NSString class]]) {
+        for (NSString * m in [models componentsSeparatedByCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@",; \t\n"]])
+            if (m.length) [approved addObject:m];
+    }
+    if (models) managed = YES;
+
+    NSMutableDictionary * out = [@{@"features": features, @"approvedModels": approved} mutableCopy];
+    id v;
+    if (off) out[@"cloudAllowed"] = @NO;
+    else if ((v = forced(@"aiCloudAllowed"))) { out[@"cloudAllowed"] = @(boolOf(v)); managed = YES; }
+    if ((v = forced(@"aiGpuAllowed"))) { out[@"gpuAllowed"] = @(boolOf(v)); managed = YES; }
+    if ((v = forced(@"aiMaxMemoryMB")) && [v respondsToSelector:@selector(integerValue)]) { out[@"maxMemMB"] = @([v integerValue]); managed = YES; }
+    if ((v = forced(@"aiDictionaryUrl")) && [v isKindOfClass:[NSString class]]) { out[@"orgDictionaryUrl"] = v; managed = YES; }
+    if ((v = forced(@"aiCatalogUrl")) && [v isKindOfClass:[NSString class]]) { out[@"catalogUrl"] = v; managed = YES; }
+    if ((v = forced(@"aiStoragePath")) && [v isKindOfClass:[NSString class]]) { out[@"storagePath"] = v; managed = YES; }
+    out[@"managed"] = @(managed);
+    return out;
+}
+
+/// "ws-ai:endpoint" from the start page or an editor tab: {port, token} of worksuite-ai, starting it when asked
+- (void)onWorkSuiteAiEndpoint:(NSDictionary *)info {
+    NSInteger viewId = [info[@"viewId"] integerValue];
+    BOOL fromStart = self.cefStartPageView && viewId == self.cefStartPageView.uuid;
+    CAscApplicationManager * appManager = [NSAscApplicationWorker getAppManager];
+    CCefView * sender = appManager ? appManager->GetViewById((int)viewId) : NULL;
+    if (!fromStart && !(sender && sender->GetType() == cvwtEditor))
+        return;
+
+    NSDictionary * json = [info[@"param"] dictionary];
+    NSString * req = [json[@"req"] isKindOfClass:[NSString class]] ? [json[@"req"] substringToIndex:MIN((NSUInteger)64, [json[@"req"] length])] : @"";
+    BOOL start = [json[@"start"] respondsToSelector:@selector(boolValue)] && [json[@"start"] boolValue];
+    NSDictionary * policy = [self workSuiteAiPolicy];
+
+    __weak ASCCommonViewController * weakSelf = self;
+    void (^answer)(NSDictionary *) = ^(NSDictionary * result) {
+        NSMutableDictionary * out = [result mutableCopy];
+        out[@"req"] = req;
+        out[@"policy"] = policy;
+        NSString * text = [out jsonString];
+        if (fromStart) {
+            [weakSelf sendToStartPage:@"ws-ai:endpoint" param:text];
+        } else if (CAscApplicationManager * manager = [NSAscApplicationWorker getAppManager]) {
+            if (CCefView * view = manager->GetViewById((int)viewId))
+                ASCApplicationManager::sendCommandTo(view, L"ws-ai:endpoint", [text stdwstring]);
+        }
+    };
+
+    if ([[[NSString stringWithFormat:@"%@", [self workSuitePolicy][@"aiFunctions"] ?: @""] lowercaseString] isEqualToString:@"off"]) {
+        answer(@{@"ok": @NO, @"reason": @"disabled-by-policy"});
+        return;
+    }
+    if (NSDictionary * live = workSuiteAiLiveEndpoint()) {
+        NSMutableDictionary * out = [live mutableCopy];
+        out[@"ok"] = @YES;
+        out[@"launched"] = @(s_workSuiteAiLaunchedPid > 0 && [live[@"pid"] intValue] == s_workSuiteAiLaunchedPid);
+        answer(out);
+        return;
+    }
+    if (!start) {
+        answer(@{@"ok": @NO, @"reason": @"not-running"});
+        return;
+    }
+
+    if (!s_workSuiteAiWaiting) s_workSuiteAiWaiting = [NSMutableArray array];
+    [s_workSuiteAiWaiting addObject:answer];
+    if (s_workSuiteAiStarting)
+        return;
+
+    void (^finish)(NSDictionary *) = ^(NSDictionary * result) {
+        s_workSuiteAiStarting = NO;
+        NSArray * waiting = [s_workSuiteAiWaiting copy];
+        [s_workSuiteAiWaiting removeAllObjects];
+        for (void (^w)(NSDictionary *) in waiting) w(result);
+    };
+
+    NSString * binary = [[NSBundle mainBundle] pathForAuxiliaryExecutable:@"worksuite-ai"];
+    if (!binary || ![[NSFileManager defaultManager] isExecutableFileAtPath:binary]) {
+        finish(@{@"ok": @NO, @"reason": @"not-installed"});
+        return;
+    }
+
+    s_workSuiteAiStarting = YES;
+    NSTask * task = [[NSTask alloc] init];
+    task.executableURL = [NSURL fileURLWithPath:binary];
+    task.currentDirectoryURL = [NSURL fileURLWithPath:NSHomeDirectory()];
+    NSError * error = nil;
+    if (![task launchAndReturnError:&error]) {
+        finish(@{@"ok": @NO, @"reason": @"start-failed"});
+        return;
+    }
+    pid_t pid = task.processIdentifier;
+    s_workSuiteAiLaunchedPid = pid;
+
+    NSDate * deadline = [NSDate dateWithTimeIntervalSinceNow:20];
+    [NSTimer scheduledTimerWithTimeInterval:0.25 repeats:YES block:^(NSTimer * timer) {
+        NSDictionary * result = nil;
+        if (NSDictionary * live = workSuiteAiLiveEndpoint()) {
+            NSMutableDictionary * out = [live mutableCopy];
+            out[@"ok"] = @YES;
+            out[@"launched"] = @([live[@"pid"] intValue] == pid);
+            result = out;
+        } else if (!task.isRunning) {
+            result = @{@"ok": @NO, @"reason": @"start-failed"};
+        } else if ([deadline timeIntervalSinceNow] < 0) {
+            result = @{@"ok": @NO, @"reason": @"timeout"};
+        }
+        if (result) {
+            [timer invalidate];
+            finish(result);
+        }
+    }];
+}
+
+/// On quit: stop worksuite-ai when this app started it and it has nothing queued (GET /v1/health)
+- (void)onWorkSuiteAiTerminate:(NSNotification *)notification {
+    pid_t pid = s_workSuiteAiLaunchedPid;
+    NSDictionary * live = workSuiteAiLiveEndpoint();
+    if (pid <= 0 || !live || [live[@"pid"] intValue] != pid)
+        return;
+
+    NSMutableURLRequest * request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:[live[@"base"] stringByAppendingString:@"/health"]]];
+    [request setValue:[@"Bearer " stringByAppendingString:live[@"token"]] forHTTPHeaderField:@"Authorization"];
+    [request setValue:@"worksuite://office" forHTTPHeaderField:@"Origin"];
+    request.timeoutInterval = 1.5;
+    __block NSInteger queueDepth = -1;
+    dispatch_semaphore_t done = dispatch_semaphore_create(0);
+    [[[NSURLSession sharedSession] dataTaskWithRequest:request completionHandler:^(NSData * d, NSURLResponse * r, NSError * e) {
+        if (!e && [(NSHTTPURLResponse *)r statusCode] == 200 && d) {
+            id json = [NSJSONSerialization JSONObjectWithData:d options:0 error:nil];
+            if ([json isKindOfClass:[NSDictionary class]] && [json[@"queueDepth"] respondsToSelector:@selector(integerValue)])
+                queueDepth = [json[@"queueDepth"] integerValue];
+        }
+        dispatch_semaphore_signal(done);
+    }] resume];
+    dispatch_semaphore_wait(done, dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.6 * NSEC_PER_SEC)));
+    if (queueDepth == 0)
+        kill(pid, SIGTERM);
+}
+
 /// The start page's WorkSuite section: sign-ins kept in the Keychain ("worksuite:secret"), the accounts
 /// WorkSuite Desktop is signed in to ("worksuite:desktop") and the sidebar's WorkSuite item ("worksuite:app").
 /// Never answered for a web page in a tab.
 - (void)onCEFWorkSuiteSecret:(NSNotification *)notification {
     NSDictionary * info = notification.userInfo;
+    if (info && [info[@"command"] isEqualToString:@"ws-ai:endpoint"]) {
+        [self onWorkSuiteAiEndpoint:info];
+        return;
+    }
     if (info && [info[@"command"] isEqualToString:@"worksuite:share"]) {
         [self onWorkSuiteShare:info];
         return;

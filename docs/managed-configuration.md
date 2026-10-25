@@ -98,3 +98,61 @@ The file is owned by root and readable by everyone (0644):
   `updateChannel` itself.
 - Start page: `common/loginpage/src/worksuite/shell-logic.js` (`normalizePolicy`, tested by
   `npm test`) and `shell.js`.
+
+## Local AI
+
+The local AI service (`worksuite-ai`, see [local-ai-bridge.md](local-ai-bridge.md)) and Settings ›
+AI Models take these extra keys, in the same places as the keys above (Windows
+`HKLM\Software\Policies\WorkSuite\Office`, macOS profile domain `lk.worksuite.office`, Linux
+`/etc/worksuite-office/policy.json`). The service serves them as `GET /v1/policy`; the desktop app
+also reads them (`CWorkSuiteAi::policy()`, `-[ASCCommonViewController workSuiteAiPolicy]`) to lock the
+page when the service is not running and to decide whether to enable microphone capture.
+`aiFunctions: off` above still turns all of it off.
+
+| Name               | Type                              | Effect (`GET /v1/policy` field) |
+| ------------------ | --------------------------------- | ------------------------------- |
+| `aiSpeechToText`   | bool (default true)               | Voice typing and transcription (`features.stt`). Off also leaves microphone capture disabled. |
+| `aiSuggestions`    | bool (default true)               | Inline suggestions (`features.suggestions`). |
+| `aiCorrection`     | bool (default true)               | Spelling, grammar and rewrite commands (`features.correction`). |
+| `aiTranslation`    | bool (default true)               | Translation (`features.translate`). |
+| `aiReadAloud`      | bool (default true)               | Read aloud (`features.tts`). |
+| `aiAssistant`      | bool (default true)               | Assistant with local models (`features.assistant`). |
+| `aiCloudAllowed`   | bool (default true)               | Cloud AI may be chosen. False: no **Cloud** default, **Offline only** on and locked; the service refuses `allowCloud` requests with `forbidden_by_policy` (`cloudAllowed`). |
+| `aiApprovedModels` | list of model ids                 | Only these models can be installed; others show *Not approved by your organization*. Empty or unset: all catalog models (`approvedModels`). |
+| `aiMaxMemoryMB`    | integer                           | Memory cap for loaded models; bigger models show *Too large* (`maxMemMB`). |
+| `aiGpuAllowed`     | bool (default true)               | Use the graphics processor (`gpuAllowed`). |
+| `aiDictionaryUrl`  | string (https URL)                | Organisation dictionary (`orgDictionaryUrl`). |
+| `aiCatalogUrl`     | string (https URL)                | A mirrored model catalog instead of the WorkSuite Update Center's (`catalogUrl`). |
+| `aiStoragePath`    | string (folder)                   | Where models are kept (`storagePath`). |
+
+A key that is set appears as *Managed by your organization* next to its control.
+
+List values: on Windows a REG_MULTI_SZ, or a REG_SZ with ids separated by commas; on macOS an array
+of strings (or one comma-separated string); in `policy.json` a JSON array.
+
+```reg
+[HKEY_LOCAL_MACHINE\Software\Policies\WorkSuite\Office]
+"aiSuggestions"=dword:00000000
+"aiCloudAllowed"=dword:00000000
+"aiApprovedModels"="whisper-small-q5,qwen2.5-3b-q4,piper-en-amy"
+"aiMaxMemoryMB"=dword:00002000
+"aiGpuAllowed"=dword:00000001
+```
+
+```xml
+  <key>aiCloudAllowed</key><false/>
+  <key>aiApprovedModels</key>
+  <array><string>whisper-small-q5</string><string>qwen2.5-3b-q4</string></array>
+  <key>aiMaxMemoryMB</key><integer>8192</integer>
+```
+
+```json
+{
+  "aiCloudAllowed": false,
+  "aiApprovedModels": ["whisper-small-q5", "qwen2.5-3b-q4"],
+  "aiMaxMemoryMB": 8192,
+  "aiDictionaryUrl": "https://office.example.com/api/dictionaries/org"
+}
+```
+
+The MSI does not set these yet (no `WS_AI_*` properties); deploy them with Group Policy or the registry.

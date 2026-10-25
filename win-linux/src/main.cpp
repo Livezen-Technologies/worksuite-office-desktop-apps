@@ -42,6 +42,7 @@
 # include <unistd.h>
 #endif
 #include "cascapplicationmanagerwrapper.h"
+#include "cworksuiteai.h"
 #include "defines.h"
 #include "clangater.h"
 #include "clogger.h"
@@ -50,6 +51,7 @@
 #include "chelp.h"
 #include "common/File.h"
 #include <QStyleFactory>
+#include <vector>
 
 
 int main( int argc, char *argv[] )
@@ -142,7 +144,18 @@ int main( int argc, char *argv[] )
 #ifdef __linux
     gtk_init(&argc, &argv);
 #endif
-    CApplicationCEF::Prepare(argc, argv);
+    /* Local AI voice typing (docs/local-ai-bridge.md): CEF grants getUserMedia only with this switch.
+     * Linux (and macOS) read switches from argv; Windows CEF reads GetCommandLineW() instead and needs
+     * the desktop-sdk change described there. */
+    std::vector<char *> cef_argv(argv, argv + argc);
+#ifdef __linux
+    static char media_stream_switch[] = "--enable-media-stream";
+    if ( CWorkSuiteAi::microphoneAllowed() )
+        cef_argv.push_back(media_stream_switch);
+#endif
+    int cef_argc = static_cast<int>(cef_argv.size());
+    cef_argv.push_back(nullptr);
+    CApplicationCEF::Prepare(cef_argc, cef_argv.data());
     CApplicationCEF* application_cef = new CApplicationCEF();
     CAscApplicationManager &manager = AscAppManager::getInstance();
 
@@ -164,7 +177,7 @@ int main( int argc, char *argv[] )
     manager.m_oSettings.country = Utils::systemLocationCode().toStdString();
     manager.m_oSettings.connection_error_path      = app_path + L"/editors/webext/noconnect.html";
 
-    application_cef->Init_CEF(&manager, argc, argv);
+    application_cef->Init_CEF(&manager, cef_argc, cef_argv.data());
     /* ********************** */
 
 //    GET_REGISTRY_SYSTEM(reg_system)
