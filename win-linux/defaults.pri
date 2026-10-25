@@ -111,6 +111,7 @@ HEADERS += \
     $$PWD/src/cprintdata.h \
     $$PWD/src/cproviders.h \
     $$PWD/src/cworksuite.h \
+    $$PWD/src/cworksuiteai.h \
     $$PWD/src/cwinsparkle.h \
     $$PWD/src/cscalingwrapper.h \
     $$PWD/src/ctabundockevent.h \
@@ -154,6 +155,7 @@ SOURCES += \
     $$PWD/src/cprintdata.cpp \
     $$PWD/src/cproviders.cpp \
     $$PWD/src/cworksuite.cpp \
+    $$PWD/src/cworksuiteai.cpp \
     $$PWD/src/cwinsparkle.cpp \
     $$PWD/src/cscalingwrapper.cpp \
     $$PWD/src/ctabundockevent.cpp \
