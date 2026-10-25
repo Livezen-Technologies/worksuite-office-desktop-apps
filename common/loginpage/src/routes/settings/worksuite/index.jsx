@@ -273,16 +273,15 @@ export default function WorkSuiteSettings() {
 
         <Show when={section() === "about"}>
           <SettingsSection title={L.wsxNavAbout}
-                           actions={<WsButton variant="secondary" icon="about" onClick={openAbout}>{L.wsxAboutMore}</WsButton>}>
+                           actions={<WsButton variant="secondary" icon="about" onClick={() => openAbout({ appname: "WorkSuite Office", version: versionInfo()?.version || updates().version || "" })}>{L.wsxAboutMore}</WsButton>}>
             <dl class="wsx-kv">
               <dt>{L.wsxProduct}</dt><dd>{versionInfo()?.appname || "WorkSuite Office"}</dd>
+              <dt>{L.wsxDeveloper}</dt><dd>{L.wsxCompany}</dd>
               <dt>{L.wsxVersion}</dt><dd>{versions().version || "—"}</dd>
               <Show when={versions().build}><dt>{L.wsxBuildLabel}</dt><dd>{versions().build}</dd></Show>
               <Show when={versions().extra}><dt>{L.wsxPackage}</dt><dd>{versions().extra}</dd></Show>
-              <Show when={versionInfo()?.site}>
-                <dt>{L.wsxWebsite}</dt>
-                <dd><a class="wsx-link" href={versionInfo().link || "https://" + versionInfo().site} target="_blank" rel="noreferrer">{versionInfo().site}</a></dd>
-              </Show>
+              <dt>{L.wsxWebsite}</dt>
+              <dd><a class="wsx-link" href={versionInfo()?.link || "https://" + (versionInfo()?.site || "worksuitecloud.com")} target="_blank" rel="noreferrer">{versionInfo()?.site || "worksuitecloud.com"}</a></dd>
               <Show when={licence()}>
                 <dt>{L.wsxLicence}</dt>
                 <dd><a class="wsx-link" href="#" onClick={(e) => { e.preventDefault(); command("open:license", licence().url); }}>{licence().text}</a></dd>
