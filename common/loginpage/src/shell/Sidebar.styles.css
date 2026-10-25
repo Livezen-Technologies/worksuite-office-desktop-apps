@@ -107,10 +107,3 @@
   flex-direction: column;
   margin-top: 10px;
 }
-
-/* WorkSuite: the app's own coloured logo, not a one-colour sidebar icon */
-.ws-app-item .ws-app-logo {
-  width: 20px;
-  height: 20px;
-  display: block;
-}
