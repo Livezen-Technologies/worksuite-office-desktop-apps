@@ -13,7 +13,7 @@ import { initPortals } from "@/services/portals";
 import { initAiPanel } from "@/services/ai-panel";
 import { aichat } from "@/stores/aichat";
 import { extPlugins, pluginRouteId } from "@/stores/ext-plugins";
-import { UpdateBanner, OfflineChoiceDialog } from "@/worksuite/ShellParts.jsx";
+import { UpdateBanner, OfflineChoiceDialog, AccountSwitchDialog } from "@/worksuite/ShellParts.jsx";
 
 const TemplatesPanel = lazy(() => import("./routes/templates/index.jsx"));
 import "./styles/main.css";
@@ -83,6 +83,7 @@ function Shell(props) {
       </Show>
       <About />
       <OfflineChoiceDialog />
+      <AccountSwitchDialog />
       <PluginModal />
     </div>
   );

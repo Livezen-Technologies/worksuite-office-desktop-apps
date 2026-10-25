@@ -111,6 +111,25 @@ export function setPrefServer(v) {
   write("ws:pref:server", v || undefined);
 }
 
+/* ---- editor tabs and accounts ---------------------------------------- */
+
+/* {to, from, resolve}: "Open as <to>?" while a server's editor tabs are <from>'s (core.js claimServerTabs) */
+const [accountSwitch, setAccountSwitch] = createSignal(null);
+export { accountSwitch };
+export function answerAccountSwitch(ok) {
+  const s = accountSwitch();
+  if (!s) return;
+  setAccountSwitch(null);
+  s.resolve(!!ok);
+}
+function confirmAccountSwitch(to, from) {
+  const open = accountSwitch();
+  if (open) open.resolve(false);
+  return new Promise((resolve) => setAccountSwitch({ to, from, resolve }));
+}
+/* core.js asks through this whether or not WorkSuite.confirmAccountSwitch is set (it may load first) */
+if (typeof window !== "undefined") window.WorkSuiteShell = Object.assign({}, window.WorkSuiteShell, { confirmAccountSwitch });
+
 /* ---- offline editing (DOC-07) ---------------------------------------- */
 
 const [online, setOnline] = createSignal(typeof navigator === "undefined" ? true : navigator.onLine !== false);
@@ -252,4 +271,4 @@ export function initWorkSuiteShell() {
 }
 
 /* for tests and the dev server */
-export const _test = { applyPolicy, setUpdateReady, setUpdateProgress, setOfflineChoice };
+export const _test = { applyPolicy, setUpdateReady, setUpdateProgress, setOfflineChoice, confirmAccountSwitch };

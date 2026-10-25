@@ -744,9 +744,8 @@ const utils = { Lang: L, defines: { FileFormat } };
             saveAccounts(list);
             Object.keys(localStorage).filter(k => k.indexOf(LS_CACHE + account.id) === 0).forEach(k => localStorage.removeItem(k));
 
-            // The editor tabs signed in to that server sign out with it, unless another account still uses it.
-            if (!list.some(a => a.server === account.server))
-                window.sdk && window.sdk.execCommand && window.sdk.execCommand('portal:logout', JSON.stringify({ domain: account.server }));
+            // The editor tabs of that server sign out with it when they are this account's, or no other account uses it.
+            endSessionOf(account, list.some(a => a.server === account.server));
 
             if (localStorage.getItem(LS_ACTIVE) === account.id)
                 list.length ? localStorage.setItem(LS_ACTIVE, list[0].id) : localStorage.removeItem(LS_ACTIVE);
@@ -774,8 +773,7 @@ const utils = { Lang: L, defines: { FileFormat } };
             delete access[account.id];
             updateAccount(account.id, { signedOut: true, signedOutBy: 'user' });
             const list = accounts();
-            if (!list.some(a => a.server === account.server && !a.signedOut))
-                window.sdk && window.sdk.execCommand && window.sdk.execCommand('portal:logout', JSON.stringify({ domain: account.server }));
+            endSessionOf(account, list.some(a => a.server === account.server && !a.signedOut));
             if (localStorage.getItem(LS_ACTIVE) === account.id) {
                 const other = list.find(a => !a.signedOut);
                 if (other) localStorage.setItem(LS_ACTIVE, other.id);
@@ -970,8 +968,7 @@ const utils = { Lang: L, defines: { FileFormat } };
         const list = accounts().filter(a => a.id !== account.id);
         saveAccounts(list);
         Object.keys(localStorage).filter(k => k.indexOf(LS_CACHE + account.id) === 0).forEach(k => localStorage.removeItem(k));
-        if (!list.some(a => a.server === account.server))
-            window.sdk && window.sdk.execCommand && window.sdk.execCommand('portal:logout', JSON.stringify({ domain: account.server }));
+        endSessionOf(account, list.some(a => a.server === account.server));
         if (localStorage.getItem(LS_ACTIVE) === account.id)
             list.length ? localStorage.setItem(LS_ACTIVE, list[0].id) : localStorage.removeItem(LS_ACTIVE);
         fire('changed');
@@ -1091,6 +1088,71 @@ const utils = { Lang: L, defines: { FileFormat } };
     }
 
     /*
+     * Editor tabs and accounts (docs/accounts.md, "Editor tabs"). The desktop SDK gives every tab the one CEF
+     * request context, so the tabs of a server share its web cookies whichever account opened them. To keep
+     * accounts apart anyway, a server's editor tabs belong to one account at a time: LS_TAB_OWNER records
+     * which. Opening a document of that server as another account first ends the server's web session
+     * (portal:logout: its tabs close, asking about unsaved changes, and its cookies are deleted), after the
+     * person agrees (confirmAccountSwitch, the start page's dialog). Sign out and Remove of the owner end it
+     * too, even when another account of that server is still signed in.
+     */
+    const LS_TAB_OWNER = 'ws:tab-owner';
+    const sessionEnds = {};     // server -> [resolve(true|false)] while a portal:logout runs
+    const SESSION_END_TIMEOUT = 120000;
+
+    function tabOwners() {
+        const o = readJson(localStorage, LS_TAB_OWNER, {});
+        return o && typeof o === 'object' ? o : {};
+    }
+
+    function setTabOwner(server, id) {
+        const o = tabOwners();
+        if (id) o[server] = id; else delete o[server];
+        try { localStorage.setItem(LS_TAB_OWNER, JSON.stringify(o)); } catch { /* only a hint */ }
+    }
+
+    /* the server's web session ended (true) or the person kept its tabs (false; macOS sends no answer then) */
+    function endServerSession(server) {
+        return new Promise(resolve => {
+            const waiting = sessionEnds[server] = sessionEnds[server] || [];
+            waiting.push(resolve);
+            if (waiting.length > 1) return;     // one logout per server at a time
+            const timer = setTimeout(() => settleSession(server, false), SESSION_END_TIMEOUT);
+            if (timer && timer.unref) timer.unref();
+            window.sdk && window.sdk.execCommand && window.sdk.execCommand('portal:logout', JSON.stringify({ domain: server }));
+        });
+    }
+
+    function settleSession(server, ended) {
+        const waiting = sessionEnds[server];
+        if (!waiting) return;
+        delete sessionEnds[server];
+        if (ended && tabOwners()[server]) setTabOwner(server, null);
+        waiting.forEach(f => f(ended));
+    }
+
+    /* the account's own sign-out: end the server's web session when its tabs are this account's, or nobody else uses it */
+    function endSessionOf(account, othersOnServer) {
+        const owner = tabOwners()[account.server];
+        if (owner === account.id || !othersOnServer) {
+            if (owner) setTabOwner(account.server, null);
+            window.sdk && window.sdk.execCommand && window.sdk.execCommand('portal:logout', JSON.stringify({ domain: account.server }));
+        }
+    }
+
+    /* before opening a tab as `account`: the server's tabs are someone else's? Ask, then end that session */
+    async function claimServerTabs(account) {
+        const owner = tabOwners()[account.server];
+        if (!owner || owner === account.id) return true;
+        const from = accounts().find(a => a.id === owner) || { id: owner, server: account.server, user: { name: '' } };
+        const ask = (window.WorkSuite && window.WorkSuite.confirmAccountSwitch) ||
+                    (window.WorkSuiteShell && window.WorkSuiteShell.confirmAccountSwitch);
+        const agreed = typeof ask === 'function' ? await Promise.resolve(ask(account, from)).catch(() => false) : true;
+        if (!agreed) return false;
+        return endServerSession(account.server);
+    }
+
+    /*
      * `extra.version`: an old version, read-only (DRV-09). `file.src`: a copy that is not in Drive (a mail
      * attachment, LNK-05), read from the server with this sign-in; Save asks for a Drive folder.
      */
@@ -1100,6 +1162,11 @@ const utils = { Lang: L, defines: { FileFormat } };
         if (!extra.version && !file.src && readJson(localStorage, 'ws:pref:openIn', 'office') === 'browser') {
             openInBrowser(account, '/editor/' + encodeURIComponent(file.id));
             return;
+        }
+        if (!(await claimServerTabs(account))) {
+            const e = new Error(L.wsxSwitchKept || 'The documents of the other account stay open.');
+            e.code = 'account-switch-cancelled';
+            throw e;
         }
         const pair = await pkce();
         const handed = await api(account, 'POST', '/api/auth/apps/handoff',
@@ -1122,6 +1189,7 @@ const utils = { Lang: L, defines: { FileFormat } };
             cloud: account.server,
             recovery: false,
         }));
+        setTabOwner(account.server, account.id);
 
         if (!file.src && !extra.version)
             api(account, 'POST', '/api/drive/opened/' + encodeURIComponent(file.id)).catch(() => {});
@@ -1410,6 +1478,15 @@ const utils = { Lang: L, defines: { FileFormat } };
             if (cmd === 'worksuite:link') {
                 onLink(param);
             } else
+            if (cmd === 'portal:logout' || cmd === 'portal:logout:cancel') {
+                // the end of a portal:logout: "portal:logout" <server> once its tabs closed and its cookies went,
+                // "portal:logout:cancel" <the request> when the person kept a tab (Windows, Linux)
+                const text = String(param || '');
+                Object.keys(sessionEnds).forEach(server => {
+                    if (cmd === 'portal:logout' ? normalizeServer(text) === server || text === server : text.indexOf(server) >= 0)
+                        settleSession(server, cmd === 'portal:logout');
+                });
+            } else
             if (cmd === 'worksuite:share') {
                 // "Share" in a Drive editor tab (DRV-10): {server: the tab's own origin, file}
                 let req = null;
@@ -1495,6 +1572,9 @@ const utils = { Lang: L, defines: { FileFormat } };
         createFromTemplate: createFromTemplate,
         _parseOpenLink: (link) => { const u = new URL(link); return parseOpenLink(u, (u.host + u.pathname).replace(/\/+$/, '')); },
         openApp: openApp,
+        /* set by the start page (shell.js): (toAccount, fromAccount) -> Promise<boolean> */
+        confirmAccountSwitch: null,
+        tabOwner: (server) => tabOwners()[server] || null,
         typeOf: typeOf,
         extOf: extOf,
         /* oda-shell: Settings › WorkSuite and offline editing (SHL-08, DOC-07) */

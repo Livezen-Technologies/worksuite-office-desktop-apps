@@ -1005,6 +1005,13 @@ static BOOL workSuiteKeychainDelete(NSString * key) {
                         self.tabsWithChanges = [NSMutableArray arrayWithArray:tabsWithChanges];
                         [self safeCloseTabsWithChanges];
                     } else if (result == NSAlertSecondButtonReturn) {
+                        // kept: tell the start page, as Windows and Linux do (a WorkSuite account switch waits for it)
+                        NSEditorApi::CAscExecCommandJS * pCommand = new NSEditorApi::CAscExecCommandJS;
+                        pCommand->put_Command(L"portal:logout:cancel");
+                        pCommand->put_Param([[@{@"domain": portal} jsonString] stdwstring]);
+                        NSEditorApi::CAscMenuEvent * pEvent = new NSEditorApi::CAscMenuEvent(ASC_MENU_EVENT_TYPE_CEF_EXECUTE_COMMAND_JS);
+                        pEvent->m_pData = pCommand;
+                        [self.cefStartPageView apply:pEvent];
                         return;
                     } else {
                         // "Delete and Quit" clicked
