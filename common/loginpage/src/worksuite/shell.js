@@ -5,13 +5,26 @@
  *
  * Native contract (win-linux CWorkSuite, macos ASCCommonViewController), start page only:
  *   "worksuite:policy"  ""                                   → {"managed","source","policy":{…}}
- *   "worksuite:updates" {"op":"get|set|check|restart","channel","auto"}
+ *   "worksuite:updates" {"op":"get|set|check|download|cancel|restart","channel","auto"}
  *                                                            → {"available","version","channel","auto",
- *                                                               "lastCheck","host","busy","text"}
+ *                                                               "lastCheck","host","busy","text",
+ *                                                               "found":{"version","size"},"download"}
  *   native → "worksuite:update-ready" {"version","channel","verified","signer","signatureChecked","notes"}
+ *   native → "worksuite:update-progress" {"state":"found|downloading|verifying|extracting|installing|ready|error|idle",
+ *                                         "received","total","version","cancellable","reason"}
+ *            (macOS: Sparkle's user driver; Windows: the app's own signed download; Linux reports
+ *             progress through "updates:status")
  *   native → "worksuite:offline" {"state":"offline|online","file":{id,name,ext},"server","uid",
  *                                 "baseVersion","path","changed"}
  *   "worksuite:upload"  {"req","url","token","path","fields":{…},"name"} → {"req","status","body"}
+ *   "worksuite:transfer" Clouds › WorkSuite Drive's uploads and downloads (this file:// page cannot send bytes itself):
+ *     {"op":"chunk","req","url":"https://<server>/api/uploads/<uuid>/chunk","token","index","data":<base64>}
+ *                                                            → {"req","status","body"}
+ *     {"op":"download","req","url":"https://<server>/media/<token>?download=1","name"}
+ *                                                            → {"req","received","total"} while it runs, then
+ *                                                              {"req","status","done":true,"path"} (Downloads)
+ *     {"op":"cancel","req"}                                  stops a download
+ *     {"op":"reveal","path"}                                 shows a downloaded file in the file manager
  */
 import { createSignal } from "solid-js";
 import { normalizePolicy, cloudAllowed, aiPolicyOf, reconcileOffline, offlineCopyName } from "./shell-logic.js";
@@ -64,7 +77,8 @@ function applyPolicy(raw) {
 
 const [updates, setUpdates] = createSignal({ available: false });
 const [updateReady, setUpdateReady] = createSignal(null);
-export { updates, updateReady };
+const [updateProgress, setUpdateProgress] = createSignal(null);
+export { updates, updateReady, updateProgress };
 
 export function setUpdateChannel(channel) {
   if (policy().locked.updateChannel) return;
@@ -78,8 +92,17 @@ export function setUpdateAuto(auto) {
   send("worksuite:updates", { op: "set", auto: !!auto });
 }
 
-export const checkForUpdates = () => send("worksuite:updates", { op: "check" });
+export const checkForUpdates = () => {
+  setUpdateProgress(null);
+  send("worksuite:updates", { op: "check" });
+};
 export const restartToUpdate = () => send("worksuite:updates", { op: "restart" });
+/* the Updates card's Download and Cancel (the app downloads and checks the signature, with progress) */
+export const downloadUpdate = () => {
+  setUpdateProgress(null);
+  send("worksuite:updates", { op: "download" });
+};
+export const cancelUpdateDownload = () => send("worksuite:updates", { op: "cancel" });
 export const dismissUpdateReady = () => setUpdateReady({ ...updateReady(), dismissed: true });
 
 /* ---- Drive preferences ----------------------------------------------- */
@@ -94,6 +117,82 @@ export function setOpenIn(v) {
 export function setPrefServer(v) {
   setPrefServerSig(v);
   write("ws:pref:server", v || undefined);
+}
+
+/* ---- editor tabs and accounts ---------------------------------------- */
+
+/* {to, from, resolve}: "Open as <to>?" while a server's editor tabs are <from>'s (core.js claimServerTabs) */
+const [accountSwitch, setAccountSwitch] = createSignal(null);
+export { accountSwitch };
+export function answerAccountSwitch(ok) {
+  const s = accountSwitch();
+  if (!s) return;
+  setAccountSwitch(null);
+  s.resolve(!!ok);
+}
+function confirmAccountSwitch(to, from) {
+  const open = accountSwitch();
+  if (open) open.resolve(false);
+  return new Promise((resolve) => setAccountSwitch({ to, from, resolve }));
+}
+/* core.js asks through this whether or not WorkSuite.confirmAccountSwitch is set (it may load first) */
+if (typeof window !== "undefined") window.WorkSuiteShell = Object.assign({}, window.WorkSuiteShell, { confirmAccountSwitch });
+
+/* ---- Clouds › WorkSuite Drive: transfers through the app ------------- */
+
+const transfers = {};
+const reqId = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
+
+/* whether this app carries the transfer command (an older one answers nothing) */
+export function canTransfer() {
+  const n = native();
+  return !!(n && n.execCommand);
+}
+
+/* One upload part: a multipart POST made by the app. → {status, body}; status 0 when the app did not answer. */
+export function sendChunk(url, token, index, data) {
+  return new Promise((resolve) => {
+    const req = reqId();
+    const timer = setTimeout(() => {
+      if (transfers[req]) { delete transfers[req]; resolve({ status: 0, body: "" }); }
+    }, 120000);
+    transfers[req] = { done: (r) => { clearTimeout(timer); resolve(r); } };
+    send("worksuite:transfer", { op: "chunk", req, url, token, index, data });
+  });
+}
+
+/* A download into the Downloads folder by the app. onProgress(received, total). → {status, path}; cancel() stops it. */
+export function download(url, name, onProgress) {
+  const req = reqId();
+  let stall;
+  const p = new Promise((resolve) => {
+    const arm = () => {
+      clearTimeout(stall);
+      stall = setTimeout(() => { if (transfers[req]) { delete transfers[req]; resolve({ status: 0 }); } }, 60000);
+    };
+    arm();
+    transfers[req] = {
+      progress: (r) => { arm(); onProgress && onProgress(r.received || 0, r.total || 0); },
+      done: (r) => { clearTimeout(stall); resolve(r); },
+    };
+    send("worksuite:transfer", { op: "download", req, url, name });
+  });
+  return { done: p, cancel: () => send("worksuite:transfer", { op: "cancel", req }) };
+}
+
+export function reveal(path) {
+  send("worksuite:transfer", { op: "reveal", path });
+}
+
+function onTransfer(param) {
+  let r = null;
+  try { r = JSON.parse(param); } catch { return; }
+  const t = r && transfers[r.req];
+  if (!t) return;
+  if (r.done || r.status !== undefined && r.received === undefined) {
+    delete transfers[r.req];
+    t.done(r);
+  } else if (t.progress) t.progress(r);
 }
 
 /* ---- offline editing (DOC-07) ---------------------------------------- */
@@ -212,6 +311,11 @@ export function initWorkSuiteShell() {
         try { setUpdates({ ...updates(), ...JSON.parse(param) }); } catch {}
       } else if (cmd === "worksuite:update-ready") {
         try { setUpdateReady(JSON.parse(param)); } catch {}
+      } else if (cmd === "worksuite:update-progress") {
+        try {
+          const p = JSON.parse(param);
+          setUpdateProgress(p && p.state && p.state !== "idle" ? p : null);
+        } catch {}
       } else if (cmd === "worksuite:upload") {
         let r = null;
         try { r = JSON.parse(param); } catch { return; }
@@ -220,6 +324,8 @@ export function initWorkSuiteShell() {
           delete uploads[r.req];
           done(r);
         }
+      } else if (cmd === "worksuite:transfer") {
+        onTransfer(param);
       } else if (cmd === "worksuite:offline") {
         let e = null;
         try { e = JSON.parse(param); } catch { return; }
@@ -232,4 +338,4 @@ export function initWorkSuiteShell() {
 }
 
 /* for tests and the dev server */
-export const _test = { applyPolicy, setUpdateReady, setOfflineChoice };
+export const _test = { applyPolicy, setUpdateReady, setUpdateProgress, setOfflineChoice, confirmAccountSwitch };

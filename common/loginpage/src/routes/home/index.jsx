@@ -1,6 +1,6 @@
-import { Show, createSignal, onCleanup, onMount } from "solid-js";
+import { Show, createEffect, createSignal, onCleanup, onMount } from "solid-js";
+import { useLocation } from "@solidjs/router";
 import { createStore, reconcile } from "solid-js/store";
-import { t } from "@/services/l10n.js";
 import { listRecents,
         onRecentsChanged,
         onRecoversChanged,
@@ -14,8 +14,10 @@ import { listRecents,
         removeRecover,
         clearRecovers,
         openRecoveryFile,
+        openLocal,
         appReady } from "@/sdk";
-import { DocTypeGrid } from "./components/DocTypeGrid.jsx";
+import { CreateCards } from "./components/CreateCards.jsx";
+import { homeSession, setHomeSession } from "@/stores/home-session.js";
 import { RecentList } from "./components/RecentList.jsx";
 import { RecoverList } from "./components/RecoverList.jsx";
 import { FileDropZone } from "./components/FileDropZone.jsx";
@@ -42,9 +44,23 @@ export default function Index() {
   let revealId = 0;
   let recentsCountChanged = true;
 
-  const hasFiles = () => recents.length > 0;
   const hasRecovers = () => recovers().length > 0;
   const visibleRecents = () => recents.slice(0, visibleCount());
+  const location = useLocation();
+  let page;
+
+  /* one scroll container for the whole page; where it was is kept for this session (home-session.js) and
+     restored when Home is shown again, e.g. after an editor or another panel */
+  let scrollRaf = 0;
+  const onScroll = () => {
+    cancelAnimationFrame(scrollRaf);
+    scrollRaf = requestAnimationFrame(() => page && location.pathname === "/" && page.offsetParent && setHomeSession("scrollTop", page.scrollTop));
+  };
+  const restoreScroll = () => {
+    if (!page || location.pathname !== "/") return;
+    requestAnimationFrame(() => { if (page.scrollHeight > page.clientHeight) page.scrollTop = homeSession.scrollTop; });
+  };
+  createEffect(() => { if (location.pathname === "/") restoreScroll(); });
 
   function loadRecents(raw) {
     const sorted = sortByPin(parseRecent(toArray(raw)));
@@ -110,7 +126,7 @@ export default function Index() {
     removeRecent(fileid);
     setRecents(
       reconcile(
-        recents.map((r) => (r.fileid === fileid ? { ...r, exist: false } : r)),
+        recents.filter((r) => r.fileid !== fileid),
         { key: "uid" },
       ),
     );
@@ -167,7 +183,7 @@ export default function Index() {
     const unsubRecents = onRecentsChanged((p) => {
       loadRecents(p);
       sendChatRecentsChanged();
-      if (!loaded()) setLoaded(true);
+      if (!loaded()) { setLoaded(true); restoreScroll(); }
     });
 
     const unsubRecovers = onRecoversChanged(loadRecovers);
@@ -205,39 +221,34 @@ export default function Index() {
   });
 
   return (
-    <div class="home-page">
-      <div class="cnt-title">
-        <h1>{t("actCreateNew")}</h1>
-      </div>
+    <div class="home-page" ref={(el) => (page = el)} onScroll={onScroll}>
+      <div class="wsh-page">
+        <CreateCards />
 
-      <section class="new-doc-section">
-        <DocTypeGrid />
-      </section>
+        <WorkSuiteSection />
 
-      <WorkSuiteSection />
+        <Show when={hasRecovers()}>
+          <section class="file-list-section">
+            <RecoverList
+              recovers={recovers()}
+              onOpen={openRecover}
+              onRemove={removeRecoverItem}
+              onClear={clearAllRecovers}
+            />
+          </section>
+        </Show>
 
-      <Show when={loaded() && !hasFiles()}>
-        <section class="file-drop-section">
-          <FileDropZone />
-        </section>
-      </Show>
-
-      <section class="file-list-section">
-        <RecoverList
-          recovers={recovers()}
-          onOpen={openRecover}
-          onRemove={removeRecoverItem}
-          onClear={clearAllRecovers}
-        />
         <RecentList
           recents={visibleRecents()}
-          heading={hasRecovers() ? t("listRecentFileTitle", "Recents") : undefined}
+          loaded={loaded()}
           onTogglePin={togglePin}
           onRemove={markFileRemoved}
           onClear={clearAll}
           onAddToChat={addToChat}
+          onOpenFile={openLocal}
+          empty={<FileDropZone />}
         />
-      </section>
+      </div>
     </div>
   );
 }

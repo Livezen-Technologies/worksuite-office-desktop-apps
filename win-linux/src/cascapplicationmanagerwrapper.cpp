@@ -64,6 +64,7 @@
 #include "OfficeFileFormats.h"
 #include "cproviders.h"
 #include "cworksuite.h"
+#include "cworksuiteai.h"
 #include "cwinsparkle.h"
 #ifndef __OS_WIN_XP
 # include "components/cnotification.h"
@@ -130,6 +131,8 @@ CAscApplicationManagerWrapper::CAscApplicationManagerWrapper(CAscApplicationMana
     QObject::connect(this, &CAscApplicationManagerWrapper::coreEvent, this, &CAscApplicationManagerWrapper::onCoreEvent);
     QObject::connect(CExistanceController::getInstance(), &CExistanceController::checked, this, &CAscApplicationManagerWrapper::onFileChecked);
     QObject::connect(&commonEvents(), &CEventDriver::onEditorClosed, this, &CAscApplicationManagerWrapper::onEditorWidgetClosed);
+    // Local AI: stop worksuite-ai on exit when this app started it and it is idle
+    QObject::connect(this, &CAscApplicationManagerWrapper::aboutToQuit, this, []() { CWorkSuiteAi::stopIfIdle(); });
 #ifndef _CAN_SCALE_IMMEDIATELY
     QObject::connect(this, &CAscApplicationManagerWrapper::aboutToQuit, this, [=]() {
         if (!m_private->uiscaling.empty()) {
@@ -394,6 +397,14 @@ bool CAscApplicationManagerWrapper::processCommonEvent(NSEditorApi::CAscCefMenuE
                 });
             return true;
         } else
+        if ( cmd.compare(L"worksuite:transfer") == 0 ) {
+            // Clouds › WorkSuite Drive: upload parts and downloads for the start page; answers come later
+            if ( m_pMainWindow && event->get_SenderId() == m_pMainWindow->startPanelId() )
+                CWorkSuite::transfer(QString::fromStdWString(pData->get_Param()), [](const QString& answer) {
+                    sendCommandTo(SEND_TO_ALL_START_PAGE, L"worksuite:transfer", answer.toStdWString());
+                });
+            return true;
+        } else
         if ( cmd.compare(L"worksuite:updates") == 0 ) {
             // SHL-08, SHL-09: Settings › WorkSuite › Updates and the Update ready banner
             if ( m_pMainWindow && event->get_SenderId() == m_pMainWindow->startPanelId() ) {
@@ -424,6 +435,22 @@ bool CAscApplicationManagerWrapper::processCommonEvent(NSEditorApi::CAscCefMenuE
                 }
 #endif
                 sendCommandTo(SEND_TO_ALL_START_PAGE, cmd, L"{\"available\":false}");
+            }
+            return true;
+        } else
+        if ( cmd.compare(L"ws-ai:endpoint") == 0 ) {
+            // Local AI (docs/local-ai-bridge.md): {port, token} of worksuite-ai, for the start page and editor tabs only
+            const int sid = event->get_SenderId();
+            const bool from_start = m_pMainWindow && sid == m_pMainWindow->startPanelId();
+            CCefView * sender = GetViewById(sid);
+            if ( from_start || (sender && sender->GetType() == cvwtEditor) ) {
+                CWorkSuiteAi::endpoint(QString::fromStdWString(pData->get_Param()), [sid, from_start](const QString& answer) {
+                    if ( from_start )
+                        sendCommandTo(SEND_TO_ALL_START_PAGE, L"ws-ai:endpoint", answer.toStdWString());
+                    else
+                    if ( CCefView * view = AscAppManager::getInstance().GetViewById(sid) )
+                        sendCommandTo(view, L"ws-ai:endpoint", answer.toStdWString());
+                });
             }
             return true;
         } else

@@ -339,3 +339,20 @@ body:not(.theme-type-dark) .icon__dark {
 .theme-type-dark .icon__light {
   display: none;
 }
+
+/* With WorkSuite Drive the page is the Drive: full width, no padding, the page the one scroll container */
+.clouds-page.has-drive {
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
+  container-type: inline-size;
+}
+.clouds-page.has-drive > section.clouds-other {
+  max-width: 650px;
+  margin: 24px auto;
+  padding: 0 24px;
+  box-sizing: border-box;
+}
+.clouds-page.has-drive > section.wsd {
+  max-width: none;
+}

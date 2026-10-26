@@ -30,7 +30,7 @@ export function Frame(props) {
 }
 
 export function SignInDialog(props) {
-  const [server, setServer] = createSignal(WS().DEFAULT_SERVER);
+  const [server, setServer] = createSignal(props.server || WS().DEFAULT_SERVER);
   const [error, setError] = createSignal("");
   const [custom, setCustom] = createSignal(false);
   const [url, setUrl] = createSignal("");
@@ -126,6 +126,8 @@ export function SignInDialog(props) {
     });
 
     if (props.desktopAccount) startDesktop(props.desktopAccount);
+    /* Reconnect of a saved account: straight to that account's server, no choosing */
+    else if (props.server) start(props.server);
   });
 
   return (
@@ -264,7 +266,7 @@ export function NewDialog(props) {
   const title = { word: L.wsNewDocument, cell: L.wsNewSpreadsheet, slide: L.wsNewPresentation }[props.type];
   const blankName = { word: L.wsBlankDocument, cell: L.wsBlankSpreadsheet, slide: L.wsBlankPresentation }[props.type];
   const [name, setName] = createSignal(untitled);
-  const [folder, setFolder] = createSignal(null);
+  const [folder, setFolder] = createSignal(props.folder || null);
   const [error, setError] = createSignal("");
   const [busy, setBusy] = createSignal(false);
   const [gallery, setGallery] = createSignal(null); // null: none (blank only), [] while loading
@@ -344,7 +346,7 @@ export function NewDialog(props) {
              ref={(el) => setTimeout(() => el.select(), 0)}
              onInput={(e) => { nameEdited = true; setName(e.currentTarget.value); }} onKeyDown={(e) => e.key === "Enter" && create()} />
       <label class="ws-label">{L.wsSaveIn}</label>
-      <FolderPicker account={props.account} onChange={setFolder} />
+      <FolderPicker account={props.account} start={props.folder || null} onChange={setFolder} />
       <Show when={error()}><p class="ws-error" role="alert">{error()}</p></Show>
       <div class="ws-dlg-buttons">
         <Button variant="accent" disabled={busy()} onClick={create}>{L.wsCreate}</Button>

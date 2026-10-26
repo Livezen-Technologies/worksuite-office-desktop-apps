@@ -22,6 +22,10 @@ export function MoveDialog(props) {
     setBusy(true);
     setError("");
     try {
+      if (props.move) {
+        props.onClose();
+        return props.move(folder());
+      }
       await WS().move(props.account, props.file, folder());
       props.onClose();
       props.onDone && props.onDone(L.wsMoved);
@@ -34,7 +38,7 @@ export function MoveDialog(props) {
   return (
     <Frame title={L.wsMoveTitle.replace("$1", props.file.name)} onClose={props.onClose}>
       <label class="ws-label">{L.wsMoveTo}</label>
-      <FolderPicker account={props.account} onChange={setFolder} />
+      <FolderPicker account={props.account} start={props.start || null} exclude={props.file.kind === "folder" ? props.file.id : null} onChange={setFolder} />
       <Show when={error()}><p class="ws-error" role="alert">{error()}</p></Show>
       <div class="ws-dlg-buttons">
         <Button variant="accent" disabled={busy()} onClick={move}>{L.wsMoveHere}</Button>

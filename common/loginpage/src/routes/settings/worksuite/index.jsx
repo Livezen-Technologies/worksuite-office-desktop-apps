@@ -7,8 +7,13 @@ import { SignInDialog } from "@/worksuite/dialogs.jsx";
 import { AccountWizard } from "@/worksuite/account-wizard.jsx";
 import { versionInfo, updateStatus, execUpdateAction, openAbout } from "@/services/about";
 import { command } from "@/sdk/bridge";
+import { t } from "@/services/l10n";
+import { settings, setSettings } from "@/stores/settings";
+import { isOptsChanged, applySettings, pendingApplyText, needsRestart } from "@/services/settings-sync";
+import { DOC_PREFS, docPrefOptions, setDocPref } from "@/worksuite/doc-prefs.js";
 import {
-  policy, serverLocked, updates, updateReady, setUpdateChannel, setUpdateAuto, checkForUpdates, restartToUpdate,
+  policy, serverLocked, updates, updateReady, updateProgress, setUpdateChannel, setUpdateAuto, checkForUpdates, restartToUpdate,
+  downloadUpdate, cancelUpdateDownload,
   openIn, setOpenIn, prefServer, setPrefServer, initWorkSuiteShell,
 } from "@/worksuite/shell.js";
 import { parseReleaseNotes } from "@/worksuite/shell-logic.js";
@@ -152,6 +157,7 @@ export default function WorkSuiteSettings() {
     { id: "general", label: L.wsxNavGeneral, icon: "general", href: "/settings/general" },
     { id: "accounts", label: L.wsAccounts, icon: "accounts" },
     { id: "drive", label: L.wsTitle, icon: "drive" },
+    { id: "documents", label: L.wsxNavDocuments, icon: "documents" },
     { id: "updates", label: L.wsUpdates, icon: "updates" },
     { id: "advanced", label: L.wsxNavAdvanced, icon: "advanced" },
     { id: "about", label: L.wsxNavAbout, icon: "about" },
@@ -161,7 +167,9 @@ export default function WorkSuiteSettings() {
   const versions = () => splitVersion(versionInfo()?.version || updates().version || "");
   const channel = () => policy().updateChannel || updates().channel || "stable";
   const auto = () => (policy().updateAuto !== undefined ? policy().updateAuto : !!updates().auto);
-  const phase = () => updatePhase(updates(), updateReady(), updateStatus());
+  const phase = () => updatePhase(updates(), updateReady(), updateStatus(), updateProgress());
+  /* "ws-download": the app's own download with progress (macOS Sparkle, Windows); others: the update service */
+  const updateAction = (action) => (action === "ws-download" ? downloadUpdate() : execUpdateAction());
   const lastCheck = () => updates().lastCheck
     ? L.wsLastChecked.replace("$1", when(updates().lastCheck)).replace("$2", updates().host || "download.worksuitecloud.com")
     : L.wsNeverChecked;
@@ -234,6 +242,32 @@ export default function WorkSuiteSettings() {
           </SettingsSection>
         </Show>
 
+        <Show when={section() === "documents"}>
+          {/* the same store and Apply as Settings › General (worksuite/doc-prefs.js): no copy of the values */}
+          <SettingsSection title={L.wsxNavDocuments} description={L.wsxDocumentsDesc}>
+            <For each={DOC_PREFS}>
+              {(pref) => (
+                <SettingsRow label={t(pref.labelKey)} labelId={"wss-doc-" + pref.key}
+                             hint={pref.key === "launchMode" ? L.wsxDocOpenHint : L.wsxDocSpellHint}>
+                  <Segmented labelledBy={"wss-doc-" + pref.key} value={settings[pref.key]}
+                             onChange={(v) => setDocPref(setSettings, pref.key, v)}
+                             options={docPrefOptions(pref.key, t)} />
+                </SettingsRow>
+              )}
+            </For>
+            <div class="wss-apply" role="status" aria-live="polite">
+              <div class="wss-apply-text">
+                <Show when={isOptsChanged()}><span class="wsx-hint">{L.wsxDocPending}</span></Show>
+                <Show when={needsRestart()}><span class="wsx-hint wss-restart">{L.wsxDocRestart}</span></Show>
+              </div>
+              <WsButton variant="primary" disabled={!isOptsChanged()} onClick={applySettings}>{pendingApplyText() ?? t("setBtnApply")}</WsButton>
+            </div>
+            <p class="wsx-hint">
+              {L.wsxDocInGeneral}: <a class="wsx-link" href="#/settings/general">{L.wsxNavGeneral}</a>
+            </p>
+          </SettingsSection>
+        </Show>
+
         <Show when={section() === "updates"}>
           <SettingsSection title={L.wsUpdates}>
             <Show when={phase().phase !== "unavailable"} fallback={
@@ -243,7 +277,8 @@ export default function WorkSuiteSettings() {
               </>
             }>
               <UpdateCard phase={phase()} version={versions().version} build={versions().build} lastCheck={lastCheck()} notes={notes()}
-                          onCheck={checkForUpdates} onRestart={restartToUpdate} onAction={() => execUpdateAction()} />
+                          onCheck={checkForUpdates} onRestart={restartToUpdate} onAction={updateAction}
+                          onCancel={cancelUpdateDownload} />
               <SettingsRow label={L.wsUpdateChannel} locked={policy().locked.updateChannel} hint={L.wsxChannelHint} labelId="wss-channel">
                 <Segmented labelledBy="wss-channel" value={channel()} disabled={policy().locked.updateChannel}
                            onChange={(v) => setUpdateChannel(v)}

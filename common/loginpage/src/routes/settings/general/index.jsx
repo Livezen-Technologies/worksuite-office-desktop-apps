@@ -17,6 +17,7 @@ import { policy } from "@/worksuite/shell.js";
 import { addonInfo } from "@/services/about";
 import { aichat } from "@/stores/aichat";
 import { TEMPLATES_COUNTRY_ARRAY } from "@/data/countries";
+import { docPrefOptions, setDocPref } from "@/worksuite/doc-prefs.js";
 
 const ADD_LOCAL_THEME_ITEM = "add-theme";
 const addLocalThemeEnabled = window.RendererProcessVariable?.theme?.addlocal === "on";
@@ -76,16 +77,9 @@ export default function GeneralSettings() {
     setSettings("theme", value);
   }
 
-  const openFileOptions = createMemo(() => [
-    { value: "tab", label: t("settOptLaunchInTab") },
-    { value: "window", label: t("settOptLaunchInWindow") },
-  ]);
-
-  const spellOptions = createMemo(() => [
-    { value: "auto", label: t("settOptScalingAuto") },
-    { value: "enabled", label: t("settOptEnabled") },
-    { value: "disabled", label: t("settOptDisabled") },
-  ]);
+  // also in Settings › WorkSuite › Document Preferences: same options, same store (worksuite/doc-prefs.js)
+  const openFileOptions = createMemo(() => docPrefOptions("launchMode", t));
+  const spellOptions = createMemo(() => docPrefOptions("spellCheck", t));
 
   function handleReset() {
     command("settings:get", "username");
@@ -186,7 +180,7 @@ export default function GeneralSettings() {
             <Select
               options={openFileOptions()}
               value={settings.launchMode}
-              onChange={(v) => setSettings("launchMode", v)}
+              onChange={(v) => setDocPref(setSettings, "launchMode", v)}
               disallowEmptySelection
             >
               <Select.Trigger class={styles.fullWidth} />
@@ -201,7 +195,7 @@ export default function GeneralSettings() {
             <Select
               options={spellOptions()}
               value={settings.spellCheck}
-              onChange={(v) => setSettings("spellCheck", v)}
+              onChange={(v) => setDocPref(setSettings, "spellCheck", v)}
               disallowEmptySelection
             >
               <Select.Trigger class={styles.fullWidth} />

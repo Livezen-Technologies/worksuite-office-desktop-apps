@@ -104,6 +104,14 @@ namespace CWorkSuite
      * https://<server>/api/files/<id>/versions. `reply` gets {"req","status","body"} */
     void upload(const QString& json, std::function<void(const QString&)> reply);
 
+    /* "worksuite:transfer": Clouds › WorkSuite Drive's uploads and downloads, which the file:// start page cannot make
+     * itself. {"op":"chunk","req","url","token","index","data"} posts one part (base64) as multipart "chunk" plus
+     * "chunk_index" to https://<server>/api/uploads/<uuid>/chunk → {"req","status","body"}.
+     * {"op":"download","req","url","name"} saves https://<server>/media/<token> into Downloads, telling
+     * {"req","received","total"} as it goes and {"req","status","done":true,"path"} at the end.
+     * {"op":"cancel","req"} stops a download; {"op":"reveal","path"} shows a downloaded file's folder. */
+    void transfer(const QString& json, std::function<void(const QString&)> reply);
+
     /* where offline working copies of Drive documents are kept (DOC-07) */
     QString offlineFolder();
 }

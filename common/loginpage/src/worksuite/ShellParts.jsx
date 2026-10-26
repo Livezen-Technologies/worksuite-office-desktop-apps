@@ -10,7 +10,7 @@ import { hostOf } from "./cards.jsx";
 import { parseReleaseNotes } from "./shell-logic.js";
 import {
   initWorkSuiteShell, updateReady, dismissUpdateReady, restartToUpdate, policy,
-  offlineChoice, openNewerVersion, keepBoth, online,
+  offlineChoice, openNewerVersion, keepBoth, online, accountSwitch, answerAccountSwitch,
 } from "./shell.js";
 import "./worksuite.css";
 
@@ -96,6 +96,25 @@ export function OfflineChoiceDialog() {
         <div class="ws-dlg-actions">
           <Button variant="outline" disabled={busy()} onClick={openNewerVersion}>{L.wsOpenVersion.replace("$1", c().serverVersion ?? "")}</Button>
           <Button variant="accent" disabled={busy() || !online()} onClick={both}>{L.wsKeepBoth}</Button>
+        </div>
+      </Frame>
+    </Show>
+  );
+}
+
+/* "Open as <name>?": a server's editor tabs belong to one account at a time (docs/accounts.md, "Editor tabs") */
+export function AccountSwitchDialog() {
+  onMount(initWorkSuiteShell);
+  const s = () => accountSwitch();
+  const name = (a) => (a && a.user && (a.user.name || a.user.email)) || "";
+  return (
+    <Show when={s()}>
+      <Frame title={L.wsxSwitchTitle.replace("$1", name(s().to))} onClose={() => answerAccountSwitch(false)}>
+        <p>{L.wsxSwitchBody.replace("$1", hostOf(s().to.server)).replace("$2", name(s().from) || L.wsSomeone)}</p>
+        <p class="ws-muted">{L.wsxSwitchNote}</p>
+        <div class="ws-dlg-actions">
+          <Button variant="outline" onClick={() => answerAccountSwitch(false)}>{L.wsCancel}</Button>
+          <Button variant="accent" onClick={() => answerAccountSwitch(true)}>{L.wsxSwitchConfirm.replace("$1", name(s().to))}</Button>
         </div>
       </Frame>
     </Show>

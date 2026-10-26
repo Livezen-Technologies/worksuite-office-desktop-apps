@@ -13,7 +13,7 @@ import { initPortals } from "@/services/portals";
 import { initAiPanel } from "@/services/ai-panel";
 import { aichat } from "@/stores/aichat";
 import { extPlugins, pluginRouteId } from "@/stores/ext-plugins";
-import { UpdateBanner, OfflineChoiceDialog } from "@/worksuite/ShellParts.jsx";
+import { UpdateBanner, OfflineChoiceDialog, AccountSwitchDialog } from "@/worksuite/ShellParts.jsx";
 
 const TemplatesPanel = lazy(() => import("./routes/templates/index.jsx"));
 import "./styles/main.css";
@@ -83,6 +83,7 @@ function Shell(props) {
       </Show>
       <About />
       <OfflineChoiceDialog />
+      <AccountSwitchDialog />
       <PluginModal />
     </div>
   );
@@ -103,6 +104,8 @@ const routes = [
     children: [
       { path: "/general", component: lazy(() => import("./routes/settings/general/index.jsx")) },
       { path: "/worksuite", component: lazy(() => import("./routes/settings/worksuite/index.jsx")) },
+      /* Local AI hook: Settings › AI Models (src/settings/ai-models) — keep when the settings redesign lands */
+      { path: "/ai-models", component: lazy(() => import("./settings/ai-models/AiModelsPage.jsx")) },
       { path: "/plugin/:pluginId/:section", component: lazy(() => import("./routes/settings/plugin/index.jsx")) },
     ],
   },

@@ -13,7 +13,7 @@
     "fmt": "oxfmt",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
-    "test": "node --test test/*.test.mjs src/worksuite/*.test.mjs"
+    "test": "node --test test/*.test.mjs src/worksuite/*.test.mjs src/settings/ai-models/*.test.mjs"
   },
   "dependencies": {
     "@kobalte/core": "^0.13.11",

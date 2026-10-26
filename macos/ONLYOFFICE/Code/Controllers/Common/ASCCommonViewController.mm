@@ -44,6 +44,9 @@
 #import "ASCCommonViewController.h"
 #import "applicationmanager.h"
 #import "mac_application.h"
+#import "ASCApplicationManager.h"
+#include <signal.h>
+#include <errno.h>
 #import "ASCTabView.h"
 #import "ASCTitleWindowController.h"
 #import "ASCHelper.h"
@@ -72,7 +75,7 @@
 #import "ASCLicenseController.h"
 #import <Carbon/Carbon.h>
 #import <Security/Security.h>
-#import <Sparkle/SUUpdater.h>
+#import "ASCWorkSuiteUpdater.h"
 #import <QuartzCore/QuartzCore.h>
 
 
@@ -147,6 +150,7 @@ static BOOL workSuiteKeychainDelete(NSString * key) {
     
     addObserverFor(ASCEventNameMainWindowLoaded, @selector(onWindowLoaded:));
     addObserverFor(ASCEventNameOpenAppLinks, @selector(onOpenAppLink));
+    addObserverFor(ASCWorkSuiteUpdateProgressNotification, @selector(onWorkSuiteUpdateProgress:));
     addObserverFor(CEFEventNameTabEditorNameChanged, @selector(onCEFChangedTabEditorName:));
     addObserverFor(CEFEventNameTabEditorType, @selector(onCEFChangedTabEditorType:));
     addObserverFor(CEFEventNameSave, @selector(onCEFSave:));
@@ -162,6 +166,8 @@ static BOOL workSuiteKeychainDelete(NSString * key) {
     addObserverFor(CEFEventNameStartPageReady, @selector(onCEFStartPageReady:));
     addObserverFor(ASCEventNameWorkSuiteLinks, @selector(onWorkSuiteLinks));
     addObserverFor(CEFEventNameWorkSuiteSecret, @selector(onCEFWorkSuiteSecret:));
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onWorkSuiteAiTerminate:)
+                                                 name:NSApplicationWillTerminateNotification object:nil];
     addObserverFor(CEFEventNameEditorAppReady, @selector(onCEFEditorAppReady:));
     addObserverFor(CEFEventNameEditorAppActionRequest, @selector(onCEFEditorAppActionRequest:));
     addObserverFor(CEFEventNameEditorOpenFolder, @selector(onCEFEditorOpenFolder:));
@@ -1004,6 +1010,13 @@ static BOOL workSuiteKeychainDelete(NSString * key) {
                         self.tabsWithChanges = [NSMutableArray arrayWithArray:tabsWithChanges];
                         [self safeCloseTabsWithChanges];
                     } else if (result == NSAlertSecondButtonReturn) {
+                        // kept: tell the start page, as Windows and Linux do (a WorkSuite account switch waits for it)
+                        NSEditorApi::CAscExecCommandJS * pCommand = new NSEditorApi::CAscExecCommandJS;
+                        pCommand->put_Command(L"portal:logout:cancel");
+                        pCommand->put_Param([[@{@"domain": portal} jsonString] stdwstring]);
+                        NSEditorApi::CAscMenuEvent * pEvent = new NSEditorApi::CAscMenuEvent(ASC_MENU_EVENT_TYPE_CEF_EXECUTE_COMMAND_JS);
+                        pEvent->m_pData = pCommand;
+                        [self.cefStartPageView apply:pEvent];
                         return;
                     } else {
                         // "Delete and Quit" clicked
@@ -1315,10 +1328,32 @@ static BOOL workSuiteKeychainDelete(NSString * key) {
     return out;
 }
 
-/// SHL-08: Settings › WorkSuite › Updates, through Sparkle. The channel is the feed address's
-/// /channels/<channel>/ part (build-mac.yml stamps it into SUFeedURL).
+/// Sparkle's progress (ASCWorkSuiteUpdater) for the Updates card: "worksuite:update-progress"
+/// {state, received, total, version, cancellable}; once ready, also "worksuite:update-ready" (Sparkle has
+/// checked the EdDSA signature and the code signature before it reports ready).
+- (void)onWorkSuiteUpdateProgress:(NSNotification *)notification {
+    NSDictionary * p = notification.userInfo ?: @{};
+    if (!self.cefStartPageView)
+        return;
+    [self sendToStartPage:@"worksuite:update-progress" param:[p jsonString]];
+    if ([p[@"state"] isEqualToString:@"ready"]) {
+        SPUUpdater * updater = [ASCWorkSuiteUpdater sharedUpdater].updater;
+        NSArray * parts = updater.feedURL.path.pathComponents;
+        NSUInteger i = [parts indexOfObject:@"channels"];
+        NSString * channel = (i != NSNotFound && i + 1 < parts.count) ? [parts[i + 1] lowercaseString] : @"stable";
+        [self sendToStartPage:@"worksuite:update-ready" param:[@{@"version": p[@"version"] ?: @"", @"channel": channel,
+                                                                 @"verified": @YES, @"signatureChecked": @YES,
+                                                                 @"signer": @"WorkSuite", @"notes": @""} jsonString]];
+    }
+}
+
+/// SHL-08: Settings › WorkSuite › Updates, through Sparkle 2 (ASCWorkSuiteUpdater). The channel is the feed
+/// address's /channels/<channel>/ part (build-mac.yml stamps it into SUFeedURL).
+///   op "download": Install in Sparkle's "update found" step (Sparkle downloads, with progress); without one,
+///                  a check (Sparkle's window). "cancel": stops the download. "restart": Install and Relaunch.
 - (NSString *)workSuiteUpdates:(NSDictionary *)json {
-    SUUpdater * updater = [SUUpdater sharedUpdater];
+    ASCWorkSuiteUpdater * ws = [ASCWorkSuiteUpdater sharedUpdater];
+    SPUUpdater * updater = ws.updater;
     NSDictionary * policy = [self workSuitePolicy];
     NSString * op = [json[@"op"] isKindOfClass:[NSString class]] ? json[@"op"] : @"get";
 
@@ -1332,7 +1367,7 @@ static BOOL workSuiteKeychainDelete(NSString * key) {
         NSString * from = [NSString stringWithFormat:@"/channels/%@/", channelOf(updater.feedURL)];
         if (c && [c.path containsString:from]) {
             c.path = [c.path stringByReplacingOccurrencesOfString:from withString:[NSString stringWithFormat:@"/channels/%@/", channel]];
-            if (c.URL) updater.feedURL = c.URL;
+            if (c.URL) [updater setFeedURL:c.URL];
         }
     };
 
@@ -1354,17 +1389,36 @@ static BOOL workSuiteKeychainDelete(NSString * key) {
             updater.automaticallyDownloadsUpdates = [json[@"auto"] boolValue];
         }
     } else if ([op isEqualToString:@"check"]) {
-        [updater checkForUpdates:nil];
+        [updater checkForUpdates];
+    } else if ([op isEqualToString:@"download"]) {
+        if (![ws startDownload])
+            [updater checkForUpdates];
+    } else if ([op isEqualToString:@"cancel"]) {
+        [ws cancelDownload];
+    } else if ([op isEqualToString:@"restart"]) {
+        if (![ws installAndRelaunch])
+            [updater checkForUpdates];
+    } else {
+        // "get": repeat the progress for a start page that loaded after it
+        NSDictionary * last = ws.lastProgress;
+        if (last.count && ![last[@"state"] isEqualToString:@"idle"]) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [[NSNotificationCenter defaultCenter] postNotificationName:ASCWorkSuiteUpdateProgressNotification object:nil userInfo:last];
+            });
+        }
     }
 
-    NSDictionary * state = @{
+    NSMutableDictionary * state = [@{
         @"available": @(updater.feedURL != nil),
         @"version": [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"] ?: @"",
         @"channel": channelOf(updater.feedURL),
         @"auto": @(updater.automaticallyDownloadsUpdates),
         @"lastCheck": @(updater.lastUpdateCheckDate ? (long long)updater.lastUpdateCheckDate.timeIntervalSince1970 : 0),
         @"host": updater.feedURL.host ?: @"download.worksuitecloud.com",
-    };
+        @"download": @YES,
+    } mutableCopy];
+    if (ws.foundVersion)
+        state[@"found"] = @{@"version": ws.foundVersion};
     return [state jsonString];
 }
 
@@ -1423,11 +1477,305 @@ static BOOL workSuiteKeychainDelete(NSString * key) {
     }] resume];
 }
 
+/* ---- Local AI (docs/local-ai-bridge.md) ------------------------------------------------------------------ */
+
+static pid_t s_workSuiteAiLaunchedPid = 0;
+static BOOL s_workSuiteAiStarting = NO;
+static NSMutableArray<void (^)(NSDictionary *)> * s_workSuiteAiWaiting = nil;
+
+static BOOL workSuiteAiPidAlive(pid_t pid) {
+    return pid > 0 && (kill(pid, 0) == 0 || errno == EPERM);
+}
+
+/// ~/.worksuite/ai/endpoint.json when it names a live worksuite-ai, else nil
+static NSDictionary * workSuiteAiLiveEndpoint() {
+    NSString * path = [NSHomeDirectory() stringByAppendingPathComponent:@".worksuite/ai/endpoint.json"];
+    NSDictionary * attrs = [[NSFileManager defaultManager] attributesOfItemAtPath:path error:nil];
+    if (!attrs || [attrs fileSize] > 16 * 1024)
+        return nil;
+    NSData * data = [NSData dataWithContentsOfFile:path];
+    id json = data ? [NSJSONSerialization JSONObjectWithData:data options:0 error:nil] : nil;
+    if (![json isKindOfClass:[NSDictionary class]])
+        return nil;
+    NSInteger port = [json[@"port"] respondsToSelector:@selector(integerValue)] ? [json[@"port"] integerValue] : 0;
+    NSString * token = [json[@"token"] isKindOfClass:[NSString class]] ? json[@"token"] : nil;
+    pid_t pid = [json[@"pid"] respondsToSelector:@selector(intValue)] ? [json[@"pid"] intValue] : 0;
+    if (port <= 0 || port > 65535 || token.length == 0 || token.length > 512 || !workSuiteAiPidAlive(pid))
+        return nil;
+    return @{@"port": @(port), @"token": token, @"pid": @(pid),
+             @"apiVersion": [NSString stringWithFormat:@"%@", json[@"apiVersion"] ?: @""],
+             @"base": [NSString stringWithFormat:@"http://127.0.0.1:%ld/v1", (long)port]};
+}
+
+/// The AI keys of the configuration profile (lk.worksuite.office), in GET /v1/policy's shape
+- (NSDictionary *)workSuiteAiPolicy {
+    CFStringRef app = (__bridge CFStringRef)([[NSBundle mainBundle] bundleIdentifier] ?: @"lk.worksuite.office");
+    id (^forced)(NSString *) = ^id(NSString * key) {
+        if (!CFPreferencesAppValueIsForced((__bridge CFStringRef)key, app))
+            return nil;
+        return CFBridgingRelease(CFPreferencesCopyAppValue((__bridge CFStringRef)key, app));
+    };
+    BOOL (^boolOf)(id) = ^BOOL(id v) {
+        if ([v isKindOfClass:[NSNumber class]]) return [v boolValue];
+        NSString * s = [[NSString stringWithFormat:@"%@", v] lowercaseString];
+        return [s isEqualToString:@"1"] || [s isEqualToString:@"true"] || [s isEqualToString:@"yes"] || [s isEqualToString:@"on"];
+    };
+    BOOL off = [[[NSString stringWithFormat:@"%@", [self workSuitePolicy][@"aiFunctions"] ?: @""] lowercaseString] isEqualToString:@"off"];
+    BOOL managed = off;
+
+    NSMutableDictionary * features = [NSMutableDictionary dictionary];
+    NSDictionary * featureKeys = @{@"aiSpeechToText": @"stt", @"aiSuggestions": @"suggestions", @"aiCorrection": @"correction",
+                                   @"aiTranslation": @"translate", @"aiReadAloud": @"tts", @"aiAssistant": @"assistant"};
+    for (NSString * key in featureKeys) {
+        id v = forced(key);
+        if (v) managed = YES;
+        if (off || v) features[featureKeys[key]] = @(off ? NO : boolOf(v));
+    }
+
+    NSMutableArray * approved = [NSMutableArray array];
+    id models = forced(@"aiApprovedModels");
+    if ([models isKindOfClass:[NSArray class]]) {
+        for (id m in models) if ([m isKindOfClass:[NSString class]] && [m length]) [approved addObject:m];
+    } else if ([models isKindOfClass:[NSString class]]) {
+        for (NSString * m in [models componentsSeparatedByCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@",; \t\n"]])
+            if (m.length) [approved addObject:m];
+    }
+    if (models) managed = YES;
+
+    NSMutableDictionary * out = [@{@"features": features, @"approvedModels": approved} mutableCopy];
+    id v;
+    if (off) out[@"cloudAllowed"] = @NO;
+    else if ((v = forced(@"aiCloudAllowed"))) { out[@"cloudAllowed"] = @(boolOf(v)); managed = YES; }
+    if ((v = forced(@"aiGpuAllowed"))) { out[@"gpuAllowed"] = @(boolOf(v)); managed = YES; }
+    if ((v = forced(@"aiMaxMemoryMB")) && [v respondsToSelector:@selector(integerValue)]) { out[@"maxMemMB"] = @([v integerValue]); managed = YES; }
+    if ((v = forced(@"aiDictionaryUrl")) && [v isKindOfClass:[NSString class]]) { out[@"orgDictionaryUrl"] = v; managed = YES; }
+    if ((v = forced(@"aiCatalogUrl")) && [v isKindOfClass:[NSString class]]) { out[@"catalogUrl"] = v; managed = YES; }
+    if ((v = forced(@"aiStoragePath")) && [v isKindOfClass:[NSString class]]) { out[@"storagePath"] = v; managed = YES; }
+    out[@"managed"] = @(managed);
+    return out;
+}
+
+/// "ws-ai:endpoint" from the start page or an editor tab: {port, token} of worksuite-ai, starting it when asked
+- (void)onWorkSuiteAiEndpoint:(NSDictionary *)info {
+    NSInteger viewId = [info[@"viewId"] integerValue];
+    BOOL fromStart = self.cefStartPageView && viewId == self.cefStartPageView.uuid;
+    CAscApplicationManager * appManager = [NSAscApplicationWorker getAppManager];
+    CCefView * sender = appManager ? appManager->GetViewById((int)viewId) : NULL;
+    if (!fromStart && !(sender && sender->GetType() == cvwtEditor))
+        return;
+
+    NSDictionary * json = [info[@"param"] dictionary];
+    NSString * req = [json[@"req"] isKindOfClass:[NSString class]] ? [json[@"req"] substringToIndex:MIN((NSUInteger)64, [json[@"req"] length])] : @"";
+    BOOL start = [json[@"start"] respondsToSelector:@selector(boolValue)] && [json[@"start"] boolValue];
+    NSDictionary * policy = [self workSuiteAiPolicy];
+
+    __weak ASCCommonViewController * weakSelf = self;
+    void (^answer)(NSDictionary *) = ^(NSDictionary * result) {
+        NSMutableDictionary * out = [result mutableCopy];
+        out[@"req"] = req;
+        out[@"policy"] = policy;
+        NSString * text = [out jsonString];
+        if (fromStart) {
+            [weakSelf sendToStartPage:@"ws-ai:endpoint" param:text];
+        } else if (CAscApplicationManager * manager = [NSAscApplicationWorker getAppManager]) {
+            if (CCefView * view = manager->GetViewById((int)viewId))
+                ASCApplicationManager::sendCommandTo(view, L"ws-ai:endpoint", [text stdwstring]);
+        }
+    };
+
+    if ([[[NSString stringWithFormat:@"%@", [self workSuitePolicy][@"aiFunctions"] ?: @""] lowercaseString] isEqualToString:@"off"]) {
+        answer(@{@"ok": @NO, @"reason": @"disabled-by-policy"});
+        return;
+    }
+    if (NSDictionary * live = workSuiteAiLiveEndpoint()) {
+        NSMutableDictionary * out = [live mutableCopy];
+        out[@"ok"] = @YES;
+        out[@"launched"] = @(s_workSuiteAiLaunchedPid > 0 && [live[@"pid"] intValue] == s_workSuiteAiLaunchedPid);
+        answer(out);
+        return;
+    }
+    if (!start) {
+        answer(@{@"ok": @NO, @"reason": @"not-running"});
+        return;
+    }
+
+    if (!s_workSuiteAiWaiting) s_workSuiteAiWaiting = [NSMutableArray array];
+    [s_workSuiteAiWaiting addObject:answer];
+    if (s_workSuiteAiStarting)
+        return;
+
+    void (^finish)(NSDictionary *) = ^(NSDictionary * result) {
+        s_workSuiteAiStarting = NO;
+        NSArray * waiting = [s_workSuiteAiWaiting copy];
+        [s_workSuiteAiWaiting removeAllObjects];
+        for (void (^w)(NSDictionary *) in waiting) w(result);
+    };
+
+    NSString * binary = [[NSBundle mainBundle] pathForAuxiliaryExecutable:@"worksuite-ai"];
+    if (!binary || ![[NSFileManager defaultManager] isExecutableFileAtPath:binary]) {
+        finish(@{@"ok": @NO, @"reason": @"not-installed"});
+        return;
+    }
+
+    s_workSuiteAiStarting = YES;
+    NSTask * task = [[NSTask alloc] init];
+    task.executableURL = [NSURL fileURLWithPath:binary];
+    task.currentDirectoryURL = [NSURL fileURLWithPath:NSHomeDirectory()];
+    NSError * error = nil;
+    if (![task launchAndReturnError:&error]) {
+        finish(@{@"ok": @NO, @"reason": @"start-failed"});
+        return;
+    }
+    pid_t pid = task.processIdentifier;
+    s_workSuiteAiLaunchedPid = pid;
+
+    NSDate * deadline = [NSDate dateWithTimeIntervalSinceNow:20];
+    [NSTimer scheduledTimerWithTimeInterval:0.25 repeats:YES block:^(NSTimer * timer) {
+        NSDictionary * result = nil;
+        if (NSDictionary * live = workSuiteAiLiveEndpoint()) {
+            NSMutableDictionary * out = [live mutableCopy];
+            out[@"ok"] = @YES;
+            out[@"launched"] = @([live[@"pid"] intValue] == pid);
+            result = out;
+        } else if (!task.isRunning) {
+            result = @{@"ok": @NO, @"reason": @"start-failed"};
+        } else if ([deadline timeIntervalSinceNow] < 0) {
+            result = @{@"ok": @NO, @"reason": @"timeout"};
+        }
+        if (result) {
+            [timer invalidate];
+            finish(result);
+        }
+    }];
+}
+
+/// On quit: stop worksuite-ai when this app started it and it has nothing queued (GET /v1/health)
+- (void)onWorkSuiteAiTerminate:(NSNotification *)notification {
+    pid_t pid = s_workSuiteAiLaunchedPid;
+    NSDictionary * live = workSuiteAiLiveEndpoint();
+    if (pid <= 0 || !live || [live[@"pid"] intValue] != pid)
+        return;
+
+    NSMutableURLRequest * request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:[live[@"base"] stringByAppendingString:@"/health"]]];
+    [request setValue:[@"Bearer " stringByAppendingString:live[@"token"]] forHTTPHeaderField:@"Authorization"];
+    [request setValue:@"worksuite://office" forHTTPHeaderField:@"Origin"];
+    request.timeoutInterval = 1.5;
+    __block NSInteger queueDepth = -1;
+    dispatch_semaphore_t done = dispatch_semaphore_create(0);
+    [[[NSURLSession sharedSession] dataTaskWithRequest:request completionHandler:^(NSData * d, NSURLResponse * r, NSError * e) {
+        if (!e && [(NSHTTPURLResponse *)r statusCode] == 200 && d) {
+            id json = [NSJSONSerialization JSONObjectWithData:d options:0 error:nil];
+            if ([json isKindOfClass:[NSDictionary class]] && [json[@"queueDepth"] respondsToSelector:@selector(integerValue)])
+                queueDepth = [json[@"queueDepth"] integerValue];
+        }
+        dispatch_semaphore_signal(done);
+    }] resume];
+    dispatch_semaphore_wait(done, dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.6 * NSEC_PER_SEC)));
+    if (queueDepth == 0)
+        kill(pid, SIGTERM);
+}
+
+/// Clouds › WorkSuite Drive (the file:// start page cannot send bytes itself), answers "worksuite:transfer":
+/// "chunk": one upload part (base64) as multipart "chunk" + "chunk_index" to https://<server>/api/uploads/<uuid>/chunk;
+/// "download": https://<server>/media/<token> into ~/Downloads with progress; "cancel"; "reveal" (a file in Downloads).
+static NSMutableDictionary<NSString *, NSURLSessionTask *> * workSuiteDownloads = nil;
+
+- (void)workSuiteTransfer:(NSDictionary *)json {
+    NSString * op = [json[@"op"] isKindOfClass:[NSString class]] ? json[@"op"] : @"";
+    NSString * req = [json[@"req"] isKindOfClass:[NSString class]] ? json[@"req"] : @"";
+    if (req.length > 64) req = [req substringToIndex:64];
+    void (^send)(NSDictionary *) = ^(NSDictionary * out) {
+        dispatch_async(dispatch_get_main_queue(), ^{ [self sendToStartPage:@"worksuite:transfer" param:[out jsonString]]; });
+    };
+    if (!workSuiteDownloads) workSuiteDownloads = [NSMutableDictionary dictionary];
+    NSString * downloadsDir = [[NSSearchPathForDirectoriesInDomains(NSDownloadsDirectory, NSUserDomainMask, YES) firstObject] stringByResolvingSymlinksInPath];
+
+    if ([op isEqualToString:@"cancel"]) {
+        [workSuiteDownloads[req] cancel];
+        return;
+    }
+    if ([op isEqualToString:@"reveal"]) {
+        NSString * path = [json[@"path"] isKindOfClass:[NSString class]] ? [json[@"path"] stringByResolvingSymlinksInPath] : nil;
+        if (path && downloadsDir && [path hasPrefix:[downloadsDir stringByAppendingString:@"/"]])
+            [[NSWorkspace sharedWorkspace] activateFileViewerSelectingURLs:@[[NSURL fileURLWithPath:path]]];
+        return;
+    }
+
+    NSURL * url = [json[@"url"] isKindOfClass:[NSString class]] ? [NSURL URLWithString:json[@"url"]] : nil;
+    BOOL https = url && [url.scheme isEqualToString:@"https"] && !url.user && url.host.length > 0 && url.path;
+
+    if ([op isEqualToString:@"chunk"]) {
+        NSRegularExpression * re = [NSRegularExpression regularExpressionWithPattern:@"^/api/uploads/[0-9a-fA-F-]{36}/chunk$" options:0 error:nil];
+        NSString * token = [json[@"token"] isKindOfClass:[NSString class]] ? json[@"token"] : nil;
+        NSInteger index = [json[@"index"] respondsToSelector:@selector(integerValue)] ? [json[@"index"] integerValue] : -1;
+        NSData * data = [json[@"data"] isKindOfClass:[NSString class]] ? [[NSData alloc] initWithBase64EncodedString:json[@"data"] options:0] : nil;
+        if (!https || url.query || [re numberOfMatchesInString:url.path options:0 range:NSMakeRange(0, url.path.length)] != 1 ||
+            token.length == 0 || [token containsString:@"\n"] || index < 0 || !data || data.length > 16 * 1024 * 1024) {
+            send(@{@"req": req, @"status": @400, @"body": @""});
+            return;
+        }
+        NSString * boundary = [NSString stringWithFormat:@"ws-%@", [[NSUUID UUID] UUIDString]];
+        NSMutableData * body = [NSMutableData data];
+        [body appendData:[[NSString stringWithFormat:@"--%@\r\nContent-Disposition: form-data; name=\"chunk_index\"\r\n\r\n%ld\r\n", boundary, (long)index] dataUsingEncoding:NSUTF8StringEncoding]];
+        [body appendData:[[NSString stringWithFormat:@"--%@\r\nContent-Disposition: form-data; name=\"chunk\"; filename=\"%ld.part\"\r\nContent-Type: application/octet-stream\r\n\r\n", boundary, (long)index] dataUsingEncoding:NSUTF8StringEncoding]];
+        [body appendData:data];
+        [body appendData:[[NSString stringWithFormat:@"\r\n--%@--\r\n", boundary] dataUsingEncoding:NSUTF8StringEncoding]];
+        NSMutableURLRequest * request = [NSMutableURLRequest requestWithURL:url];
+        request.HTTPMethod = @"POST";
+        [request setValue:[@"Bearer " stringByAppendingString:token] forHTTPHeaderField:@"Authorization"];
+        [request setValue:@"application/json" forHTTPHeaderField:@"Accept"];
+        [request setValue:[NSString stringWithFormat:@"multipart/form-data; boundary=%@", boundary] forHTTPHeaderField:@"Content-Type"];
+        [[[NSURLSession sharedSession] uploadTaskWithRequest:request fromData:body completionHandler:^(NSData * d, NSURLResponse * r, NSError * e) {
+            NSString * text = d ? ([[NSString alloc] initWithData:d encoding:NSUTF8StringEncoding] ?: @"") : @"";
+            send(@{@"req": req, @"status": @(e ? 0 : [(NSHTTPURLResponse *)r statusCode]), @"body": text});
+        }] resume];
+        return;
+    }
+
+    if ([op isEqualToString:@"download"]) {
+        NSRegularExpression * re = [NSRegularExpression regularExpressionWithPattern:@"^/media/[A-Za-z0-9._~-]{8,2048}$" options:0 error:nil];
+        if (!https || [re numberOfMatchesInString:url.path options:0 range:NSMakeRange(0, url.path.length)] != 1 ||
+            (url.query && ![url.query isEqualToString:@"download=1"]) || !downloadsDir || req.length == 0) {
+            send(@{@"req": req, @"status": @400, @"done": @YES});
+            return;
+        }
+        NSString * raw = [json[@"name"] isKindOfClass:[NSString class]] ? json[@"name"] : @"";
+        NSCharacterSet * bad = [NSCharacterSet characterSetWithCharactersInString:@"/\\:*?\"<>|"];
+        NSString * name = [[[raw componentsSeparatedByCharactersInSet:bad] componentsJoinedByString:@"_"] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+        if (name.length > 180) name = [name substringToIndex:180];
+        if (name.length == 0 || [name hasPrefix:@"."]) name = [@"download" stringByAppendingString:name];
+        NSString * path = [downloadsDir stringByAppendingPathComponent:name];
+        for (int n = 2; [[NSFileManager defaultManager] fileExistsAtPath:path] && n < 1000; n++) {
+            NSString * ext = name.pathExtension.length ? [@"." stringByAppendingString:name.pathExtension] : @"";
+            path = [downloadsDir stringByAppendingPathComponent:[NSString stringWithFormat:@"%@ (%d)%@", name.stringByDeletingPathExtension, n, ext]];
+        }
+        __block NSTimer * timer = nil;
+        NSURLSessionDownloadTask * task = [[NSURLSession sharedSession] downloadTaskWithURL:url completionHandler:^(NSURL * location, NSURLResponse * r, NSError * e) {
+            dispatch_async(dispatch_get_main_queue(), ^{ [timer invalidate]; [workSuiteDownloads removeObjectForKey:req]; });
+            NSInteger status = e ? (e.code == NSURLErrorCancelled ? 499 : 0) : [(NSHTTPURLResponse *)r statusCode];
+            if (!e && status >= 200 && status < 300 && location && [[NSFileManager defaultManager] moveItemAtURL:location toURL:[NSURL fileURLWithPath:path] error:nil])
+                send(@{@"req": req, @"status": @(status), @"done": @YES, @"path": path});
+            else
+                send(@{@"req": req, @"status": @(status), @"done": @YES});
+        }];
+        workSuiteDownloads[req] = task;
+        timer = [NSTimer scheduledTimerWithTimeInterval:0.3 repeats:YES block:^(NSTimer * t) {
+            send(@{@"req": req, @"received": @(task.countOfBytesReceived), @"total": @(MAX(0, task.countOfBytesExpectedToReceive))});
+        }];
+        [task resume];
+        return;
+    }
+}
+
 /// The start page's WorkSuite section: sign-ins kept in the Keychain ("worksuite:secret"), the accounts
 /// WorkSuite Desktop is signed in to ("worksuite:desktop") and the sidebar's WorkSuite item ("worksuite:app").
 /// Never answered for a web page in a tab.
 - (void)onCEFWorkSuiteSecret:(NSNotification *)notification {
     NSDictionary * info = notification.userInfo;
+    if (info && [info[@"command"] isEqualToString:@"ws-ai:endpoint"]) {
+        [self onWorkSuiteAiEndpoint:info];
+        return;
+    }
     if (info && [info[@"command"] isEqualToString:@"worksuite:share"]) {
         [self onWorkSuiteShare:info];
         return;
@@ -1463,6 +1811,11 @@ static BOOL workSuiteKeychainDelete(NSString * key) {
 
     if ([info[@"command"] isEqualToString:@"worksuite:upload"]) {
         [self workSuiteUpload:[info[@"param"] dictionary]];
+        return;
+    }
+
+    if ([info[@"command"] isEqualToString:@"worksuite:transfer"]) {
+        [self workSuiteTransfer:[info[@"param"] dictionary]];
         return;
     }
 

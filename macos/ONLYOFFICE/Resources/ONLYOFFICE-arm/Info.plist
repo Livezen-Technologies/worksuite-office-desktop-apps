@@ -777,7 +777,7 @@
 	<key>NSMainStoryboardFile</key>
 	<string>Main</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Once WorkSuite Office has permission, document tabs will be able to ask you for access.</string>
+	<string>WorkSuite Office uses the microphone for voice typing. Audio is transcribed on this computer and is not kept unless you turn on Keep voice recordings.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 	<key>SUFeedURL</key>

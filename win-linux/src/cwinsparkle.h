@@ -43,6 +43,14 @@
  * Once WinSparkle has downloaded and verified an update it does not run the installer at once: the
  * start page shows "worksuite:update-ready", and the installer runs when the app closes ("Restart to
  * update" closes the app and opens it again afterwards).
+ *
+ * Download with progress (WinSparkle 0.9 reports none): the Updates card's Download ("op":"download") is
+ * done by CWsUpdateDownload from the same appcast, with "worksuite:update-progress"
+ * {state: downloading|verifying|ready|error|idle, received, total, version, cancellable, reason} to the
+ * start page and "op":"cancel" to stop it. It refuses an item without sparkle:edSignature or length and
+ * a file whose length or Ed25519 signature (WS_EDDSA_PUBLIC_KEY) does not match, deletes it, and then
+ * opens WinSparkle's own window instead. A verified file is kept like WinSparkle's own download and runs
+ * at exit. WinSparkle's did-find / did-not-find / skipped callbacks keep the card's "found" in step.
  */
 namespace CWinSparkle
 {
@@ -53,7 +61,7 @@ namespace CWinSparkle
 
     bool active();
 
-    /* "worksuite:updates" {"op":"get|set|check|restart",...} → the state for Settings › WorkSuite */
+    /* "worksuite:updates" {"op":"get|set|check|download|cancel|restart",...} → the state for Settings › WorkSuite */
     QString command(const QJsonObject& in);
     /* About › Check for updates ("updates:action" "check") */
     void checkWithUi();

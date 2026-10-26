@@ -52,6 +52,8 @@ const utils = { Lang: L, defines: { FileFormat } };
  * and every save is a new version of the same Drive file.
  */
 
+import { driveCacheKey } from './clouds-logic.js';
+
 +function () {
     'use strict';
 
@@ -744,9 +746,8 @@ const utils = { Lang: L, defines: { FileFormat } };
             saveAccounts(list);
             Object.keys(localStorage).filter(k => k.indexOf(LS_CACHE + account.id) === 0).forEach(k => localStorage.removeItem(k));
 
-            // The editor tabs signed in to that server sign out with it, unless another account still uses it.
-            if (!list.some(a => a.server === account.server))
-                window.sdk && window.sdk.execCommand && window.sdk.execCommand('portal:logout', JSON.stringify({ domain: account.server }));
+            // The editor tabs of that server sign out with it when they are this account's, or no other account uses it.
+            endSessionOf(account, list.some(a => a.server === account.server));
 
             if (localStorage.getItem(LS_ACTIVE) === account.id)
                 list.length ? localStorage.setItem(LS_ACTIVE, list[0].id) : localStorage.removeItem(LS_ACTIVE);
@@ -774,8 +775,7 @@ const utils = { Lang: L, defines: { FileFormat } };
             delete access[account.id];
             updateAccount(account.id, { signedOut: true, signedOutBy: 'user' });
             const list = accounts();
-            if (!list.some(a => a.server === account.server && !a.signedOut))
-                window.sdk && window.sdk.execCommand && window.sdk.execCommand('portal:logout', JSON.stringify({ domain: account.server }));
+            endSessionOf(account, list.some(a => a.server === account.server && !a.signedOut));
             if (localStorage.getItem(LS_ACTIVE) === account.id) {
                 const other = list.find(a => !a.signedOut);
                 if (other) localStorage.setItem(LS_ACTIVE, other.id);
@@ -970,8 +970,7 @@ const utils = { Lang: L, defines: { FileFormat } };
         const list = accounts().filter(a => a.id !== account.id);
         saveAccounts(list);
         Object.keys(localStorage).filter(k => k.indexOf(LS_CACHE + account.id) === 0).forEach(k => localStorage.removeItem(k));
-        if (!list.some(a => a.server === account.server))
-            window.sdk && window.sdk.execCommand && window.sdk.execCommand('portal:logout', JSON.stringify({ domain: account.server }));
+        endSessionOf(account, list.some(a => a.server === account.server));
         if (localStorage.getItem(LS_ACTIVE) === account.id)
             list.length ? localStorage.setItem(LS_ACTIVE, list[0].id) : localStorage.removeItem(LS_ACTIVE);
         fire('changed');
@@ -999,49 +998,69 @@ const utils = { Lang: L, defines: { FileFormat } };
             org: f.org_id === undefined ? undefined : f.org_id,
             folder: f.folder_id === undefined ? undefined : f.folder_id,
             version: f.version === undefined ? undefined : f.version,
+            size: typeof f.size === 'number' ? f.size : (f.size ? Number(f.size) : undefined),
+            mime: f.mime_type || '',
+            shared: !!f.shared,
+            access: f.access && typeof f.access === 'object' ? f.access : undefined,
+            ownerId: f.owner_id === undefined ? undefined : f.owner_id,
+            deleted: f.deleted_at || '',
+            daysLeft: f.days_left === undefined ? undefined : f.days_left,
         };
     }
 
     function shapeFolder(f) {
         return { kind: 'folder', id: f.id, name: f.name || '', owner: f.owner_name || '', modified: f.updated_at || '',
-                 org: f.org_id === undefined ? undefined : f.org_id };
+                 org: f.org_id === undefined ? undefined : f.org_id, location: f.path || '', shared: !!f.shared,
+                 access: f.access && typeof f.access === 'object' ? f.access : undefined, ownerId: f.owner_id,
+                 size: f.total_size === undefined ? undefined : Number(f.total_size), count: f.file_count === undefined ? undefined : Number(f.file_count),
+                 locked: !!f.is_locked };
     }
 
     /*
-     * One list: 'recent' | 'shared' | 'starred' | 'drive' (with folder) | 'search' (with q).
-     * Only Office files and PDFs are listed, with folders where browsing.
+     * One list: 'recent' | 'shared' | 'starred' | 'trash' | 'drive' (with folder) | 'search' (with q), for the
+     * account's organisation (org_id). Home lists only Office files and PDFs (folders where browsing); Clouds
+     * passes `all` for every file. `page` pages Drive's lists (per_page 100): {items, total, page, more}.
+     * `access` is the reader's access to the folder shown (null at the top of My Drive).
      */
     async function list(account, view, opts) {
         opts = opts || {};
-        let data, items, breadcrumb = null;
+        let data, items, breadcrumb = null, total = null, folderAccess = null, company = null;
         const org = companyOf(account);
         const orgQ = org ? '&org_id=' + encodeURIComponent(org) : '';
+        const page = Math.max(1, opts.page || 1);
 
         if (view === 'drive') {
             data = await api(account, 'GET', '/api/files/browse?' + (opts.folder ? 'folder_id=' + encodeURIComponent(opts.folder) : '') + orgQ);
             items = (data.folders || []).map(shapeFolder).concat((data.files || []).map(shapeFile));
             breadcrumb = data.breadcrumb || [];
+            folderAccess = data.access || null;
+            company = data.company || null;
+            if (data.locked) folderAccess = Object.assign({}, folderAccess, { locked: true });
         } else
         if (view === 'search') {
             data = await api(account, 'GET', '/api/files/search?limit=100&q=' + encodeURIComponent(opts.q || '') + orgQ);
             items = (data.files || []).map(shapeFile);
         } else {
             const sort = view === 'recent' ? '&sort=opened&dir=desc' : '&sort=modified&dir=desc';
-            data = await api(account, 'GET', '/api/drive/list?per_page=100&view=' + encodeURIComponent(view) + sort + orgQ);
+            data = await api(account, 'GET', '/api/drive/list?per_page=100&counts=0&page=' + page + '&view=' + encodeURIComponent(view) + sort + orgQ);
             items = (data.files || []).map(shapeFile);
+            total = typeof data.total === 'number' ? data.total : null;
         }
 
-        items = items.filter(i => (i.kind === 'folder' || OFFICE_EXT.includes(i.ext)) && inCompany(org, i));
-        const result = { items: items, breadcrumb: breadcrumb, at: Date.now() };
+        items = items.filter(i => (opts.all || i.kind === 'folder' || OFFICE_EXT.includes(i.ext)) && inCompany(org, i));
+        const result = { items: items, breadcrumb: breadcrumb, access: folderAccess, company: company, total: total, page: page,
+                         more: total !== null && page * 100 < total, at: Date.now() };
 
         if (view !== 'search')
             writeJson(localStorage, cacheKey(account, view, opts), result);
         return result;
     }
 
+    /* the account's own prefix (Sign out / Remove drop it), then the account, server, organisation and place */
     function cacheKey(account, view, opts) {
-        const org = companyOf(account);
-        return LS_CACHE + account.id + ':' + view + (view === 'drive' ? ':' + (opts.folder || 'root') : '') + (org ? '@' + org : '');
+        opts = opts || {};
+        return LS_CACHE + account.id + ':' + driveCacheKey({ server: account.server, user: account.user && account.user.id, org: companyOf(account),
+                                                              view: view + (opts.all ? '+all' : ''), folder: opts.folder, page: opts.page });
     }
 
     function cached(account, view, opts) {
@@ -1091,6 +1110,71 @@ const utils = { Lang: L, defines: { FileFormat } };
     }
 
     /*
+     * Editor tabs and accounts (docs/accounts.md, "Editor tabs"). The desktop SDK gives every tab the one CEF
+     * request context, so the tabs of a server share its web cookies whichever account opened them. To keep
+     * accounts apart anyway, a server's editor tabs belong to one account at a time: LS_TAB_OWNER records
+     * which. Opening a document of that server as another account first ends the server's web session
+     * (portal:logout: its tabs close, asking about unsaved changes, and its cookies are deleted), after the
+     * person agrees (confirmAccountSwitch, the start page's dialog). Sign out and Remove of the owner end it
+     * too, even when another account of that server is still signed in.
+     */
+    const LS_TAB_OWNER = 'ws:tab-owner';
+    const sessionEnds = {};     // server -> [resolve(true|false)] while a portal:logout runs
+    const SESSION_END_TIMEOUT = 120000;
+
+    function tabOwners() {
+        const o = readJson(localStorage, LS_TAB_OWNER, {});
+        return o && typeof o === 'object' ? o : {};
+    }
+
+    function setTabOwner(server, id) {
+        const o = tabOwners();
+        if (id) o[server] = id; else delete o[server];
+        try { localStorage.setItem(LS_TAB_OWNER, JSON.stringify(o)); } catch { /* only a hint */ }
+    }
+
+    /* the server's web session ended (true) or the person kept its tabs (false; macOS sends no answer then) */
+    function endServerSession(server) {
+        return new Promise(resolve => {
+            const waiting = sessionEnds[server] = sessionEnds[server] || [];
+            waiting.push(resolve);
+            if (waiting.length > 1) return;     // one logout per server at a time
+            const timer = setTimeout(() => settleSession(server, false), SESSION_END_TIMEOUT);
+            if (timer && timer.unref) timer.unref();
+            window.sdk && window.sdk.execCommand && window.sdk.execCommand('portal:logout', JSON.stringify({ domain: server }));
+        });
+    }
+
+    function settleSession(server, ended) {
+        const waiting = sessionEnds[server];
+        if (!waiting) return;
+        delete sessionEnds[server];
+        if (ended && tabOwners()[server]) setTabOwner(server, null);
+        waiting.forEach(f => f(ended));
+    }
+
+    /* the account's own sign-out: end the server's web session when its tabs are this account's, or nobody else uses it */
+    function endSessionOf(account, othersOnServer) {
+        const owner = tabOwners()[account.server];
+        if (owner === account.id || !othersOnServer) {
+            if (owner) setTabOwner(account.server, null);
+            window.sdk && window.sdk.execCommand && window.sdk.execCommand('portal:logout', JSON.stringify({ domain: account.server }));
+        }
+    }
+
+    /* before opening a tab as `account`: the server's tabs are someone else's? Ask, then end that session */
+    async function claimServerTabs(account) {
+        const owner = tabOwners()[account.server];
+        if (!owner || owner === account.id) return true;
+        const from = accounts().find(a => a.id === owner) || { id: owner, server: account.server, user: { name: '' } };
+        const ask = (window.WorkSuite && window.WorkSuite.confirmAccountSwitch) ||
+                    (window.WorkSuiteShell && window.WorkSuiteShell.confirmAccountSwitch);
+        const agreed = typeof ask === 'function' ? await Promise.resolve(ask(account, from)).catch(() => false) : true;
+        if (!agreed) return false;
+        return endServerSession(account.server);
+    }
+
+    /*
      * `extra.version`: an old version, read-only (DRV-09). `file.src`: a copy that is not in Drive (a mail
      * attachment, LNK-05), read from the server with this sign-in; Save asks for a Drive folder.
      */
@@ -1100,6 +1184,11 @@ const utils = { Lang: L, defines: { FileFormat } };
         if (!extra.version && !file.src && readJson(localStorage, 'ws:pref:openIn', 'office') === 'browser') {
             openInBrowser(account, '/editor/' + encodeURIComponent(file.id));
             return;
+        }
+        if (!(await claimServerTabs(account))) {
+            const e = new Error(L.wsxSwitchKept || 'The documents of the other account stay open.');
+            e.code = 'account-switch-cancelled';
+            throw e;
         }
         const pair = await pkce();
         const handed = await api(account, 'POST', '/api/auth/apps/handoff',
@@ -1122,6 +1211,7 @@ const utils = { Lang: L, defines: { FileFormat } };
             cloud: account.server,
             recovery: false,
         }));
+        setTabOwner(account.server, account.id);
 
         if (!file.src && !extra.version)
             api(account, 'POST', '/api/drive/opened/' + encodeURIComponent(file.id)).catch(() => {});
@@ -1151,7 +1241,105 @@ const utils = { Lang: L, defines: { FileFormat } };
     }
 
     function star(account, file, on) {
-        return api(account, 'POST', '/api/drive/star', { type: 'file', id: file.id, on: !!on });
+        return api(account, 'POST', '/api/drive/star', { type: file.kind === 'folder' ? 'folder' : 'file', id: file.id, on: !!on });
+    }
+
+    /* ------------------------------------------------------------------ *
+     * Clouds › WorkSuite Drive: folders, the bin, preview, download, upload, activity
+     * ------------------------------------------------------------------ */
+
+    /* POST /api/folders {name, parent_id}: needs "add_files" on the parent */
+    function createFolder(account, name, parent) {
+        return api(account, 'POST', '/api/folders', { name: name, parent_id: parent || null }).then(d => shapeFolder(d || {}));
+    }
+
+    /* DELETE /api/files/{id}/purge: out of the bin for good (the server refuses under a legal hold) */
+    function purge(account, file) {
+        return api(account, 'DELETE', '/api/files/' + encodeURIComponent(file.id) + '/purge');
+    }
+
+    const absolute = (account, u) => (typeof u === 'string' && u ? (u.charAt(0) === '/' ? account.server + u : u) : null);
+
+    /*
+     * GET /api/drive/preview/{id}: the viewer's signed addresses (/media/<token>, good for an hour or two).
+     * {url (a PDF, an image…), download (null when the reader may not download), kind, mime, size}
+     */
+    async function preview(account, file) {
+        const d = await api(account, 'GET', '/api/drive/preview/' + encodeURIComponent(file.id));
+        const url = absolute(account, d && d.url);
+        const download = absolute(account, d && d.download_url);
+        return { url: pictureUrl(account, url), download: pictureUrl(account, download), kind: (d && d.preview) || '', mime: (d && d.mime) || '', size: (d && d.size) || 0 };
+    }
+
+    /* GET /api/drive/activity/{file|folder}/{id}: the item's timeline as the reader may see it */
+    async function activity(account, item) {
+        const d = await api(account, 'GET', '/api/drive/activity/' + (item.kind === 'folder' ? 'folder' : 'file') + '/' + encodeURIComponent(item.id));
+        return ((d && d.activity) || []).map(a => ({ id: a.id, summary: String(a.summary || ''), actor: a.actor && a.actor.name ? String(a.actor.name) : '',
+                                                     at: a.at || a.created_at || '', kind: a.kind || '' }));
+    }
+
+    /*
+     * Upload one file into a folder (Drive's resumable uploads): POST /api/uploads/init, each part through the app
+     * (worksuite:transfer, a multipart POST to /api/uploads/{id}/chunk with the token, which this file:// page
+     * cannot make itself), then POST /api/uploads/{id}/complete (202 while the server assembles it: asked again).
+     * `send(part)` is the page's transfer: (url, token, index, base64) → {status, body}. `onProgress(bytes)`.
+     * `cancelled()` stops between parts and aborts the session.
+     */
+    async function upload(account, blob, folder, hooks) {
+        hooks = hooks || {};
+        const size = blob.size || 0;
+        const chunk = hooks.chunk || 1024 * 1024;
+        const total = Math.max(1, Math.ceil(size / chunk));
+        const started = await api(account, 'POST', '/api/uploads/init', {
+            filename: blob.name, total_size: size, chunk_size: chunk, total_chunks: total, folder_id: folder || null,
+            mime_type: blob.type || null, client_key: hooks.key || null,
+        });
+        const id = started && started.upload_id;
+        if (!id || !/^[0-9a-f-]{36}$/i.test(id)) throw new Error(utils.Lang.wsErrServer);
+        const have = new Set((started.received_chunks || []).map(Number));
+        let sent = 0;
+        for (let i = 0; i < total; i++) {
+            const end = Math.min(size, (i + 1) * chunk);
+            if (hooks.cancelled && hooks.cancelled()) {
+                api(account, 'POST', '/api/uploads/' + id + '/abort', {}).catch(() => {});
+                const e = new Error('cancelled');
+                e.cancelled = true;
+                throw e;
+            }
+            if (!have.has(i)) {
+                const part = await readBase64(blob.slice(i * chunk, end));
+                let r = await hooks.send(account.server + '/api/uploads/' + id + '/chunk', await token(account), i, part);
+                if (r.status === 401) {
+                    delete access[account.id];
+                    r = await hooks.send(account.server + '/api/uploads/' + id + '/chunk', await refresh(account), i, part);
+                }
+                if (r.status < 200 || r.status >= 300) {
+                    let json = null;
+                    try { json = JSON.parse(r.body || 'null'); } catch (e) { /* not JSON */ }
+                    throw apiError({ status: r.status, json: json });
+                }
+            }
+            sent = end;
+            hooks.onProgress && hooks.onProgress(sent);
+        }
+        hooks.onFinishing && hooks.onFinishing();
+        for (let round = 0; round < 60; round++) {
+            const res = await http('POST', account.server + '/api/uploads/' + id + '/complete', {}, { 'Authorization': 'Bearer ' + await token(account) });
+            if (res.status === 202) { await new Promise(ok => setTimeout(ok, 1500)); continue; }
+            if (res.status < 200 || res.status >= 300 || !res.json || res.json.status === 'error') throw apiError(res);
+            const d = res.json.data || {};
+            return { id: d.file_id, name: d.name || blob.name, size: d.size, quarantined: !!d.quarantined };
+        }
+        throw new Error(utils.Lang.wsErrServer);
+    }
+
+    function readBase64(blob) {
+        return new Promise((resolve, reject) => {
+            const r = new FileReader();
+            r.onload = () => resolve(String(r.result).replace(/^data:[^,]*,/, ''));
+            r.onerror = () => reject(new Error(utils.Lang.wsErrServer));
+            r.readAsDataURL(blob);
+        });
     }
 
     function requestEdit(account, file) {
@@ -1164,6 +1352,8 @@ const utils = { Lang: L, defines: { FileFormat } };
 
     /* PUT /api/files/{id} {name}: needs "rename"; the open editor tabs take the new title (office/meta) */
     async function rename(account, file, name) {
+        if (file.kind === 'folder')
+            return api(account, 'PUT', '/api/folders/' + encodeURIComponent(file.id), { name: name }).then(d => shapeFolder(d || {}));
         const data = await api(account, 'PUT', '/api/files/' + encodeURIComponent(file.id), { name: name });
         api(account, 'POST', '/api/files/' + encodeURIComponent(file.id) + '/office/meta', {}).catch(() => {});
         return shapeFile(data || {});
@@ -1171,20 +1361,26 @@ const utils = { Lang: L, defines: { FileFormat } };
 
     /* PUT /api/files/{id} {folder_id}: needs "move" here and "add_files" there; null is the top of My Drive */
     function move(account, file, folder) {
+        if (file.kind === 'folder')
+            return api(account, 'POST', '/api/folders/' + encodeURIComponent(file.id) + '/move', { parent_id: folder || null }).then(d => shapeFolder(d || {}));
         return api(account, 'PUT', '/api/files/' + encodeURIComponent(file.id), { folder_id: folder || null }).then(d => shapeFile(d || {}));
     }
 
     /* POST /api/files/{id}/copy: "<name> (copy)" beside it, or at the top of My Drive where it may not add */
     function copy(account, file) {
+        if (file.kind === 'folder')
+            return api(account, 'POST', '/api/folders/' + encodeURIComponent(file.id) + '/copy', {}).then(d => shapeFolder((d && d.folder) || d || {}));
         return api(account, 'POST', '/api/files/' + encodeURIComponent(file.id) + '/copy', {}).then(d => shapeFile(d || {}));
     }
 
     /* DELETE /api/files/{id}: to the bin (soft); POST /api/files/{id}/restore takes it back */
     function trash(account, file) {
+        if (file.kind === 'folder') return api(account, 'DELETE', '/api/folders/' + encodeURIComponent(file.id));
         return api(account, 'DELETE', '/api/files/' + encodeURIComponent(file.id));
     }
 
     function untrash(account, file) {
+        if (file.kind === 'folder') return api(account, 'POST', '/api/folders/' + encodeURIComponent(file.id) + '/restore', {});
         return api(account, 'POST', '/api/files/' + encodeURIComponent(file.id) + '/restore', {});
     }
 
@@ -1410,6 +1606,15 @@ const utils = { Lang: L, defines: { FileFormat } };
             if (cmd === 'worksuite:link') {
                 onLink(param);
             } else
+            if (cmd === 'portal:logout' || cmd === 'portal:logout:cancel') {
+                // the end of a portal:logout: "portal:logout" <server> once its tabs closed and its cookies went,
+                // "portal:logout:cancel" <the request> when the person kept a tab (Windows, Linux)
+                const text = String(param || '');
+                Object.keys(sessionEnds).forEach(server => {
+                    if (cmd === 'portal:logout' ? normalizeServer(text) === server || text === server : text.indexOf(server) >= 0)
+                        settleSession(server, cmd === 'portal:logout');
+                });
+            } else
             if (cmd === 'worksuite:share') {
                 // "Share" in a Drive editor tab (DRV-10): {server: the tab's own origin, file}
                 let req = null;
@@ -1493,8 +1698,16 @@ const utils = { Lang: L, defines: { FileFormat } };
         inCompany: inCompany,
         templates: templates,
         createFromTemplate: createFromTemplate,
+        createFolder: createFolder,
+        purge: purge,
+        preview: preview,
+        activity: activity,
+        upload: upload,
         _parseOpenLink: (link) => { const u = new URL(link); return parseOpenLink(u, (u.host + u.pathname).replace(/\/+$/, '')); },
         openApp: openApp,
+        /* set by the start page (shell.js): (toAccount, fromAccount) -> Promise<boolean> */
+        confirmAccountSwitch: null,
+        tabOwner: (server) => tabOwners()[server] || null,
         typeOf: typeOf,
         extOf: extOf,
         /* oda-shell: Settings › WorkSuite and offline editing (SHL-08, DOC-07) */

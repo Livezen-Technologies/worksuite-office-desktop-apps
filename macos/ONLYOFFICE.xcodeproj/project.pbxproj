@@ -55,8 +55,11 @@
 		5A9F8D3A2848AA07007CA93F /* file-xlsm.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5A9F8D382848AA06007CA93F /* file-xlsm.icns */; };
 		5A9F8D3B2848AA07007CA93F /* file-xlsm.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5A9F8D382848AA06007CA93F /* file-xlsm.icns */; };
 		5AA06CBD27AC3BA000D67BEE /* ASCLinguist.m in Sources */ = {isa = PBXBuildFile; fileRef = 5AA06CBC27AC3BA000D67BEE /* ASCLinguist.m */; };
+		A5E1D0C0B0A0900000000003 /* ASCWorkSuiteUpdater.mm in Sources */ = {isa = PBXBuildFile; fileRef = A5E1D0C0B0A0900000000002 /* ASCWorkSuiteUpdater.mm */; };
 		5AA06CC027B1267200D67BEE /* ASCLinguist.m in Sources */ = {isa = PBXBuildFile; fileRef = 5AA06CBC27AC3BA000D67BEE /* ASCLinguist.m */; };
+		A5E1D0C0B0A0900000000004 /* ASCWorkSuiteUpdater.mm in Sources */ = {isa = PBXBuildFile; fileRef = A5E1D0C0B0A0900000000002 /* ASCWorkSuiteUpdater.mm */; };
 		5AA06CC127B1267600D67BEE /* ASCLinguist.m in Sources */ = {isa = PBXBuildFile; fileRef = 5AA06CBC27AC3BA000D67BEE /* ASCLinguist.m */; };
+		A5E1D0C0B0A0900000000005 /* ASCWorkSuiteUpdater.mm in Sources */ = {isa = PBXBuildFile; fileRef = A5E1D0C0B0A0900000000002 /* ASCWorkSuiteUpdater.mm */; };
 		5AA2F5842D5B824300C9DDC9 /* file-hwpx.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5AA2F5822D5B824300C9DDC9 /* file-hwpx.icns */; };
 		5AA2F5852D5B824300C9DDC9 /* file-hwpx.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5AA2F5822D5B824300C9DDC9 /* file-hwpx.icns */; };
 		5AA2F5862D5B824300C9DDC9 /* file-hwpx.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5AA2F5822D5B824300C9DDC9 /* file-hwpx.icns */; };
@@ -838,6 +841,8 @@
 		5A9F8D382848AA06007CA93F /* file-xlsm.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "file-xlsm.icns"; sourceTree = "<group>"; };
 		5AA06CBB27AC3BA000D67BEE /* ASCLinguist.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ASCLinguist.h; sourceTree = "<group>"; };
 		5AA06CBC27AC3BA000D67BEE /* ASCLinguist.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ASCLinguist.m; sourceTree = "<group>"; };
+		A5E1D0C0B0A0900000000001 /* ASCWorkSuiteUpdater.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ASCWorkSuiteUpdater.h; sourceTree = "<group>"; };
+		A5E1D0C0B0A0900000000002 /* ASCWorkSuiteUpdater.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = ASCWorkSuiteUpdater.mm; sourceTree = "<group>"; };
 		5AA2F5822D5B824300C9DDC9 /* file-hwpx.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "file-hwpx.icns"; sourceTree = "<group>"; };
 		5AA2F5832D5B824300C9DDC9 /* file-hwp.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "file-hwp.icns"; sourceTree = "<group>"; };
 		F0DA01002E5B824300C9DDC9 /* file-xlt.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "file-xlt.icns"; sourceTree = "<group>"; };
@@ -1884,6 +1889,8 @@
 				FC3BFE0C1BBEBB7B0040C904 /* ASCApplicationManager.h */,
 				5AA06CBB27AC3BA000D67BEE /* ASCLinguist.h */,
 				5AA06CBC27AC3BA000D67BEE /* ASCLinguist.m */,
+				A5E1D0C0B0A0900000000001 /* ASCWorkSuiteUpdater.h */,
+				A5E1D0C0B0A0900000000002 /* ASCWorkSuiteUpdater.mm */,
 				FC3B77831BB2A94300DB9705 /* ASCEventsController.h */,
 				FC3B77841BB2A94300DB9705 /* ASCEventsController.mm */,
 				FCF2897F21510C16002FD438 /* ASCExternalController.h */,
@@ -2607,6 +2614,7 @@
 				FC0BD6B9258B63F700C47F95 /* ASCConstants.m in Sources */,
 				FC0BD6BA258B63F700C47F95 /* GTMNSString+HTML.m in Sources */,
 				5AA06CC127B1267600D67BEE /* ASCLinguist.m in Sources */,
+				A5E1D0C0B0A0900000000005 /* ASCWorkSuiteUpdater.mm in Sources */,
 				FC0BD6BB258B63F700C47F95 /* ASCTabTouchBar.m in Sources */,
 				FC0BD6BC258B63F700C47F95 /* AppDelegate.mm in Sources */,
 				FC0BD6BD258B63F700C47F95 /* NSAlert+SynchronousSheet.m in Sources */,
@@ -2692,6 +2700,7 @@
 				FCB4C6F526DD018B0012C20D /* ASCConstants.m in Sources */,
 				FCB4C6F626DD018B0012C20D /* GTMNSString+HTML.m in Sources */,
 				5AA06CBD27AC3BA000D67BEE /* ASCLinguist.m in Sources */,
+				A5E1D0C0B0A0900000000003 /* ASCWorkSuiteUpdater.mm in Sources */,
 				FCB4C6F726DD018B0012C20D /* ASCTabTouchBar.m in Sources */,
 				FCB4C6F826DD018B0012C20D /* AppDelegate.mm in Sources */,
 				FCB4C6F926DD018B0012C20D /* NSAlert+SynchronousSheet.m in Sources */,
@@ -2777,6 +2786,7 @@
 				FCAC6DF81C195FA6003D2457 /* ASCConstants.m in Sources */,
 				FCC77C60206CDBCE001B7837 /* GTMNSString+HTML.m in Sources */,
 				5AA06CC027B1267200D67BEE /* ASCLinguist.m in Sources */,
+				A5E1D0C0B0A0900000000004 /* ASCWorkSuiteUpdater.mm in Sources */,
 				FCCC2FDB21E5E04000FB9209 /* ASCTabTouchBar.m in Sources */,
 				FCBC426F1B9D650400405301 /* AppDelegate.mm in Sources */,
 				FCC77C5D206CDBCE001B7837 /* NSAlert+SynchronousSheet.m in Sources */,
