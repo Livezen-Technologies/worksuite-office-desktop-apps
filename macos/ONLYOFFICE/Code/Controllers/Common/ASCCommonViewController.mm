@@ -1673,6 +1673,7 @@ static NSDictionary * workSuiteAiLiveEndpoint() {
     dispatch_semaphore_wait(done, dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.6 * NSEC_PER_SEC)));
     if (queueDepth == 0)
         kill(pid, SIGTERM);
+}
 
 /// Clouds › WorkSuite Drive (the file:// start page cannot send bytes itself), answers "worksuite:transfer":
 /// "chunk": one upload part (base64) as multipart "chunk" + "chunk_index" to https://<server>/api/uploads/<uuid>/chunk;
