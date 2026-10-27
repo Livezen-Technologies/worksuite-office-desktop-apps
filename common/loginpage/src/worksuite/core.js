@@ -640,7 +640,8 @@ import {
     }
 
     function deviceName() {
-        const ua = navigator.userAgent;
+        // globalThis: the start page's tests run on Node 20, which has no navigator
+        const ua = globalThis.navigator?.userAgent || '';
         return 'WorkSuite Office on ' + (/Windows/.test(ua) ? 'Windows' : /Mac OS/.test(ua) ? 'macOS' : 'Linux');
     }
 
