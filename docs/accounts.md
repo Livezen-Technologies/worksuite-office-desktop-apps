@@ -73,8 +73,15 @@ offered when the organisation locked the server (managed configuration `lockServ
    `wsc_orgs` (each organization's instance address, once it is ready) make the Cloud account (`ws:cloud`: who,
    which organizations; no token). Cloud's API is called with `X-WS-Org: <organization>`, as WorkSuite Desktop
    calls it.
-5. **The personal cloud.** The active organization's instance (else the Personal one, else the first) is
-   opened at `<instance>/login?wsc=switch&next=/desktop/office?challenge…&state…&device…`: the instance's own
+5. **The personal cloud.** The active organization's instance (else the Personal one, else the first).
+   **Through WorkSuite Cloud's gateway** when `/v1/me` offers one (`gateway: {version, base, ready, handoff}`,
+   with `base` on Cloud's own hosts and `handoff: true`): `POST <gateway base>/auth/apps/handoff` with the
+   Cloud token, `X-WS-Org` and a fresh PKCE challenge (`client: worksuite-office`, S256) hands a one-time code,
+   which is exchanged at the instance's `/api/auth/apps/exchange` with the verifier — Office's own session on
+   the instance, with no browser. The Cloud token goes to Cloud only; the instance never sees it (Cloud passes
+   the request on with a short-lived assertion of its own). Any refusal — no gateway, `CLOUD_NOT_LINKED` (the
+   workspace does not know this person yet), `WORKSPACE_REFUSED_GATEWAY`, not ready, an error — falls back to
+   the browser: the instance is opened at `<instance>/login?wsc=switch&next=/desktop/office?challenge…&state…&device…`: the instance's own
    silent "Sign in with WorkSuite Cloud" (the browser has just signed in there), then Office's usual hand-off,
    back on `worksuiteoffice://auth/callback` or through `/api/auth/apps/poll`, and `/api/auth/apps/exchange`.
    That instance is then an ordinary account here, marked `cloud: {account, org, name}`: Drive lists, opening,
@@ -94,11 +101,12 @@ state and storage (`GET <api>/v1/storage/usage`), **Open my cloud** and **Sign o
 grant is revoked (`<issuer>/revoke`, RFC 7009), its token deleted, and its workspaces are signed out here too.
 A workspace account whose session ended signs in again through WorkSuite Cloud.
 
-What the server does not offer yet, and how this works without it: WorkSuite Cloud has no gateway that serves
-an instance's API under its own address (WorkSuite Desktop's Personal account sends Drive requests to
-`<Cloud API>` with `X-WS-Org` and needs one), and a WorkSuite instance does not take a WorkSuite Cloud access
-token. Hence the instance's own sign-in in step 5. With such a gateway (or a token exchange on the instance),
-step 5 could be done without the browser.
+**The gateway** (worksuite-cloud `api/src/routes/cloud/gateway.ts`, WorkSuite Auth 2.9.0 `CloudGateway`): Cloud
+checks the token and the membership, and passes allow-listed paths (Drive, files, uploads, `/api/auth/me`,
+`/api/auth/apps/handoff` …) to the organization's instance with a 60-second assertion signed with its OIDC key.
+The instance lets in only the person linked to that Cloud identity; a person it does not know yet is linked by
+their own browser sign-in, which is why the browser stays as the fallback. A Cloud without the gateway (older, or
+`CLOUD_GATEWAY=0`) has no `gateway` in `/v1/me`, and step 5 is the browser, as before.
 
 ## Card actions
 

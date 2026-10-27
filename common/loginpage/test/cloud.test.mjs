@@ -47,12 +47,15 @@ globalThis.sdk = {
 const link = (url) => reply("worksuite:link", url);
 
 /* WorkSuite Cloud and the instance */
-const cloud = { orgUrl: T7, accountState: "ACTIVE", meFails: 0, codes: {}, refresh: new Set(), revoked: [], requests: [] };
+const cloud = { orgUrl: T7, accountState: "ACTIVE", meFails: 0, codes: {}, refresh: new Set(), revoked: [], requests: [],
+                gateway: null, gatewayAnswer: null, handed: {}, access: new Set() };
 const b64 = (o) => Buffer.from(JSON.stringify(o)).toString("base64url");
 const tokens = (extra) => {
   const r = "refresh-" + Math.random().toString(36).slice(2);
   cloud.refresh.add(r);
-  return { access_token: "access-" + Math.random().toString(36).slice(2), refresh_token: r, token_type: "Bearer", expires_in: 3600, ...extra };
+  const a = "access-" + Math.random().toString(36).slice(2);
+  cloud.access.add(a);
+  return { access_token: a, refresh_token: r, token_type: "Bearer", expires_in: 3600, ...extra };
 };
 const wscOrgs = () => [{ id: "7", name: "Nimali", type: "PERSONAL", role: "OWNER", instance: "t7", ...(cloud.orgUrl ? { url: cloud.orgUrl } : {}) }];
 const json = (status, body) => ({ status, text: async () => (body === undefined ? "" : JSON.stringify(body)) });
@@ -91,7 +94,19 @@ globalThis.fetch = async (url, opts) => {
     if (!bearer) return json(401, {});
     if (cloud.meFails > 0) { cloud.meFails--; return json(401, { error: { code: "SESSION_EXPIRED" } }); }
     return json(200, { identity: { id: "42", email: "nimali@example.com", name: "Nimali Perera", email_verified: true }, account_state: cloud.accountState,
-                       organizations: [{ id: "7", name: "Nimali", plan: "FREE", state: "ACTIVE" }], active_organization_id: "7" });
+                       organizations: [{ id: "7", name: "Nimali", plan: "FREE", state: "ACTIVE" }], active_organization_id: "7",
+                       ...(cloud.gateway ? { gateway: cloud.gateway } : {}) });
+  }
+  /* the workspace gateway: the instance's hand-off at Cloud's address, for a Cloud token and X-WS-Org */
+  if (url === SITE + "/api/auth/apps/handoff") {
+    if (!cloud.access.has(bearer)) return json(401, { status: "error", code: "UNAUTHENTICATED" });
+    if (headers["X-WS-Org"] !== "7") return json(403, { status: "error", code: "ORG_NOT_FOUND", message: "Not a member." });
+    if (cloud.gatewayAnswer) return json(cloud.gatewayAnswer.status, cloud.gatewayAnswer.body);
+    const b = JSON.parse(opts.body);
+    if (b.client !== "worksuite-office" || b.code_challenge_method !== "S256" || !/^[A-Za-z0-9_-]{43}$/.test(b.code_challenge)) return json(422, { status: "error" });
+    const code = "g".repeat(40) + Math.random().toString(36).slice(2, 5);
+    cloud.handed[code] = b.code_challenge;
+    return json(200, { status: "success", data: { code, expires_in: 120, callback: "worksuiteoffice://auth/callback" } });
   }
   if (url === SITE + "/api/v1/storage/usage") return json(200, { used: 1048576, limit: 2147483648 });
   if (url === T7 + "/.well-known/worksuite-desktop")
@@ -99,7 +114,10 @@ globalThis.fetch = async (url, opts) => {
   if (url === T7 + "/api/auth/apps/poll") return json(202, { status: "ok", data: null });
   if (url === T7 + "/api/auth/apps/exchange") {
     const b = JSON.parse(opts.body);
-    if (b.client !== "worksuite-office" || b.code !== "c".repeat(43)) return json(400, { status: "error", message: "bad code" });
+    const handed = cloud.handed[b.code];
+    delete cloud.handed[b.code];
+    const viaGateway = handed && handed === createHash("sha256").update(b.code_verifier || "").digest("base64url");
+    if (b.client !== "worksuite-office" || (b.code !== "c".repeat(43) && !viaGateway)) return json(400, { status: "error", message: "bad code" });
     return json(200, { status: "ok", data: { user: { id: 5, name: "Nimali Perera", email: "nimali@example.com" }, tokens: { access_token: "core-access", refresh_token: "core-refresh", expires_in: 3600 } } });
   }
   if (url === T7 + "/api/auth/logout") return json(200, { status: "ok" });
@@ -244,4 +262,55 @@ test("sign out of WorkSuite Cloud: the grant revoked, the token deleted, its wor
   assert.deepEqual(WS.cloudAccounts(), []);
   assert.equal(WS.accounts().some((a) => a.cloud), false);
   assert.equal(secrets["worksuite:" + T7 + "|5"], undefined);
+});
+
+test("with Cloud's gateway, the personal cloud opens with no second trip to the browser", async () => {
+  cloud.gateway = { version: 1, base: SITE + "/api", ready: true, handoff: true };
+  const signedIn = once("signedin");
+  await WS.signInWithCloud();
+  const before = opened.length;
+  approveInBrowser(opened.at(-1));
+  const account = await signedIn;
+  assert.equal(opened.length, before, "only WorkSuite Cloud's own sign-in was opened");
+  assert.equal(account.server, T7);
+  assert.equal(account.via, "cloud");
+  assert.deepEqual(account.cloud, { account: ISS + "|42", org: "7", name: "Nimali" });
+  assert.equal(WS.active().id, account.id);
+  assert.deepEqual(WS.cloudAccounts()[0].gateway, { base: SITE + "/api" });
+
+  // the hand-off went to Cloud with the Cloud token and X-WS-Org; the exchange to the instance with the verifier
+  const handoff = cloud.requests.filter((r) => r.url === SITE + "/api/auth/apps/handoff").at(-1);
+  assert.equal(handoff.method, "POST");
+  assert.equal(handoff.headers["X-WS-Org"], "7");
+  assert.ok(cloud.access.has(handoff.headers.Authorization.replace(/^Bearer /, "")));
+  const exchange = cloud.requests.filter((r) => r.url === T7 + "/api/auth/apps/exchange").at(-1);
+  assert.equal(exchange.headers.Authorization, undefined, "the Cloud token never goes to the instance");
+  assert.equal(secrets["worksuite:" + T7 + "|5"], "core-refresh");
+  assert.equal(WS.pendingSignIn(), null);
+  assert.doesNotMatch(JSON.stringify(store), /refresh-|access-|core-refresh|core-access|code_verifier/);
+});
+
+test("the gateway refusing (not linked yet) falls back to the workspace's browser sign-in", async () => {
+  for (const a of WS.accounts().filter((x) => x.cloud)) await WS.signOut(a);
+  cloud.gatewayAnswer = { status: 403, body: { status: "error", code: "CLOUD_NOT_LINKED", message: "Not linked yet.", fallback: "browser_sign_in" } };
+  const before = opened.length;
+  const server = await WS.signInWithCloud();
+  assert.equal(server, T7);
+  const ws = new URL(await waitFor(() => opened.length > before && opened.at(-1)));
+  assert.equal(ws.origin + ws.pathname, T7 + "/login");
+  assert.equal(ws.searchParams.get("wsc"), "switch");
+  assert.equal(WS.cloudAccounts()[0].signedOut, false, "a refusal by the workspace is not a Cloud sign-out");
+  WS.cancelSignIn();
+  cloud.gatewayAnswer = null;
+});
+
+test("a gateway somewhere other than Cloud's own hosts is never given the token", async () => {
+  cloud.gateway = { version: 1, base: "https://evil.example/api", ready: true, handoff: true };
+  const [c] = WS.cloudAccounts();
+  const fresh = await WS.refreshCloud(c);
+  assert.equal(fresh.gateway, null);
+  cloud.gateway = { version: 1, base: SITE + "/api", ready: true, handoff: false };
+  assert.equal((await WS.refreshCloud(c)).gateway, null);
+  cloud.gateway = null;
+  assert.equal((await WS.refreshCloud(c)).gateway, null);
 });
