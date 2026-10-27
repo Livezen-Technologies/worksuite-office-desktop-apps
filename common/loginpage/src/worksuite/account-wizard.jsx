@@ -13,12 +13,14 @@ import { Avatar, Icon, Spinner, StatusBadge, WsButton } from "./ui/components.js
 const WS = () => window.WorkSuite;
 const WAITS = { desktop: 2 * 60 * 1000, browser: 5 * 60 * 1000 };
 
-/* props: onClose(result: {id, duplicate} | null), server (prefill), locked, known (servers to pick), desktop (Desktop accounts) */
+/* props: onClose(result: {id, duplicate} | null), server (prefill), locked, known (servers to pick), desktop (Desktop accounts),
+   cloud (start with WorkSuite Cloud: a Personal account's sign-in or its workspace) */
 export function AccountWizard(props) {
   const [st, setSt] = createSignal(initialWizard({ server: props.server || "", locked: props.locked }));
   const [code, setCode] = createSignal("");
   const [codeOpen, setCodeOpen] = createSignal(false);
   const [codeError, setCodeError] = createSignal("");
+  const [cloudTarget, setCloudTarget] = createSignal(""); // WorkSuite Cloud, then its workspace
   let timer, before = [], finished = false;
 
   const ctx = () => ({ defaultServer: WS().DEFAULT_SERVER, desktop: props.desktop || [], accounts: WS().accounts() });
@@ -41,7 +43,7 @@ export function AccountWizard(props) {
     clearTimeout(timer);
     before = WS().accounts().filter((a) => !a.signedOut).map((a) => a.id);
     const viaDesktop = s.via === "desktop";
-    (viaDesktop ? WS().signInWithDesktop(s.pick) : WS().signIn(s.server)).then(
+    (viaDesktop ? WS().signInWithDesktop(s.pick) : s.via === "cloud" ? WS().signInWithCloud() : WS().signIn(s.server)).then(
       () => { timer = setTimeout(() => { if (viaDesktop) WS().cancelSignIn(); send({ type: "AUTH_TIMEOUT" }); }, viaDesktop ? WAITS.desktop : WAITS.browser); },
       (e) => send({ type: "AUTH_ERROR", message: e.message }),
     );
@@ -66,14 +68,18 @@ export function AccountWizard(props) {
       if (st().step === "auth") send({ type: "SIGNED_IN", account, existed: before.includes(account.id) });
     };
     const error = (e) => st().step === "auth" && (clearTimeout(timer), send({ type: "AUTH_ERROR", message: e.message }));
+    const pending = (server) => server && setCloudTarget(server);
     WS().on("signedin", signedin);
     WS().on("error", error);
+    WS().on("pending", pending);
     onCleanup(() => {
       clearTimeout(timer);
       WS().off("signedin", signedin);
       WS().off("error", error);
+      WS().off("pending", pending);
       if (!finished && WS().pendingSignIn()) WS().cancelSignIn();
     });
+    if (props.cloud) send({ type: "CHOOSE_CLOUD" });
   });
 
   function cancelAuth() {
@@ -141,6 +147,16 @@ export function AccountWizard(props) {
                 <div class="wsx-wizard-actions">
                   <WsButton type="submit" variant="primary" busy={st().step === "checking"}>{st().step === "checking" ? L.wsxChecking2 : L.wsxNext}</WsButton>
                 </div>
+                <Show when={!st().locked && WS().cloudAllowed()}>
+                  <button type="button" class="wsx-choice" onClick={() => send({ type: "CHOOSE_CLOUD" })}>
+                    <span class="wsx-avatar"><Icon name="accounts" /></span>
+                    <span class="wsx-choice-text">
+                      <span class="wsx-account-name">{L.wsxCloudChoice}</span>
+                      <span class="wsx-hint">{L.wsCloudHint}</span>
+                    </span>
+                    <Icon name="chevron" class="wsx-choice-go" />
+                  </button>
+                </Show>
               </form>
             </Match>
 
@@ -195,9 +211,9 @@ export function AccountWizard(props) {
                 <Switch>
                   <Match when={st().auth.state === "waiting"}>
                     <Spinner class="wsx-spinner-lg" />
-                    <p class="wsx-auth-text">{st().via === "desktop" ? L.wsWaitDesktop : L.wsWaitBrowser}</p>
-                    <p class="wsx-hint">{hostOf(st().server)}</p>
-                    <Show when={st().via === "browser"}>
+                    <p class="wsx-auth-text">{st().via === "desktop" ? L.wsWaitDesktop : st().via === "cloud" ? L.wsCloudWait : L.wsWaitBrowser}</p>
+                    <p class="wsx-hint">{st().via === "cloud" ? hostOf(cloudTarget() || WS().CLOUD.site) : hostOf(st().server)}</p>
+                    <Show when={st().via !== "desktop"}>
                       <Show when={codeOpen()} fallback={<button type="button" class="wsx-link" onClick={() => setCodeOpen(true)}>{L.wsHaveCode}</button>}>
                         <div class="wsx-server-line">
                           <input class="wsx-input" spellcheck={false} autocomplete="off" placeholder={L.wsCodePlaceholder} aria-label={L.wsCodePlaceholder}
@@ -221,8 +237,8 @@ export function AccountWizard(props) {
                 <Show when={st().auth.state !== "waiting"}>
                   <WsButton variant="primary" onClick={() => send({ type: "RETRY" })}>{L.wsTryAgain}</WsButton>
                 </Show>
-                <Show when={st().auth.state === "waiting" && st().via === "browser"}>
-                  <WsButton variant="secondary" onClick={() => WS().signIn(st().server).catch((e) => send({ type: "AUTH_ERROR", message: e.message }))}>{L.wsOpenAgain}</WsButton>
+                <Show when={st().auth.state === "waiting" && st().via !== "desktop"}>
+                  <WsButton variant="secondary" onClick={() => (st().via === "cloud" ? WS().signInWithCloud() : WS().signIn(st().server)).catch((e) => send({ type: "AUTH_ERROR", message: e.message }))}>{L.wsOpenAgain}</WsButton>
                 </Show>
               </div>
             </Match>

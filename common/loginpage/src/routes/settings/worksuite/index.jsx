@@ -17,10 +17,10 @@ import {
   openIn, setOpenIn, prefServer, setPrefServer, initWorkSuiteShell,
 } from "@/worksuite/shell.js";
 import { parseReleaseNotes } from "@/worksuite/shell-logic.js";
-import { mergeAccounts, updatePhase } from "@/worksuite/settings-logic.js";
+import { formatBytes, mergeAccounts, updatePhase } from "@/worksuite/settings-logic.js";
 import { PolicyBanner, PolicyCard } from "@/worksuite/ShellParts.jsx";
 import {
-  AccountCard, LockHint, Segmented, ServerInput, SettingsLayout, SettingsRow, SettingsSection, SettingsToggle, UpdateCard, WsButton,
+  AccountCard, Avatar, Icon, LockHint, Segmented, ServerInput, SettingsLayout, SettingsRow, SettingsSection, SettingsToggle, UpdateCard, WsButton,
 } from "@/worksuite/ui/components.jsx";
 import "@/worksuite/worksuite.css";
 import "./worksuite-settings.css";
@@ -30,6 +30,7 @@ const SECTION_KEY = "ws:settings:section";
 
 function via(account) {
   if (account.broker || account.via === "os") return L.wsViaOsShort;
+  if (account.cloud) return L.wsCloudPersonal.replace("$1", account.cloud.name || hostOf(account.server)) + " · " + L.wsViaCloud;
   if (account.via === "desktop") return L.wsViaDesktopShort;
   return L.wsViaBrowser;
 }
@@ -68,6 +69,8 @@ export default function WorkSuiteSettings() {
   const [unreachable, setUnreachable] = createSignal({}); // server → true when it did not answer
   const [wizard, setWizard] = createSignal(null); // {server} while "Add account" is open
   const [focusId, setFocusId] = createSignal(null);
+  const [clouds, setClouds] = createSignal(WS().cloudAccounts()); // WorkSuite Cloud accounts (Personal)
+  const [storage, setStorage] = createSignal({}); // cloud account id → {used, limit}
   const [section, setSectionSig] = createSignal((() => {
     try { return sessionStorage.getItem(SECTION_KEY) || "accounts"; } catch { return "accounts"; }
   })());
@@ -79,7 +82,15 @@ export default function WorkSuiteSettings() {
   const refresh = () => {
     setAccounts(WS().accounts());
     setActiveId(WS().active() && WS().active().id);
+    setClouds(WS().cloudAccounts());
   };
+  /* Each WorkSuite Cloud account as Cloud sees it now (its workspace's state) and its storage, once per visit */
+  const checkClouds = () => WS().cloudAccounts().filter((c) => !c.signedOut).forEach((c) => {
+    WS().refreshCloud(c).then((fresh) => WS().cloudStorage(fresh)).then(
+      (u) => setStorage({ ...storage(), [c.id]: u }),
+      () => {},
+    );
+  });
   const findDesktop = () => {
     setLooking(true);
     WS().desktopAccounts().then((list) => setDesktop(list || []), () => setDesktop([])).finally(() => setLooking(false));
@@ -89,6 +100,7 @@ export default function WorkSuiteSettings() {
     ["signedin", "changed"].forEach((e) => WS().on(e, refresh));
     findDesktop();
     probeServers();
+    checkClouds();
   });
   onCleanup(() => ["signedin", "changed"].forEach((e) => WS().off(e, refresh)));
 
@@ -123,8 +135,37 @@ export default function WorkSuiteSettings() {
       return setOne(errors, setErrors, a.id, L.wsxUnreachableMsg.replace("$1", hostOf(a.server)));
     }
     if (a.desktop) return setSigningIn({ desktopAccount: a.desktop, id: a.id });
+    // a WorkSuite Cloud workspace signs in again through WorkSuite Cloud
+    if (a.cloud && WS().cloudAllowed()) return setWizard({ server: "", cloud: true });
     setWizard({ server: a.server });
   }
+
+  async function signOutCloud(c) {
+    setOne(busy, setBusy, c.id, "signout");
+    setOne(errors, setErrors, c.id, "");
+    try {
+      await WS().signOutCloud(c);
+    } catch (e) {
+      setOne(errors, setErrors, c.id, (e && e.message) || L.wsErrServer);
+    } finally {
+      const b = { ...busy() };
+      delete b[c.id];
+      setBusy(b);
+      refresh();
+    }
+  }
+
+  const cloudNote = (c) => {
+    if (c.signedOut) return L.wsCloudExpired;
+    return ({ "setting-up": L.wsCloudSettingUp, failed: L.wsCloudFailed, "verify-email": L.wsCloudVerifyEmail, none: L.wsCloudNoOrg,
+              "read-only": L.wsCloudReadOnly })[c.state] || "";
+  };
+  const cloudMeta = (c) => {
+    const org = (c.orgs || []).find((o) => o.id === c.org);
+    const u = storage()[c.id];
+    return [c.user.email, org && org.name, u && u.limit ? L.wsCloudStorage.replace("$1", formatBytes(u.used)).replace("$2", formatBytes(u.limit)) : ""]
+      .filter(Boolean).join(" · ");
+  };
 
   function wizardClosed(result) {
     setWizard(null);
@@ -212,6 +253,32 @@ export default function WorkSuiteSettings() {
               <Show when={looking()}><p class="wsx-hint" role="status">{L.wsxLookingDesktop}</p></Show>
             </Show>
             <p class="wsx-hint">{L.wsxSignOutNote2}</p>
+            <Show when={clouds().length}>
+              <h4 class="wsx-label wss-cloud-title">{L.wsCloudTitle}</h4>
+              <p class="wsx-hint">{L.wsCloudDesc}</p>
+              <div class="wsx-accounts">
+                <For each={clouds()}>
+                  {(c) => (
+                    <div class="wsx-account" data-cloud-account={c.id}>
+                      <Avatar name={c.user.name} />
+                      <div class="wsx-account-text">
+                        <div class="wsx-account-name"><span class="wsx-ellipsis">{c.user.name}</span></div>
+                        <div class="wsx-account-meta wsx-ellipsis" title={c.user.email || ""}>{cloudMeta(c)}</div>
+                        <Show when={cloudNote(c)}><div class="wsx-msg wsx-tone-info"><Icon name="about" />{cloudNote(c)}</div></Show>
+                        <Show when={errors()[c.id]}><div class="wsx-msg wsx-tone-danger" role="alert"><Icon name="alert" />{errors()[c.id]}</div></Show>
+                      </div>
+                      <div class="wsx-account-actions">
+                        <WsButton small variant="primary" disabled={!!busy()[c.id] || !!wizard()} onClick={() => setWizard({ server: "", cloud: true })}>
+                          {c.signedOut ? L.wsxSignInAgain : L.wsCloudOpen}
+                        </WsButton>
+                        <WsButton small variant="ghost" busy={busy()[c.id] === "signout"} disabled={!!busy()[c.id]} onClick={() => signOutCloud(c)}>{L.wsCloudSignOut}</WsButton>
+                      </div>
+                    </div>
+                  )}
+                </For>
+              </div>
+              <p class="wsx-hint">{L.wsCloudSignOutNote}</p>
+            </Show>
           </SettingsSection>
         </Show>
 
@@ -329,7 +396,7 @@ export default function WorkSuiteSettings() {
       <Show when={wizard()}>
         <AccountWizard server={serverLocked() ? policy().server : wizard().server} locked={serverLocked()} desktop={desktop()}
                        known={[...accounts().map((a) => a.server), ...desktop().map((d) => d.server), WS().DEFAULT_SERVER]}
-                       onClose={wizardClosed} />
+                       cloud={!!wizard().cloud} onClose={wizardClosed} />
       </Show>
       <Show when={signingIn()}>
         <SignInDialog desktopAccount={signingIn().desktopAccount} onClose={() => { setSigningIn(null); refresh(); findDesktop(); }} />

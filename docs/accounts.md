@@ -46,6 +46,60 @@ through the wizard below.
 Esc closes the wizard and cancels a pending sign-in. Back goes one step back. Every control is reachable
 with Tab.
 
+## WorkSuite Cloud (a Personal account and its cloud)
+
+"Sign in with WorkSuite Cloud" (the home screen's sign-in dialog, and the wizard's server step) signs in a
+Personal account at account.worksuitecloud.com, the way WorkSuite Desktop does, and then opens that person's
+cloud: the WorkSuite instance WorkSuite Cloud runs for their organization. The code is
+`src/worksuite/cloud-logic.js` (the protocol, pure) and the WorkSuite Cloud section of `core.js`. It is not
+offered when the organisation locked the server (managed configuration `lockServer`).
+
+1. **Where.** `https://worksuitecloud.com/.well-known/worksuite` gives the issuer (`auth.issuer`) and the API
+   (`endpoints.api`); only https addresses on worksuitecloud.com and its subdomains are taken from it, and
+   without it the built-in ones are used (`https://account.worksuitecloud.com/oauth`,
+   `https://worksuitecloud.com/api`). `<issuer>/.well-known/openid-configuration` must name the same issuer,
+   S256 and endpoints on the issuer's own origin; it is kept for a day (`ws:cloud:meta`). WorkSuite Desktop
+   pins the discovery document's Ed25519 signature instead; Office pins the hosts.
+2. **Sign in.** The system browser opens `<issuer>/authorize` for the public client `worksuite-office`
+   (registered in worksuite-cloud by migration 033): `response_type=code`, PKCE S256, a 32-byte `state` and
+   `nonce`, scope `openid profile email offline_access wsc_orgs`, `redirect_uri=worksuiteoffice://auth/callback`
+   (`prompt=create` for "Create a free account"). The password, two-step verification and passkeys stay in the
+   browser. The link comes back through the app as `worksuite:link`; a pasted link works too. There is no poll
+   for this step.
+3. **Exchange.** `state` must match the pending sign-in and `iss` (RFC 9207) the issuer. The code, verifier and
+   redirect go to the token endpoint as a form (no secret). The id_token's `iss`, `aud` (and `azp`), `nonce`,
+   `exp` and `iat` are checked; it is not kept.
+4. **The account.** `GET <api>/v1/me` (account state, organizations, the active one) and the userinfo's
+   `wsc_orgs` (each organization's instance address, once it is ready) make the Cloud account (`ws:cloud`: who,
+   which organizations; no token). Cloud's API is called with `X-WS-Org: <organization>`, as WorkSuite Desktop
+   calls it.
+5. **The personal cloud.** The active organization's instance (else the Personal one, else the first) is
+   opened at `<instance>/login?wsc=switch&next=/desktop/office?challenge…&state…&device…`: the instance's own
+   silent "Sign in with WorkSuite Cloud" (the browser has just signed in there), then Office's usual hand-off,
+   back on `worksuiteoffice://auth/callback` or through `/api/auth/apps/poll`, and `/api/auth/apps/exchange`.
+   That instance is then an ordinary account here, marked `cloud: {account, org, name}`: Drive lists, opening,
+   editing and saving (each save a new version of the Drive file, through the instance's document service) are
+   those of any WorkSuite server. When it is already signed in here, it is simply made the active account.
+   A workspace that is still being set up, failed, or waits for the email address to be confirmed says so
+   instead.
+
+**Tokens.** Each refresh token is in the operating system's store (`worksuite:secret`): the Cloud one as
+`worksuite-cloud:<issuer>|<sub>`, the instance's as `worksuite:<server>|<user id>`. Access tokens are in memory
+only. Cloud refresh tokens rotate (`grant_type=refresh_token`, the new one kept before anything else); a
+refused refresh (revoked on the portal's Devices or Connected apps page, expired, reused) marks the Cloud
+account signed out. No token, code or verifier is written to localStorage or to a log.
+
+**Settings › WorkSuite › Accounts** lists the WorkSuite Cloud accounts under the others, with the workspace's
+state and storage (`GET <api>/v1/storage/usage`), **Open my cloud** and **Sign out of WorkSuite Cloud**: the
+grant is revoked (`<issuer>/revoke`, RFC 7009), its token deleted, and its workspaces are signed out here too.
+A workspace account whose session ended signs in again through WorkSuite Cloud.
+
+What the server does not offer yet, and how this works without it: WorkSuite Cloud has no gateway that serves
+an instance's API under its own address (WorkSuite Desktop's Personal account sends Drive requests to
+`<Cloud API>` with `X-WS-Org` and needs one), and a WorkSuite instance does not take a WorkSuite Cloud access
+token. Hence the instance's own sign-in in step 5. With such a gateway (or a token exchange on the instance),
+step 5 could be done without the browser.
+
 ## Card actions
 
 | Status | Inline action | Menu |

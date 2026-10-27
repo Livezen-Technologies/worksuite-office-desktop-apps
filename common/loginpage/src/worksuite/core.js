@@ -53,6 +53,10 @@ const utils = { Lang: L, defines: { FileFormat } };
  */
 
 import { driveCacheKey } from './clouds-logic.js';
+import {
+    CLOUD, META_TTL, activeOrg, authorizeUrl, checkIdToken, checkMetadata, cloudConfig, cloudSecretKey, cloudState, orgsOf,
+    readCallback, tokenForm, tokensOf, workspaceSignInUrl,
+} from './cloud-logic.js';
 
 +function () {
     'use strict';
@@ -211,7 +215,16 @@ import { driveCacheKey } from './clouds-logic.js';
         const h = Object.assign({ 'Accept': 'application/json' }, headers || {});
         const payload = body === undefined ? undefined : JSON.stringify(body);
         if (payload !== undefined) h['Content-Type'] = 'application/json';
+        return send(method, url, payload, h);
+    }
 
+    /* An OAuth endpoint's form post (RFC 6749 §4.1.3, §6; RFC 7009) */
+    function postForm(url, form) {
+        return send('POST', url, new URLSearchParams(form).toString(),
+                    { 'Accept': 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' });
+    }
+
+    function send(method, url, payload, h) {
         return new Promise((resolve, reject) => {
             const done = (status, text) => {
                 let json = null;
@@ -306,8 +319,9 @@ import { driveCacheKey } from './clouds-logic.js';
         return err;
     }
 
-    async function remember(server, data, via) {
+    async function remember(server, data, via, cloudLink) {
         const user = data.user || {};
+        const before = accounts().find(a => a.id === accountId(server, user.id));
         const account = {
             id: accountId(server, user.id),
             server: server,
@@ -316,6 +330,9 @@ import { driveCacheKey } from './clouds-logic.js';
             via: via || 'browser', // oda-shell (SHL-08): how this account signed in, for Settings › WorkSuite
             at: Date.now(),
         };
+        // a workspace of a WorkSuite Cloud account: which one, so signing out of WorkSuite Cloud signs it out too
+        const link = cloudLink || (before && before.cloud);
+        if (link) account.cloud = { account: String(link.account), org: String(link.org), name: String(link.name || '') };
 
         await secret('set', secretKey(account), data.tokens.refresh_token).then(r => {
             if (!r || !r.ok) throw new Error('not kept');
@@ -623,7 +640,8 @@ import { driveCacheKey } from './clouds-logic.js';
     }
 
     function deviceName() {
-        const ua = navigator.userAgent;
+        // globalThis: the start page's tests run on Node 20, which has no navigator
+        const ua = globalThis.navigator?.userAgent || '';
         return 'WorkSuite Office on ' + (/Windows/.test(ua) ? 'Windows' : /Mac OS/.test(ua) ? 'macOS' : 'Linux');
     }
 
@@ -635,6 +653,7 @@ import { driveCacheKey } from './clouds-logic.js';
             fire('error', new Error(utils.Lang.wsErrStale));
             return;
         }
+        if (pending.kind === 'cloud') return finishCloud(pending, params);
         writeJson(localStorage, LS_PENDING, undefined);
         finishedState = pending.state;
 
@@ -644,7 +663,7 @@ import { driveCacheKey } from './clouds-logic.js';
             if (res.status !== 200 || !res.json || !res.json.data || !res.json.data.tokens)
                 throw apiError(res, utils.Lang.wsErrStale);
 
-            const account = await remember(pending.server, res.json.data, pending.via);
+            const account = await remember(pending.server, res.json.data, pending.via, pending.cloud);
             fire('signedin', account);
         } catch (e) {
             fire('error', e);
@@ -671,7 +690,8 @@ import { driveCacheKey } from './clouds-logic.js';
     function watchSignIn() {
         clearTimeout(pollTimer);
         const first = pendingSignIn();
-        if (!first) return;
+        // WorkSuite Cloud's own sign-in has no poll: only its link (or a pasted code) finishes it
+        if (!first || first.kind === 'cloud') return;
 
         const next = () => {
             const p = pendingSignIn();
@@ -682,7 +702,7 @@ import { driveCacheKey } from './clouds-logic.js';
         const tick = async () => {
             pollTimer = null;
             const pending = pendingSignIn();
-            if (!pending || !pending.verifier) return;
+            if (!pending || !pending.verifier || pending.kind === 'cloud') return;
 
             let res = null;
             try {
@@ -701,7 +721,7 @@ import { driveCacheKey } from './clouds-logic.js';
             try {
                 if (res.status !== 200 || !res.json || !res.json.data || !res.json.data.tokens)
                     throw apiError(res, utils.Lang.wsErrStale);
-                fire('signedin', await remember(pending.server, res.json.data, pending.via));
+                fire('signedin', await remember(pending.server, res.json.data, pending.via, pending.cloud));
             } catch (e) {
                 fire('error', e);
             } finally {
@@ -975,6 +995,289 @@ import { driveCacheKey } from './clouds-logic.js';
             list.length ? localStorage.setItem(LS_ACTIVE, list[0].id) : localStorage.removeItem(LS_ACTIVE);
         fire('changed');
         return Promise.resolve();
+    }
+
+    /* ------------------------------------------------------------------ *
+     * WorkSuite Cloud: a Personal account and its cloud (cloud-logic.js)
+     *
+     * SIGNING IN. signInWithCloud() opens WorkSuite Cloud's sign-in (OneAuth, client worksuite-office) in the
+     * system browser with PKCE S256, state and nonce; the code comes back on worksuiteoffice://auth/callback
+     * ("worksuite:link", or pasted) and is exchanged at the token endpoint. The id_token's iss, aud, nonce and
+     * exp are checked; it is not kept. Then /api/v1/me (account state, organizations, the active one) and
+     * the userinfo's wsc_orgs (each organization's WorkSuite instance, once it is ready).
+     *
+     * TOKENS. The refresh token is kept by the operating system ("worksuite:secret", key
+     * worksuite-cloud:<issuer>|<sub>), the access token only in memory, as for every account here. Refresh
+     * tokens rotate: the new one is kept before anything else. The Cloud account list (who, which
+     * organizations, never a token) is in localStorage (ws:cloud).
+     *
+     * THE PERSONAL CLOUD is the organization's WorkSuite instance. signInToWorkspace() signs Office in there
+     * with the same WorkSuite Cloud account (the instance's silent Cloud sign-in, then the usual
+     * /desktop/office hand-off), and that instance is then an ordinary account of this page, marked with
+     * `cloud: {account, org, name}`: Drive lists, opening, editing and saving (every save a new version)
+     * are those of any WorkSuite server. Signing out of WorkSuite Cloud signs its workspaces out too.
+     * ------------------------------------------------------------------ */
+
+    const LS_CLOUD = 'ws:cloud';
+    const LS_CLOUD_META = 'ws:cloud:meta';
+    const cloudAccess = {};      // cloud account id → {token, exp}
+    const cloudRefreshing = {};  // cloud account id → Promise
+
+    function cloudAccounts() { return readJson(localStorage, LS_CLOUD, []); }
+
+    function saveCloudAccounts(list) {
+        writeJson(localStorage, LS_CLOUD, list);
+        fire('changed');
+    }
+
+    function updateCloud(id, patch) {
+        const list = cloudAccounts();
+        const i = list.findIndex(a => a.id === id);
+        if (i < 0) return null;
+        list[i] = Object.assign({}, list[i], patch);
+        saveCloudAccounts(list);
+        return list[i];
+    }
+
+    /* An organisation that locked the server (managed configuration) signs in there only, never to WorkSuite Cloud */
+    function cloudAllowed() {
+        const policy = readJson(localStorage, 'ws:policy', null);
+        return !(policy && policy.lockServer && normalizeServer(policy.server));
+    }
+
+    /* Cloud's addresses (discovery document, only Cloud's own hosts) and the issuer's checked metadata, kept a day */
+    async function cloudMeta(again) {
+        const kept = readJson(localStorage, LS_CLOUD_META, null);
+        if (!again && kept && kept.meta && kept.config && Date.now() - kept.at < META_TTL) return kept;
+        const doc = await http('GET', CLOUD.site + CLOUD.discovery).catch(() => null);
+        const config = cloudConfig(doc && doc.status === 200 ? doc.json : null);
+        const res = await http('GET', config.issuer + '/.well-known/openid-configuration');
+        if (res.status !== 200) throw new Error(L.wsCloudUnavailable);
+        const out = { config: config, meta: checkMetadata(res.json, config.issuer), at: Date.now() };
+        writeJson(localStorage, LS_CLOUD_META, out);
+        return out;
+    }
+
+    async function signInWithCloud(opts) {
+        opts = opts || {};
+        if (!cloudAllowed()) throw new Error(L.wsCloudNotAllowed);
+        // already signed in to WorkSuite Cloud here: straight on to its workspace
+        const known = cloudAccounts().find(a => !a.signedOut);
+        if (known && !opts.again && !opts.signUp) {
+            try {
+                return await signInToWorkspace(await refreshCloud(known));
+            } catch (e) {
+                if (!e || !e.signedOut) throw e;
+            }
+        }
+        const found = await cloudMeta();
+        const pair = await pkce();
+        const state = random(32), nonce = random(32);
+        writeJson(localStorage, LS_PENDING, {
+            kind: 'cloud', server: CLOUD.site, issuer: found.meta.issuer, verifier: pair.verifier, state: state, nonce: nonce,
+            redirect: CLOUD.redirect, at: Date.now(),
+        });
+        const opened = await openExternal(authorizeUrl(found.meta, {
+            challenge: pair.challenge, state: state, nonce: nonce, loginHint: opts.loginHint, signUp: !!opts.signUp,
+        }));
+        if (!opened.ok) {
+            writeJson(localStorage, LS_PENDING, undefined);
+            throw new Error(L.wsErrBrowser);
+        }
+        fire('pending', CLOUD.site);
+        return CLOUD.site;
+    }
+
+    function cloudCallbackError(back) {
+        if (back.error === 'access_denied') return new Error(back.message || L.wsCloudDenied);
+        if (back.error === 'issuer') return new Error(L.wsErrStale);
+        return new Error(back.message || L.wsErrStale);
+    }
+
+    async function finishCloud(pending, params) {
+        writeJson(localStorage, LS_PENDING, undefined);
+        finishedState = pending.state;
+        let onward = false;
+        try {
+            const back = readCallback(params, pending.issuer);
+            if (back.error) throw cloudCallbackError(back);
+            const found = await cloudMeta();
+            if (found.meta.issuer !== pending.issuer) throw new Error(L.wsErrStale);
+            const res = await postForm(found.meta.token_endpoint, tokenForm({ code: back.code, verifier: pending.verifier, redirect: pending.redirect }));
+            if (res.status >= 500) throw new Error(L.wsCloudUnavailable);
+            const t = res.status === 200 ? tokensOf(res.json) : null;
+            if (!t) throw new Error(L.wsErrStale);
+            if (!t.idToken) throw new Error(L.wsErrServer);
+            const claims = checkIdToken(t.idToken, { issuer: found.meta.issuer, nonce: pending.nonce });
+            const account = await keepCloud(found, claims, t);
+            fire('cloud', account);
+            await signInToWorkspace(account);
+            onward = true;
+        } catch (e) {
+            fire('error', e);
+        } finally {
+            if (!onward) fire('pending', null);
+        }
+    }
+
+    async function keepCloud(found, claims, t) {
+        const sub = String(claims.sub);
+        const before = cloudAccounts().find(a => a.issuer === found.meta.issuer && a.sub === sub);
+        const account = Object.assign({}, before || {}, {
+            id: found.meta.issuer + '|' + sub,
+            issuer: found.meta.issuer,
+            api: found.config.api,
+            sub: sub,
+            user: { id: sub, name: String(claims.name || claims.email || ''), email: String(claims.email || '') },
+            signedOut: false,
+            at: Date.now(),
+        });
+        const kept = await secret('set', cloudSecretKey(account), t.refresh);
+        if (!kept || !kept.ok) throw new Error(L.wsCloudNotKept);
+        cloudAccess[account.id] = { token: t.access, exp: Date.now() + t.expiresIn * 1000 };
+        saveCloudAccounts(cloudAccounts().filter(a => a.id !== account.id).concat([account]));
+        return refreshCloud(account, claims.wsc_orgs);
+    }
+
+    function cloudSignedOut(account) {
+        delete cloudAccess[account.id];
+        updateCloud(account.id, { signedOut: true });
+        const err = new Error(L.wsCloudExpired);
+        err.signedOut = true;
+        return err;
+    }
+
+    function cloudRefresh(account) {
+        if (cloudRefreshing[account.id]) return cloudRefreshing[account.id];
+        const run = async () => {
+            const stored = await secret('get', cloudSecretKey(account)).catch(() => null);
+            if (!stored || !stored.ok) throw cloudSignedOut(account);
+            const found = await cloudMeta();
+            const res = await postForm(found.meta.token_endpoint, tokenForm({ refresh: stored.value }));
+            const t = res.status === 200 ? tokensOf(res.json, stored.value) : null;
+            if (t) {
+                // the old refresh token is spent: keep the new one before anything else
+                await secret('set', cloudSecretKey(account), t.refresh);
+                cloudAccess[account.id] = { token: t.access, exp: Date.now() + t.expiresIn * 1000 };
+                if (account.signedOut) updateCloud(account.id, { signedOut: false });
+                return t.access;
+            }
+            // invalid_grant: expired, rotated out or revoked (Devices, Connected apps, an administrator)
+            if (res.status === 400 || res.status === 401) throw cloudSignedOut(account);
+            throw apiError(res, L.wsCloudUnavailable);
+        };
+        cloudRefreshing[account.id] = run().finally(() => { delete cloudRefreshing[account.id]; });
+        return cloudRefreshing[account.id];
+    }
+
+    async function cloudToken(account) {
+        const a = cloudAccess[account.id];
+        if (a && a.exp - Date.now() > 60000) return a.token;
+        return cloudRefresh(account);
+    }
+
+    /* Cloud's REST API for the account, in its organization (X-WS-Org, as WorkSuite Desktop sends it) */
+    async function cloudApi(account, method, url) {
+        const headers = (bearer) => Object.assign({ 'Authorization': 'Bearer ' + bearer }, account.org ? { 'X-WS-Org': String(account.org) } : {});
+        let res = await http(method, url, undefined, headers(await cloudToken(account)));
+        if (res.status === 401) {
+            delete cloudAccess[account.id];
+            res = await http(method, url, undefined, headers(await cloudRefresh(account)));
+            if (res.status === 401) throw cloudSignedOut(account);
+        }
+        if (res.status < 200 || res.status >= 300 || !res.json) {
+            const e = apiError(res, res.status >= 500 ? L.wsCloudUnavailable : L.wsErrServer);
+            if (res.json && res.json.error && res.json.error.message) e.message = res.json.error.message;
+            throw e;
+        }
+        return res.json;
+    }
+
+    /* /api/v1/me and the organizations' instances (wsc_orgs, from the id_token or userinfo): the account as it is now */
+    async function refreshCloud(account, wscOrgs) {
+        const me = await cloudApi(account, 'GET', account.api + '/v1/me');
+        if (!Array.isArray(wscOrgs)) {
+            const found = await cloudMeta();
+            const info = found.meta.userinfo_endpoint ? await cloudApi(account, 'GET', found.meta.userinfo_endpoint).catch(() => null) : null;
+            wscOrgs = info && Array.isArray(info.wsc_orgs) ? info.wsc_orgs : [];
+        }
+        const orgs = orgsOf(me, wscOrgs);
+        const org = activeOrg(orgs, me.active_organization_id);
+        const identity = me.identity || {};
+        return updateCloud(account.id, {
+            user: { id: account.sub, name: String(identity.name || account.user.name || identity.email || ''), email: String(identity.email || account.user.email || '') },
+            accountState: String(me.account_state || ''),
+            orgs: orgs,
+            org: org ? org.id : null,
+            state: cloudState(String(me.account_state || ''), org),
+            checked: Date.now(),
+        }) || account;
+    }
+
+    function cloudStateError(state) {
+        const text = { 'setting-up': L.wsCloudSettingUp, failed: L.wsCloudFailed, 'verify-email': L.wsCloudVerifyEmail, none: L.wsCloudNoOrg }[state];
+        const e = new Error(text || L.wsCloudSettingUp);
+        e.cloudState = state;
+        return e;
+    }
+
+    /*
+     * Signs in to the account's workspace (its organization's WorkSuite instance) through the browser; it finishes
+     * like any sign-in here ("signedin"). An organization other than the active one may be named. When that
+     * workspace is already signed in here, it is simply the active account again.
+     */
+    async function signInToWorkspace(account, orgId) {
+        const current = cloudAccounts().find(a => a.id === account.id) || account;
+        const orgs = current.orgs || [];
+        const org = (orgId !== undefined && orgId !== null && orgs.find(o => o.id === String(orgId))) || activeOrg(orgs, current.org);
+        const state = cloudState(current.accountState, org);
+        if (state !== 'ready' && state !== 'read-only') throw cloudStateError(state);
+        const server = normalizeServer(org.url);
+
+        const here = accounts().find(a => a.cloud && a.cloud.account === current.id && a.cloud.org === org.id && !a.signedOut);
+        if (here) {
+            setActive(here.id);
+            fire('signedin', here);
+            return here.server;
+        }
+
+        await ensureCapable(server);
+        const pair = await pkce();
+        const st = random(24);
+        writeJson(localStorage, LS_PENDING, {
+            server: server, verifier: pair.verifier, state: st, at: Date.now(), via: 'cloud',
+            cloud: { account: current.id, org: org.id, name: org.name },
+        });
+        const opened = await openExternal(workspaceSignInUrl(server, { challenge: pair.challenge, state: st, device: deviceName() }));
+        if (!opened.ok) {
+            writeJson(localStorage, LS_PENDING, undefined);
+            throw new Error(L.wsErrBrowser);
+        }
+        fire('pending', server);
+        watchSignIn();
+        return server;
+    }
+
+    /* GET /api/v1/storage/usage: {used, limit} of the account's organization, in bytes */
+    async function cloudStorage(account) {
+        const u = await cloudApi(account, 'GET', account.api + '/v1/storage/usage');
+        return { used: Number(u.used) || 0, limit: Number(u.limit) || 0 };
+    }
+
+    /* Sign out of WorkSuite Cloud: the grant revoked (RFC 7009), the token deleted, and its workspaces signed out here */
+    async function signOutCloud(account) {
+        try {
+            const stored = await secret('get', cloudSecretKey(account)).catch(() => null);
+            const found = stored && stored.ok ? await cloudMeta().catch(() => null) : null;
+            if (found && found.meta.revocation_endpoint)
+                await postForm(found.meta.revocation_endpoint, { token: stored.value, token_type_hint: 'refresh_token', client_id: CLOUD.client }).catch(() => null);
+        } finally {
+            await secret('delete', cloudSecretKey(account)).catch(() => null);
+            delete cloudAccess[account.id];
+            saveCloudAccounts(cloudAccounts().filter(a => a.id !== account.id));
+            for (const a of accounts().filter(x => x.cloud && x.cloud.account === account.id))
+                await signOut(a).catch(() => null);
+        }
     }
 
     /* ------------------------------------------------------------------ *
@@ -1650,6 +1953,15 @@ import { driveCacheKey } from './clouds-logic.js';
         signInWithDesktop: signInWithDesktop,
         signInWithBroker: signInWithBroker,
         osBroker: osBroker,
+        /* WorkSuite Cloud: a Personal account and its cloud */
+        CLOUD: CLOUD,
+        signInWithCloud: signInWithCloud,
+        cloudAllowed: cloudAllowed,
+        cloudAccounts: cloudAccounts,
+        refreshCloud: refreshCloud,
+        signInToWorkspace: signInToWorkspace,
+        cloudStorage: cloudStorage,
+        signOutCloud: signOutCloud,
         finishWithCode: finishWithCode,
         desktopAccounts: desktopAccounts,
         cancelSignIn: cancelSignIn,
