@@ -21,6 +21,14 @@
  * (worksuiteoffice://auth/callback, /api/auth/apps/exchange or /api/auth/apps/poll), so no password and
  * normally no question either. Cloud's own API (/api/v1/me, /api/v1/storage/usage) takes the OneAuth
  * token with `X-WS-Org`, as for WorkSuite Desktop.
+ *
+ * THE GATEWAY. When /api/v1/me says so (`gateway`), WorkSuite Cloud serves the instance's API at its own
+ * address for this token and `X-WS-Org` (worksuite-cloud api/src/routes/cloud/gateway.ts). Then there is no
+ * second trip to the browser: the gateway hands Office a one-time code for its own session on the instance
+ * (POST <gateway>/auth/apps/handoff, PKCE S256), which Office exchanges at the instance's
+ * /api/auth/apps/exchange as after a browser sign-in. Anything else — no gateway, a workspace that does not
+ * know the person yet (CLOUD_NOT_LINKED), an error — falls back to the browser sign-in above. The Cloud token
+ * only ever goes to Cloud's own hosts: the gateway's address must be one of them.
  */
 
 export const CLOUD = Object.freeze({
@@ -245,6 +253,21 @@ export function workspaceSignInUrl(instance, req) {
   const next = "/desktop/office?challenge=" + encodeURIComponent(req.challenge) + "&state=" + encodeURIComponent(req.state) +
                "&device=" + encodeURIComponent(req.device || "");
   return origin + "/login?wsc=switch&next=" + encodeURIComponent(next);
+}
+
+/*
+ * The workspace gateway /api/v1/me offers ({version, base, ready, handoff}), when it is on Cloud's own hosts and
+ * can hand Office a session: {base}. Anything else is no gateway.
+ */
+export function gatewayOf(me) {
+  const g = me && typeof me === "object" ? me.gateway : null;
+  if (!g || typeof g !== "object" || !(Number(g.version) >= 1) || g.handoff !== true || !isCloudUrl(g.base)) return null;
+  return { base: trim(g.base) };
+}
+
+/* The body of the gateway's hand-off: a code for WorkSuite Office's own session, bound to this PKCE challenge. */
+export function gatewayHandoff(challenge) {
+  return { client: CLOUD.client, code_challenge: challenge, code_challenge_method: "S256" };
 }
 
 /* The key the refresh token is kept under in the secret store (never the token itself in localStorage). */

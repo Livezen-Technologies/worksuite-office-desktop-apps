@@ -54,8 +54,8 @@ const utils = { Lang: L, defines: { FileFormat } };
 
 import { driveCacheKey } from './clouds-logic.js';
 import {
-    CLOUD, META_TTL, activeOrg, authorizeUrl, checkIdToken, checkMetadata, cloudConfig, cloudSecretKey, cloudState, orgsOf,
-    readCallback, tokenForm, tokensOf, workspaceSignInUrl,
+    CLOUD, META_TTL, activeOrg, authorizeUrl, checkIdToken, checkMetadata, cloudConfig, cloudSecretKey, cloudState, gatewayHandoff,
+    gatewayOf, orgsOf, readCallback, tokenForm, tokensOf, workspaceSignInUrl,
 } from './cloud-logic.js';
 
 +function () {
@@ -1012,8 +1012,9 @@ import {
      * organizations, never a token) is in localStorage (ws:cloud).
      *
      * THE PERSONAL CLOUD is the organization's WorkSuite instance. signInToWorkspace() signs Office in there
-     * with the same WorkSuite Cloud account (the instance's silent Cloud sign-in, then the usual
-     * /desktop/office hand-off), and that instance is then an ordinary account of this page, marked with
+     * with the same WorkSuite Cloud account: through WorkSuite Cloud's gateway when /api/v1/me offers it (a
+     * one-time code from the gateway, exchanged at the instance; no browser), else the instance's silent Cloud
+     * sign-in and the usual /desktop/office hand-off. That instance is then an ordinary account of this page, marked with
      * `cloud: {account, org, name}`: Drive lists, opening, editing and saving (every save a new version)
      * are those of any WorkSuite server. Signing out of WorkSuite Cloud signs its workspaces out too.
      * ------------------------------------------------------------------ */
@@ -1176,18 +1177,20 @@ import {
         return cloudRefresh(account);
     }
 
-    /* Cloud's REST API for the account, in its organization (X-WS-Org, as WorkSuite Desktop sends it) */
-    async function cloudApi(account, method, url) {
-        const headers = (bearer) => Object.assign({ 'Authorization': 'Bearer ' + bearer }, account.org ? { 'X-WS-Org': String(account.org) } : {});
-        let res = await http(method, url, undefined, headers(await cloudToken(account)));
+    /* Cloud's REST API for the account, in its organization (X-WS-Org, as WorkSuite Desktop sends it; `org` names another) */
+    async function cloudApi(account, method, url, body, org) {
+        const inOrg = org !== undefined && org !== null ? org : account.org;
+        const headers = (bearer) => Object.assign({ 'Authorization': 'Bearer ' + bearer }, inOrg ? { 'X-WS-Org': String(inOrg) } : {});
+        let res = await http(method, url, body, headers(await cloudToken(account)));
         if (res.status === 401) {
             delete cloudAccess[account.id];
-            res = await http(method, url, undefined, headers(await cloudRefresh(account)));
+            res = await http(method, url, body, headers(await cloudRefresh(account)));
             if (res.status === 401) throw cloudSignedOut(account);
         }
         if (res.status < 200 || res.status >= 300 || !res.json) {
             const e = apiError(res, res.status >= 500 ? L.wsCloudUnavailable : L.wsErrServer);
             if (res.json && res.json.error && res.json.error.message) e.message = res.json.error.message;
+            e.code = (res.json && (res.json.code || (res.json.error && res.json.error.code))) || null;
             throw e;
         }
         return res.json;
@@ -1210,6 +1213,7 @@ import {
             orgs: orgs,
             org: org ? org.id : null,
             state: cloudState(String(me.account_state || ''), org),
+            gateway: gatewayOf(me),
             checked: Date.now(),
         }) || account;
     }
@@ -1242,11 +1246,24 @@ import {
         }
 
         await ensureCapable(server);
+        const cloudLink = { account: current.id, org: org.id, name: org.name };
+
+        // WorkSuite Cloud's gateway: Office's own session on the instance with no browser. The browser below otherwise.
+        const viaGateway = current.gateway ? await gatewaySession(current, org, server, cloudLink).catch(e => {
+            if (e && e.signedOut) throw e;
+            return null;
+        }) : null;
+        if (viaGateway) {
+            fire('pending', null);
+            fire('signedin', viaGateway);
+            return server;
+        }
+
         const pair = await pkce();
         const st = random(24);
         writeJson(localStorage, LS_PENDING, {
             server: server, verifier: pair.verifier, state: st, at: Date.now(), via: 'cloud',
-            cloud: { account: current.id, org: org.id, name: org.name },
+            cloud: cloudLink,
         });
         const opened = await openExternal(workspaceSignInUrl(server, { challenge: pair.challenge, state: st, device: deviceName() }));
         if (!opened.ok) {
@@ -1256,6 +1273,31 @@ import {
         fire('pending', server);
         watchSignIn();
         return server;
+    }
+
+    /*
+     * The workspace session through WorkSuite Cloud's gateway: POST <gateway>/auth/apps/handoff with the Cloud
+     * token and X-WS-Org hands a one-time code for WorkSuite Office's own session on the instance (PKCE S256),
+     * exchanged at the instance's /api/auth/apps/exchange as after a browser sign-in. The account, or null when
+     * the gateway could not (the caller falls back to the browser); a Cloud sign-in that ended throws.
+     */
+    async function gatewaySession(account, org, server, cloudLink) {
+        const pair = await pkce();
+        let handed;
+        try {
+            handed = await cloudApi(account, 'POST', account.gateway.base + '/auth/apps/handoff', gatewayHandoff(pair.challenge), org.id);
+        } catch (e) {
+            if (e && e.signedOut) throw e;
+            // CLOUD_NOT_LINKED, WORKSPACE_REFUSED_GATEWAY, not ready, an older Cloud: the browser sign-in links or retries
+            console.warn('WorkSuite Cloud gateway: ' + ((e && e.code) || (e && e.status) || 'unavailable') + '; signing in in the browser');
+            return null;
+        }
+        const code = handed && handed.data && typeof handed.data.code === 'string' ? handed.data.code : '';
+        if (!code) return null;
+        const res = await http('POST', server + '/api/auth/apps/exchange', { client: CLIENT, code: code, code_verifier: pair.verifier });
+        const data = res.status === 200 && res.json ? res.json.data : null;
+        if (!data || !data.user || !data.tokens || !data.tokens.refresh_token) return null;
+        return remember(server, data, 'cloud', cloudLink);
     }
 
     /* GET /api/v1/storage/usage: {used, limit} of the account's organization, in bytes */
