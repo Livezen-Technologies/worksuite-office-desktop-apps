@@ -40,6 +40,7 @@ export function SignInDialog(props) {
   const [code, setCode] = createSignal("");
   const [codeError, setCodeError] = createSignal("");
   const [desktops, setDesktops] = createSignal([]);
+  const [viaCloud, setViaCloud] = createSignal(false); // signing in with WorkSuite Cloud (a Personal account)
   let timer, lastDesktop = null, signedIn = false;
 
   const knownSignedOut = () => WS().accounts().filter((a) => a.signedOut);
@@ -50,7 +51,7 @@ export function SignInDialog(props) {
     setCodeOpen(false);
     setCode("");
     setCodeError("");
-    setWait({ desktop: viaDesktop, text: viaDesktop ? L.wsWaitDesktop : L.wsWaitBrowser, timedOut: false });
+    setWait({ desktop: viaDesktop, text: viaDesktop ? L.wsWaitDesktop : viaCloud() ? L.wsCloudWait : L.wsWaitBrowser, timedOut: false });
     // never a spinner forever: say what to do, with a way to try again
     timer = setTimeout(() => {
       if (viaDesktop) {
@@ -70,8 +71,20 @@ export function SignInDialog(props) {
 
   async function start(target) {
     setError("");
+    setViaCloud(false);
     try {
       waiting(await WS().signIn(target), false);
+    } catch (e) {
+      backToStart(e.message);
+    }
+  }
+
+  /* A Personal account: WorkSuite Cloud in the browser, then its workspace (core.js signInWithCloud) */
+  async function startCloud(signUp) {
+    setError("");
+    setViaCloud(true);
+    try {
+      waiting(await WS().signInWithCloud({ signUp: !!signUp }), false);
     } catch (e) {
       backToStart(e.message);
     }
@@ -116,13 +129,17 @@ export function SignInDialog(props) {
 
     const done = () => { signedIn = true; props.onClose(); };
     const failed = (e) => backToStart(e.message);
+    // after WorkSuite Cloud, its workspace's sign-in: show where it goes on
+    const moved = (target) => { if (target && wait() && viaCloud()) setServer(target); };
     WS().on("signedin", done);
     WS().on("error", failed);
+    WS().on("pending", moved);
     onCleanup(() => {
       clearTimeout(timer);
       if (!signedIn && WS().pendingSignIn()) WS().cancelSignIn();
       WS().off("signedin", done);
       WS().off("error", failed);
+      WS().off("pending", moved);
     });
 
     if (props.desktopAccount) startDesktop(props.desktopAccount);
@@ -161,6 +178,15 @@ export function SignInDialog(props) {
             </Show>
           </p>
         </Show>
+        <Show when={!serverLocked() && WS().cloudAllowed()}>
+          <div class="ws-dlg-cloud">
+            <Button variant="outline" class="ws-dlg-wide" disabled={busy()} onClick={() => startCloud(false)}>{L.wsCloudSignIn}</Button>
+            <p class="ws-dlg-server">
+              {L.wsCloudHint} ·{" "}
+              <a href="#" onClick={(e) => { e.preventDefault(); startCloud(true); }}>{L.wsCloudCreate}</a>
+            </p>
+          </div>
+        </Show>
         <Show when={error()}><p class="ws-error" role="alert">{error()}</p></Show>
       </Show>
 
@@ -186,7 +212,7 @@ export function SignInDialog(props) {
               <Button variant="accent" onClick={() => lastDesktop && startDesktop(lastDesktop)}>{L.wsTryAgain}</Button>
             </Show>
             <Show when={!wait().desktop}>
-              <Button onClick={() => start(server())}>{L.wsOpenAgain}</Button>
+              <Button onClick={() => (viaCloud() ? startCloud(false) : start(server()))}>{L.wsOpenAgain}</Button>
             </Show>
             <Show when={wait().desktop}>
               <Button onClick={() => start(server())}>{L.wsUseBrowser}</Button>

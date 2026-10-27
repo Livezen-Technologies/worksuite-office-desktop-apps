@@ -9,6 +9,10 @@
  *
  * A Desktop account that is already signed in here never starts a sign-in: the wizard ends with
  * `duplicate` set so the page can focus the existing card.
+ *
+ * A Personal account skips the server: server|result ──CHOOSE_CLOUD──▶ auth (via "cloud": WorkSuite Cloud, then
+ * its workspace) ──SIGNED_IN──▶ verify; Back or Cancel from there returns to the server step. Not offered when
+ * the organisation locked the server.
  */
 import { validateServer } from "./settings-logic.js";
 
@@ -23,7 +27,7 @@ export function initialWizard(opts) {
     error: "",
     probe: null, // {ok, old, name} | {error}
     desktop: [], // WorkSuite Desktop accounts on this server
-    via: null, // "desktop" | "browser"
+    via: null, // "desktop" | "browser" | "cloud"
     pick: null, // the Desktop account chosen
     auth: null, // {state: "waiting"|"timeout"|"error", message}
     account: null,
@@ -79,6 +83,10 @@ export function wizardReducer(state, ev, ctx) {
       if (here && !here.signedOut) return { ...state, step: "done", duplicate: id, account: here };
       return { ...state, step: "auth", via: "desktop", pick: ev.account, auth: { state: "waiting" } };
     }
+    case "CHOOSE_CLOUD":
+      if (state.locked || !["server", "checking", "result"].includes(state.step)) return state;
+      return { ...state, step: "auth", via: "cloud", pick: null, probe: null, error: "", auth: { state: "waiting" } };
+
     case "CHOOSE_BROWSER":
       if (state.step !== "choose") return state;
       return { ...state, step: "auth", via: "browser", pick: null, auth: { state: "waiting" } };
@@ -92,7 +100,7 @@ export function wizardReducer(state, ev, ctx) {
       return { ...state, auth: { state: "error", message: ev.message || "" } };
 
     case "CANCEL":
-      if (state.step === "auth") return { ...state, step: "choose", auth: null, via: null, pick: null };
+      if (state.step === "auth") return { ...state, step: state.via === "cloud" ? "server" : "choose", auth: null, via: null, pick: null };
       return state;
 
     case "SIGNED_IN":
@@ -115,7 +123,7 @@ export function wizardReducer(state, ev, ctx) {
         case "choose":
           return { ...state, step: "result" };
         case "auth":
-          return { ...state, step: "choose", auth: null, via: null, pick: null };
+          return { ...state, step: state.via === "cloud" ? "server" : "choose", auth: null, via: null, pick: null };
         default:
           return state;
       }

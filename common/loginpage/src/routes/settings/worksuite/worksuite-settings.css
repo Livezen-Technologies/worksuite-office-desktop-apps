@@ -6,3 +6,6 @@
              padding-top: var(--wsx-space-4); border-top: var(--wsx-border-w) solid var(--wsx-line); }
 .wss-apply-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 240px; }
 .wss-restart { color: var(--wsx-warning); }
+
+/* WorkSuite Cloud accounts under the account list */
+.wss-cloud-title { display: block; margin-top: var(--wsx-space-4, 16px); }

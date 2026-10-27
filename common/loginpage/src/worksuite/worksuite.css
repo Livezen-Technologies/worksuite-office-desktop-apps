@@ -352,6 +352,7 @@
 .ws-dlg-server { margin: 0; color: var(--text-secondary); font-size: 12px; text-align: center;
   a { color: var(--text-link); } }
 .ws-dlg-buttons { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+.ws-dlg-cloud { display: flex; flex-direction: column; gap: 6px; padding-top: 12px; border-top: 1px solid var(--border-regular-control, rgba(127, 127, 127, 0.25)); }
 .ws-label { font-size: 12px; color: var(--text-secondary); margin-bottom: -6px; }
 .ws-link { color: var(--text-link); text-align: center; }
 .ws-wait { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }

@@ -86,3 +86,18 @@ test("Back walks the steps; events out of place are ignored", () => {
   assert.equal(wizardReducer(s, { type: "SIGNED_IN", account: {} }).step, "server");
   assert.equal(wizardReducer(s, { type: "PROBE_OK", office: true }).step, "server");
 });
+
+test("WorkSuite Cloud: a Personal account skips the server, Back and Cancel return to it, a locked server never offers it", () => {
+  const s = run(initialWizard(), [{ type: "INPUT", value: "demo.worksuite.lk" }, { type: "CHOOSE_CLOUD" }]);
+  assert.equal(s.step, "auth");
+  assert.equal(s.via, "cloud");
+  assert.deepEqual(s.auth, { state: "waiting" });
+  assert.equal(wizardReducer(s, { type: "BACK" }).step, "server");
+  assert.equal(wizardReducer(s, { type: "CANCEL" }).step, "server");
+  assert.equal(wizardReducer(s, { type: "CANCEL" }).server, "demo.worksuite.lk");
+  const signed = wizardReducer(s, { type: "SIGNED_IN", account: { id: "https://t7.worksuitecloud.com|5" } });
+  assert.equal(signed.step, "verify");
+  assert.equal(wizardReducer(wizardReducer(s, { type: "AUTH_ERROR", message: "Still being set up" }), { type: "RETRY" }).auth.state, "waiting");
+  assert.equal(run(initialWizard({ server: "https://corp.example", locked: true }), [{ type: "CHOOSE_CLOUD" }]).step, "server");
+  assert.equal(wizardReducer(signed, { type: "CHOOSE_CLOUD" }).step, "verify");
+});
