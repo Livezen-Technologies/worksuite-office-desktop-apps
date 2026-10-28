@@ -55,7 +55,8 @@ extern NSNotificationName const ASCWorkSuiteUpdateProgressNotification;
 /// The app's one Sparkle updater (replaces the storyboard's SUUpdater, whose user driver reports no
 /// progress). Sparkle's standard windows are kept as they were: every user-driver call is forwarded to
 /// SPUStandardUserDriver, and the wrapper only also reports what it sees. The storyboard object
-/// (Main.storyboard, "Check for Updates…") is this same instance: -init returns +sharedUpdater.
+/// (Main.storyboard, "Check for Updates…") is a stand-in: its actions and properties answer with
+/// +sharedUpdater's Sparkle session. Use +sharedUpdater everywhere else.
 @interface ASCWorkSuiteUpdater : NSObject <SPUUpdaterDelegate, NSMenuItemValidation>
 
 + (instancetype)sharedUpdater;
