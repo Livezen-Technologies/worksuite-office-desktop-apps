@@ -176,7 +176,7 @@ typedef NS_ENUM(NSInteger, EditorHeaderLayout) {
     [self.btnHome autoSetDimensionsToSize:CGSizeMake(kToolButtonWidth, kToolButtonHeight)];
 
     self.headerLabel = [[NSTextField alloc] initForAutoLayout];
-    self.headerLabel.stringValue = @"ONLYOFFICE";
+    self.headerLabel.stringValue = @"WorkSuite Office";
     self.headerLabel.editable = NO;
     self.headerLabel.selectable = NO;
     self.headerLabel.bordered = NO;

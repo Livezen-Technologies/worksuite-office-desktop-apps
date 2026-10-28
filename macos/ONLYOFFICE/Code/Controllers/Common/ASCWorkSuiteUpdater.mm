@@ -232,9 +232,17 @@ static void (^wsOnce(void (^reply)(SPUUserUpdateChoice)))(SPUUserUpdateChoice) {
     return shared;
 }
 
-/// the storyboard's object, and anyone else's alloc/init, is the shared updater: one Sparkle session per app
+/// The storyboard's object ("Check for Updates…") is a stand-in that hands its menu item to the shared updater, so
+/// there is still one Sparkle session per app. -init must return the object it was given: the storyboard loader
+/// refuses any other ("This coder is expecting the replaced object … to be returned from
+/// NSClassSwapper.initWithCoder"), and macOS 26's AppKit stops the app there at launch.
 - (instancetype)init {
-    return [ASCWorkSuiteUpdater sharedUpdater];
+    return [super init];
+}
+
+/// the instance that runs Sparkle: this one when it is the shared updater, otherwise the shared updater
+- (ASCWorkSuiteUpdater *)session {
+    return _updater ? self : [ASCWorkSuiteUpdater sharedUpdater];
 }
 
 - (instancetype)initShared {
@@ -251,39 +259,40 @@ static void (^wsOnce(void (^reply)(SPUUserUpdateChoice)))(SPUUserUpdateChoice) {
 }
 
 - (NSDictionary *)lastProgress {
-    return self.driver.last ?: @{};
+    return self.session.driver.last ?: @{};
 }
 
 - (NSString *)foundVersion {
-    return self.driver.foundReply ? self.driver.version : nil;
+    ASCWorkSuiteUserDriver * driver = self.session.driver;
+    return driver.foundReply ? driver.version : nil;
 }
 
 - (IBAction)checkForUpdates:(id)sender {
-    [self.updater checkForUpdates];
+    [self.session.updater checkForUpdates];
 }
 
 - (BOOL)validateMenuItem:(NSMenuItem *)item {
     if (item.action == @selector(checkForUpdates:))
-        return self.updater.canCheckForUpdates;
+        return self.session.updater.canCheckForUpdates;
     return YES;
 }
 
 - (BOOL)startDownload {
-    void (^reply)(SPUUserUpdateChoice) = self.driver.foundReply;
+    void (^reply)(SPUUserUpdateChoice) = self.session.driver.foundReply;
     if (!reply) return NO;
     reply(SPUUserUpdateChoiceInstall);
     return YES;
 }
 
 - (BOOL)cancelDownload {
-    void (^cancel)(void) = self.driver.cancellation;
+    void (^cancel)(void) = self.session.driver.cancellation;
     if (!cancel) return NO;
     cancel();
     return YES;
 }
 
 - (BOOL)installAndRelaunch {
-    void (^reply)(SPUUserUpdateChoice) = self.driver.readyReply;
+    void (^reply)(SPUUserUpdateChoice) = self.session.driver.readyReply;
     if (!reply) return NO;
     reply(SPUUserUpdateChoiceInstall);
     return YES;
