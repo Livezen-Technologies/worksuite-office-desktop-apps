@@ -1,16 +1,17 @@
 import { For } from "solid-js";
 import { useNavigate } from "@solidjs/router";
-import { createDocument } from "@/sdk";
+import { createDocument, openLocal } from "@/sdk";
 import { L } from "@/worksuite/lang.js";
 import { Icon } from "@/worksuite/ui/components.jsx";
 import "./CreateCards.styles.css";
 
-/* The create commands are the native ones ("create:new" word | cell | slide | form) */
+/* The create commands are the native ones ("create:new" word | cell | slide); the PDF editor opens a PDF through
+   the native Open dialog ("open:folder"), since there is no blank PDF to create */
 const KINDS = () => [
   { id: "word", label: L.wshDocument, ext: "DOCX", icon: "file-text" },
   { id: "cell", label: L.wshSpreadsheet, ext: "XLSX", icon: "file-sheet" },
   { id: "slide", label: L.wshPresentation, ext: "PPTX", icon: "presentation" },
-  { id: "form", label: L.wshPdfForm, ext: "PDF", icon: "file-type" },
+  { id: "pdf", label: L.wshPdfEditor, ext: L.wshPdfEditorHint, icon: "file-type", open: true },
 ];
 
 export function CreateCards(props) {
@@ -38,7 +39,7 @@ export function CreateCards(props) {
         <For each={KINDS()}>
           {(k, i) => (
             <div role="listitem">
-              <button type="button" class={"wsh-create-card wsh-type-" + k.id} tabindex={i() === 0 ? 0 : -1} title={k.label + " (" + k.ext + ")"} onClick={() => create(k.id)}>
+              <button type="button" class={"wsh-create-card wsh-type-" + k.id} tabindex={i() === 0 ? 0 : -1} title={k.open ? k.ext : k.label + " (" + k.ext + ")"} onClick={() => (k.open ? openLocal() : create(k.id))}>
                 <span class="wsh-create-tile" aria-hidden="true"><Icon name={k.icon} /></span>
                 <span class="wsh-create-text">
                   <span class="wsh-create-name">{k.label}</span>

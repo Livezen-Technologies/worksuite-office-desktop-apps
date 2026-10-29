@@ -380,6 +380,8 @@ export const WS_EN = {
     wshSpreadsheet: 'Spreadsheet',
     wshPresentation: 'Presentation',
     wshPdfForm: 'PDF form',
+    wshPdfEditor: 'PDF editor',
+    wshPdfEditorHint: 'Open and edit a PDF',
     wshFromTemplate: 'From template',
     wshBrowseTemplates: 'Browse templates',
     wshRecentFiles: 'Recent files',
