@@ -153,7 +153,7 @@ export function AccountPanel(props) {
         <Show when={!props.noRefresh}><IconButton icon="refresh" label={L.wshRefresh} busy={props.refreshing} onClick={props.onRefresh} /></Show>
       }>
         <StatusBadge status={status()} />
-        <WsButton variant="primary" small busy={props.reconnecting} onClick={props.onReconnect}>{L.wshReconnect}</WsButton>
+        <WsButton variant="warning" small icon="refresh" busy={props.reconnecting} onClick={props.onReconnect}>{L.wshReconnect}</WsButton>
       </Show>
     </div>
   );
