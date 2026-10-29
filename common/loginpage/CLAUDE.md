@@ -90,8 +90,10 @@ of being routed, so their state survives navigation.
 - Components wrap Kobalte primitives; compound API via `Object.assign(Root, { Sub, ... })`.
   Exemplar: `src/components/select/Select.jsx`.
 - Styling: CSS Modules (`*.module.css`) for components; route-level plain `*.styles.css`
-  for pages. Design tokens live in `src/styles/tokens.css` (theme classes on
-  `documentElement`). CSS container queries (`@container`, `container-type: inline-size`)
+  for pages. Theme colours are the ONLYOFFICE variables of `src/styles/themes/*.css`
+  (theme classes on `body`); the WorkSuite screens use the semantic tokens of
+  `src/worksuite/ui/tokens.css` (`--background`, `--card`, `--primary`, `--muted`, `--accent`,
+  `--border`, …), which are derived from them. Never hard-code a UI colour. CSS container queries (`@container`, `container-type: inline-size`)
   are used for component-local responsive breakpoints instead of viewport media queries
   where a panel's width can differ from the window's.
 - Class merging: `mergeClass(base, extra)` from `src/utils/classes.js` with Solid

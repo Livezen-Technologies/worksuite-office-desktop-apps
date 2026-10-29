@@ -123,9 +123,15 @@ credentials (WorkSuite Desktop's "Continue as" when that account is there, other
 server) only when the refresh token is refused or there is none. A network failure shows *Server
 unreachable* and does not discard anything.
 
-## The home screen's Drive account panel
+## The home screen's Files explorer and Drive account panel
 
-`WorkSuiteSection.jsx` and `connect.jsx` show the default account (`ws:active`) in one of three states
+Home has one file explorer (`routes/home/components/FilesExplorer.jsx`) with the tabs Recent, My Drive, Shared
+with me, Starred and This computer; one list shows at a time. Recent is the native recent files plus Drive's
+recently opened files (`view=recent`), merged without duplicates (`mergeRecents()`); My Drive, Shared with me and
+Starred are Drive's `browse`/`search`, `view=shared` and `view=starred`; This computer is the native recent files
+that are on this computer. Each tab keeps its own search, filters, sort, layout and scroll position
+(`stores/home-session.js`) and loads only when shown; a Drive list shown again within a minute is not fetched
+again (Refresh fetches). On the Drive tabs, `WorkSuiteSection.jsx` and `connect.jsx` show the default account (`ws:active`) in one of three states
 (`accountPanelState()` in `home-logic.js`):
 
 | State | When | Panel |

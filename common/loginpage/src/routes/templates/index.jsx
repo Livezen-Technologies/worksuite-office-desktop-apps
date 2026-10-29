@@ -57,17 +57,23 @@ function whenVisible(el, cb) {
   onCleanup(() => seen.unobserve(el));
 }
 
+const TYPE_ICON = { word: "file-text", cell: "file-sheet", slide: "presentation", pdf: "file-type" };
+
 function Thumb(props) {
   const [src, setSrc] = createSignal("");
   const [failed, setFailed] = createSignal(false);
+  const [settled, setSettled] = createSignal(!props.template.thumb);
   let el;
-  onMount(() => whenVisible(el, () => cachedThumb(props.template.thumb).then(setSrc)));
+  onMount(() => whenVisible(el, () => cachedThumb(props.template.thumb).then(setSrc).finally(() => setSettled(true))));
   return (
     <div class="tpl-thumb" ref={el}>
       <Show when={src() && !failed()} fallback={
-        <div class="tpl-thumb-none">
-          <span class={"tpl-type-mark tpl-type-" + props.template.type}>{props.template.ext.toUpperCase()}</span>
-        </div>
+        <Show when={settled() || failed()} fallback={<span class="tpl-skel" aria-hidden="true" />}>
+          <div class="tpl-thumb-none">
+            <Icon name={TYPE_ICON[props.template.type] || "file-text"} class="tpl-thumb-icon" />
+            <span class="tpl-type-mark">{props.template.ext.toUpperCase()}</span>
+          </div>
+        </Show>
       }>
         <img src={src()} alt="" draggable={false} onError={() => setFailed(true)} />
       </Show>

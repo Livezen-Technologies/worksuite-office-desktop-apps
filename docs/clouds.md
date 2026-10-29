@@ -22,12 +22,16 @@ The browser is laid out like WorkSuite Desktop's Drive module (`src/modules/file
 - a 240px rail with New and the places;
 - a header with the breadcrumb, the title, New folder and Upload;
 - a toolbar with search, Refresh, list/grid, density and Details;
-- a table whose sticky header sits on the ground colour, with 36px rows (30px when compact);
+- a table whose sticky header sits on the muted surface, with 40px rows (32px when compact);
 - a details drawer;
 - an upload tray.
 
-The tokens in `ui/tokens.css` are Desktop's own values, from `src/styles.css`, for light, dark and high
-contrast. The kit's Menu, Checkbox, InfoBanner, ConnectionWarning, SyncButton, OrgSwitcher and avatar follow
+Every colour comes from the app's theme: `ui/tokens.css` defines the semantic tokens (`--background`,
+`--foreground`, `--card`, `--popover`, `--primary`, `--secondary`, `--muted`, `--accent`, `--border`, `--input`,
+`--ring`, with their `-foreground` pairs) from the ONLYOFFICE theme variables the theme class on `<body>` sets
+(`src/styles/themes/*.css`, or a custom theme's injected colours), and the `--ws-*` / `--wsx-*` names the
+components use are aliases of them. Only status (success, warning, danger) and document-type colours are fixed.
+A theme change repaints everything at once; the saved theme is applied before the first paint (`index.html`). The kit's Menu, Checkbox, InfoBanner, ConnectionWarning, SyncButton, OrgSwitcher and avatar follow
 Desktop's components. The page is the one vertical scroll container; the rail and the table header stay in
 place while it scrolls.
 

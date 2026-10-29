@@ -23,6 +23,18 @@
     </style>
   </head>
   <body>
+    <script>
+      /* the saved theme before the first paint, so the page under the loading screen is never in the wrong theme */
+      (function () {
+        try {
+          var id = (JSON.parse(localStorage.getItem("settings") || "{}") || {}).theme;
+          var sys = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+          if (!id || id === "theme-system") id = sys ? "theme-night" : "theme-white";
+          var dark = /^theme-(night|dark|contrast-dark)$/.test(id);
+          document.body.classList.add(id, dark ? "theme-type-dark" : "theme-type-light");
+        } catch (e) {}
+      })();
+    </script>
     <div id="wrap">
       <div id="loading-mask" class="loadmask ws-splash" role="status" aria-label="Loading WorkSuite Office">
         <div id="ws-splash-anim" class="ws-splash__anim"></div>

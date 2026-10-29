@@ -33,7 +33,7 @@ export function whenMs(value) {
 
 /*
  * Drive items ({kind, name, ext, owner, modified}) or recents ({name, ext, date, islocal}) by text, type and
- * source. Folders stay under a type filter (they lead to files of that type) but not under a text query
+ * source ("all" | "local" | "drive": WorkSuite Drive | "cloud": other clouds). Folders stay under a type filter (they lead to files of that type) but not under a text query
  * that they do not match.
  */
 export function filterFiles(items, opts) {
@@ -44,7 +44,8 @@ export function filterFiles(items, opts) {
   return (items || []).filter((i) => {
     if (q && !String(i.fullName || i.name || "").toLowerCase().includes(q)) return false;
     if (source === "local" && i.islocal === false) return false;
-    if (source === "cloud" && i.islocal !== false) return false;
+    if (source === "drive" && i.source !== "drive") return false;
+    if (source === "cloud" && (i.islocal !== false || i.source === "drive")) return false;
     if (type === "all" || i.kind === "folder") return true;
     return typeOfExt(i.ext) === type;
   });
@@ -188,5 +189,38 @@ export function driveActions(item, has) {
   if (item.level === "view" && can("files.request_edit")) out.push("request-edit");
   out.push("star", "browser");
   if (edit && can("files.trash")) out.push("trash");
+  return out;
+}
+
+/*
+ * The Recent tab: this computer's recent files (native recents: local files and other clouds' documents) and
+ * WorkSuite Drive's recently opened files, as one list without duplicates. A Drive document opened here is in
+ * the native list only as its one-time sign-in address (<server>/desktop/office/session#…); while Drive's own
+ * entries are there, those are left out. → rows with source "local" | "cloud" | "drive"
+ */
+export function mergeRecents(native, drive, opts) {
+  opts = opts || {};
+  const servers = opts.servers || [];
+  const driveFiles = (drive || []).filter((d) => d && d.kind === "file");
+  const isSession = (p) => servers.some((s) => s && String(p || "").startsWith(s + "/desktop/office/session"));
+  const seen = new Set();
+  const out = [];
+  for (const n of native || []) {
+    if (!n || seen.has(n.uid) || (driveFiles.length && isSession(n.path))) continue;
+    seen.add(n.uid);
+    out.push({ ...n, source: n.islocal === false ? "cloud" : "local" });
+  }
+  for (const d of driveFiles) {
+    const uid = "drive:" + d.id;
+    if (seen.has(uid)) continue;
+    seen.add(uid);
+    const name = String(d.name || "");
+    const dot = name.lastIndexOf(".");
+    out.push({
+      uid, fileid: uid, name: dot > 0 ? name.slice(0, dot) : name, ext: dot > 0 ? name.slice(dot) : "", fullName: name,
+      descr: d.location || opts.driveLabel || "", owner: d.owner || "", date: d.modified || "", islocal: false,
+      source: "drive", starred: !!d.starred, drive: d,
+    });
+  }
   return out;
 }

@@ -7,10 +7,10 @@ import "./CreateCards.styles.css";
 
 /* The create commands are the native ones ("create:new" word | cell | slide | form) */
 const KINDS = () => [
-  { id: "word", label: L.wshDocument, ext: "DOCX", icon: "doc" },
-  { id: "cell", label: L.wshSpreadsheet, ext: "XLSX", icon: "sheet" },
-  { id: "slide", label: L.wshPresentation, ext: "PPTX", icon: "slides" },
-  { id: "form", label: L.wshPdfForm, ext: "PDF", icon: "pdf" },
+  { id: "word", label: L.wshDocument, ext: "DOCX", icon: "file-text" },
+  { id: "cell", label: L.wshSpreadsheet, ext: "XLSX", icon: "file-sheet" },
+  { id: "slide", label: L.wshPresentation, ext: "PPTX", icon: "presentation" },
+  { id: "form", label: L.wshPdfForm, ext: "PDF", icon: "file-type" },
 ];
 
 export function CreateCards(props) {
@@ -38,7 +38,7 @@ export function CreateCards(props) {
         <For each={KINDS()}>
           {(k, i) => (
             <div role="listitem">
-              <button type="button" class={"wsh-create-card wsh-type-" + k.id} tabindex={i() === 0 ? 0 : -1} onClick={() => create(k.id)}>
+              <button type="button" class={"wsh-create-card wsh-type-" + k.id} tabindex={i() === 0 ? 0 : -1} title={k.label + " (" + k.ext + ")"} onClick={() => create(k.id)}>
                 <span class="wsh-create-tile" aria-hidden="true"><Icon name={k.icon} /></span>
                 <span class="wsh-create-text">
                   <span class="wsh-create-name">{k.label}</span>
@@ -49,8 +49,8 @@ export function CreateCards(props) {
           )}
         </For>
         <div role="listitem">
-          <button type="button" class="wsh-create-card wsh-type-template" tabindex="-1" onClick={() => navigate("/templates")}>
-            <span class="wsh-create-tile" aria-hidden="true"><Icon name="template" /></span>
+          <button type="button" class="wsh-create-card wsh-type-template" tabindex="-1" title={L.wshBrowseTemplates} onClick={() => navigate("/templates")}>
+            <span class="wsh-create-tile" aria-hidden="true"><Icon name="layout-template" /></span>
             <span class="wsh-create-text">
               <span class="wsh-create-name">{L.wshFromTemplate}</span>
               <span class="wsh-create-ext">{L.wshBrowseTemplates}</span>

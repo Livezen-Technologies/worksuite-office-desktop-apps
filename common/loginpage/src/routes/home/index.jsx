@@ -18,13 +18,12 @@ import { listRecents,
         appReady } from "@/sdk";
 import { CreateCards } from "./components/CreateCards.jsx";
 import { homeSession, setHomeSession } from "@/stores/home-session.js";
-import { RecentList } from "./components/RecentList.jsx";
+import { FilesExplorer } from "./components/FilesExplorer.jsx";
 import { RecoverList } from "./components/RecoverList.jsx";
 import { FileDropZone } from "./components/FileDropZone.jsx";
 import { aichat, openFullAIPanel, openSidePanel } from "@/stores/aichat.js";
 import { command } from "@/sdk/bridge.js";
 import "@/styles/components/home.css";
-import WorkSuiteSection from "@/worksuite/WorkSuiteSection.jsx";
 import { sendChatRecentsChanged, sendFileStatusToChat, sendFileToChat, sendPluginVisibility } from "@/services/ai-panel.js";
 
 const toArray = (v) => (Array.isArray(v) ? v : []);
@@ -225,8 +224,6 @@ export default function Index() {
       <div class="wsh-page">
         <CreateCards />
 
-        <WorkSuiteSection />
-
         <Show when={hasRecovers()}>
           <section class="file-list-section">
             <RecoverList
@@ -238,7 +235,7 @@ export default function Index() {
           </section>
         </Show>
 
-        <RecentList
+        <FilesExplorer
           recents={visibleRecents()}
           loaded={loaded()}
           onTogglePin={togglePin}
@@ -246,6 +243,7 @@ export default function Index() {
           onClear={clearAll}
           onAddToChat={addToChat}
           onOpenFile={openLocal}
+          onRefresh={() => { recentsCountChanged = true; return Promise.race([listRecents(), new Promise((r) => setTimeout(r, 5000))]).catch(() => {}); }}
           empty={<FileDropZone />}
         />
       </div>

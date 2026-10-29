@@ -52,7 +52,7 @@
       }
 
       &.selected {
-        background: var(--highlight-button-pressed);
+        background: var(--accent-strong, var(--highlight-button-pressed));
       }
 
       .icon-inner-box {
