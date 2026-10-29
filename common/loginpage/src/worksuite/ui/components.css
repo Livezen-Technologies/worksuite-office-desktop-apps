@@ -41,7 +41,24 @@
 /* Desktop's "accent": the one main action of a panel (PrimaryAction) */
 .wsx-btn-accent {
   background: var(--wsx-brand); color: var(--wsx-on-brand);
-  &:not(:disabled):hover { background: var(--wsx-brand-hover); }
+  border-color: color-mix(in srgb, var(--wsx-brand) 82%, var(--foreground));
+  box-shadow: 0 1px 2px rgb(0 0 0 / .16);
+  &:not(:disabled):hover { background: var(--wsx-brand-hover); box-shadow: 0 2px 6px rgb(0 0 0 / .2); }
+  &:not(:disabled):active { box-shadow: none; }
+}
+/* dark themes' primary is a mid grey that reads as muddy: lifted to a crisp near-white */
+.theme-type-dark :is(.wsx-btn-accent, .wsx-btn-primary):not(:disabled) {
+  background: color-mix(in srgb, var(--wsx-brand) 45%, #fff); border-color: transparent;
+  &:hover { background: color-mix(in srgb, var(--wsx-brand) 65%, #fff); }
+}
+/* the primary at half opacity reads as muddy grey; a disabled main action is a muted surface instead */
+:is(.wsx-btn-accent, .wsx-btn-primary):disabled:not([aria-busy="true"]) {
+  opacity: 1; background: var(--muted); color: var(--muted-foreground); border-color: var(--border); box-shadow: none;
+}
+.wsx-btn-warning {
+  background: var(--wsx-warning-bg); color: var(--wsx-warning);
+  border-color: color-mix(in srgb, var(--wsx-warning) 45%, transparent);
+  &:not(:disabled):hover { background: color-mix(in srgb, var(--wsx-warning) 18%, transparent); border-color: var(--wsx-warning); }
 }
 .wsx-btn-secondary {
   background: var(--wsx-surface); color: var(--wsx-ink); border-color: var(--wsx-line);
