@@ -24,6 +24,7 @@ export function buildTools() {
       description: loc.description ?? '',
       usertext: loc.usertext ?? '',
       prompt: card.prompt ?? '',
+      action: card.action ?? '',
       icon: card.icon,
     });
   }

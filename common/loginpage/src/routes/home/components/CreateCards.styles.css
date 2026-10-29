@@ -27,3 +27,7 @@
 .wsh-create-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; line-height: var(--wsx-line-tight); }
 .wsh-create-name { font-size: var(--wsx-font-md); font-weight: var(--wsx-weight-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .wsh-create-ext { font-size: var(--wsx-font-xs); color: var(--muted-foreground); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* PDF tools: the Create New cards' look, three to a row */
+.wsh-pdftools { margin-top: var(--wsx-space-4); }
+.wsh-pdftools .wsh-create-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@container (max-width: 600px) { .wsh-pdftools .wsh-create-grid { grid-template-columns: minmax(0, 1fr); } }

@@ -2,10 +2,15 @@ import styles from './Card.module.css';
 import { showToast } from '@/components/toast/toastutil';
 import { sendPluginVisibility, sendTextToChat } from '@/services/ai-panel';
 import { aichat, openSidePanel } from '@/stores/aichat';
+import { isPdfAction } from '@/worksuite/pdf-tools.js';
+import { runPdfTool } from '@/routes/home/components/PdfTools.jsx';
 
 export default function Card(props) {
   const handleClick = () => {
-    if (props.prompt) {
+    /* Merge, Split and Extract pages are real tools, not chat prompts */
+    if (isPdfAction(props.action)) {
+      runPdfTool(props.action);
+    } else if (props.prompt) {
       sendTextToChat(props.prompt, props.usertext);
       // sendPluginVisibility("expanded");
       if (aichat.expanded)

@@ -1,6 +1,7 @@
 {
   "id": "merge-pdf",
   "group": "pdf",
+  "action": "merge",
   "prompt": "Please merge the attached PDF files into a single document. Align styles and formatting for a consistent result across the merged file.",
   "locale": {
     "en": {
