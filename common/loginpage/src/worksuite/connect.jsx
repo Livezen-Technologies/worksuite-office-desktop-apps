@@ -103,7 +103,7 @@ export function AccountPanel(props) {
           </span>
           <Icon name="chevron" class="wsx-combo-caret" />
         </DropdownMenu.Trigger>
-        <DropdownMenu.Content class="wsh-account-menu">
+        <DropdownMenu.Content class="wsx-dropdown wsh-account-menu">
           <div class="wsh-menu-head">
             <Avatar small name={a().user.name} src={a().user.avatar} />
             <span class="wsh-account-text">
@@ -111,8 +111,8 @@ export function AccountPanel(props) {
               <span class="wsx-hint wsx-ellipsis">{[a().user.email, hostOf(a().server)].filter(Boolean).join(" · ")}</span>
             </span>
           </div>
+          <DropdownMenu.Separator />
           <Show when={others().length}>
-            <DropdownMenu.Separator />
             <div class="wsh-menu-label">{L.wsxSwitchAccount}</div>
             <For each={others()}>
               {(x) => (
