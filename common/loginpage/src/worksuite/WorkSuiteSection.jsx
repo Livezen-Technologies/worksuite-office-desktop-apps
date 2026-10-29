@@ -587,7 +587,7 @@ export default function WorkSuiteSection(props) {
           <DropdownMenu.Trigger class="wsx-btn wsx-btn-ghost wsx-btn-sm wsx-btn-icon" aria-label={L.wsxMoreActions.replace("$1", p.item.name)}>
             <Icon name="more" />
           </DropdownMenu.Trigger>
-          <DropdownMenu.Content><FileMenu menu={DropdownMenu} item={p.item} /></DropdownMenu.Content>
+          <DropdownMenu.Content class="wsx-dropdown"><FileMenu menu={DropdownMenu} item={p.item} /></DropdownMenu.Content>
         </DropdownMenu>
       </Show>
     </div>
@@ -689,12 +689,12 @@ export default function WorkSuiteSection(props) {
             <DropdownMenu.Trigger class="wsx-btn wsx-btn-primary">
               <Icon name="plus" /><span>{L.wsNew}</span>
             </DropdownMenu.Trigger>
-            <DropdownMenu.Content>
-              <DropdownMenu.Item icon="#docx" onSelect={() => setDialog({ kind: "new", type: "word" })}>{L.wsNewDocument}</DropdownMenu.Item>
-              <DropdownMenu.Item icon="#xlsx" onSelect={() => setDialog({ kind: "new", type: "cell" })}>{L.wsNewSpreadsheet}</DropdownMenu.Item>
-              <DropdownMenu.Item icon="#pptx" onSelect={() => setDialog({ kind: "new", type: "slide" })}>{L.wsNewPresentation}</DropdownMenu.Item>
+            <DropdownMenu.Content class="wsx-dropdown">
+              <DropdownMenu.Item onSelect={() => setDialog({ kind: "new", type: "word" })}><Icon name="doc" />{L.wsNewDocument}</DropdownMenu.Item>
+              <DropdownMenu.Item onSelect={() => setDialog({ kind: "new", type: "cell" })}><Icon name="sheet" />{L.wsNewSpreadsheet}</DropdownMenu.Item>
+              <DropdownMenu.Item onSelect={() => setDialog({ kind: "new", type: "slide" })}><Icon name="slides" />{L.wsNewPresentation}</DropdownMenu.Item>
               <DropdownMenu.Separator />
-              <DropdownMenu.Item onSelect={() => { location.hash = "#/clouds"; }}>{L.wsfUpload}</DropdownMenu.Item>
+              <DropdownMenu.Item onSelect={() => { location.hash = "#/clouds"; }}><Icon name="upload" />{L.wsfUpload}</DropdownMenu.Item>
             </DropdownMenu.Content>
           </DropdownMenu>
         </FilesToolbar>

@@ -531,6 +531,20 @@
   &.is-danger { color: var(--wsx-danger); }
   &[aria-checked="true"]::after { content: "✓"; margin-inline-start: auto; color: var(--wsx-ink); }
 }
+/* the shared Kobalte dropdown (src/components) on WorkSuite screens: the same look as .wsx-menu */
+.wsx-dropdown {
+  padding: 6px; gap: 0; min-width: 200px; border-radius: var(--wsx-radius-lg);
+  border-color: var(--wsx-line); background: var(--wsx-surface); box-shadow: var(--wsx-shadow-pop);
+  & [role="menuitem"], & [role="menuitemcheckbox"], & [role="menuitemradio"] {
+    gap: 8px; height: 32px; padding: 0 10px; border-radius: var(--wsx-radius-md);
+    color: var(--wsx-ink); font-size: 13px; font-weight: var(--wsx-weight-medium); line-height: 1;
+    &[data-highlighted] { background: var(--wsx-subtle); }
+    &:focus-visible { box-shadow: inset 0 0 0 2px var(--wsx-focus); }
+    &.negative { color: var(--wsx-danger); }
+    & > .wsx-icon { width: 16px; height: 16px; flex-shrink: 0; color: var(--wsx-ink-2); }
+  }
+  & [role="separator"] { height: 1px; margin: 4px 6px; background: var(--wsx-line); }
+}
 .wsx-menu-sep { height: 1px; margin: 4px 6px; background: var(--wsx-line); }
 .wsx-menu-head { padding: 8px 10px 4px; font-size: 11px; font-weight: var(--wsx-weight-strong); letter-spacing: .04em; text-transform: uppercase; color: var(--wsx-ink-3); }
 

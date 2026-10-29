@@ -21,7 +21,7 @@ export function FilterMenu(props) {
         <span class="wsf-filter-value">{text()}</span>
         <Icon name="chevron" class="wsf-filter-caret" />
       </DropdownMenu.Trigger>
-      <DropdownMenu.Content class="iconless">
+      <DropdownMenu.Content class="wsx-dropdown iconless">
         <For each={props.options}>
           {([value, label]) => (
             <DropdownMenu.Item onSelect={() => props.onChange(value)} class={props.value === value ? "wsf-menu-on" : ""}>

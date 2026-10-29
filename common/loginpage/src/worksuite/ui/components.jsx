@@ -277,7 +277,7 @@ export function AccountCard(props) {
                                   aria-label={L.wsxMoreActions.replace("$1", a().user.name)}>
               <Show when={props.busy && props.busy !== "signin"} fallback={<Icon name="more" />}><Spinner /></Show>
             </DropdownMenu.Trigger>
-            <DropdownMenu.Content>
+            <DropdownMenu.Content class="wsx-dropdown">
               <For each={acts().menu}>
                 {(m) => (
                   <DropdownMenu.Item class={m === "remove" ? "negative" : ""}
