@@ -1,6 +1,7 @@
 {
   "id": "split-pdf",
   "group": "pdf",
+  "action": "split",
   "prompt": "Please split the attached PDF into separate files. Let me know how you would like it split: by page, by range, or by section.",
   "locale": {
     "en": {

@@ -1,6 +1,7 @@
 {
   "id": "extract-pdf-pages",
   "group": "pdf",
+  "action": "extract",
   "prompt": "Please extract the specified pages from the attached PDF and save them as a new document. Let me know which page numbers or ranges to extract.",
   "locale": {
     "en": {

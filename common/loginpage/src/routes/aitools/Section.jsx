@@ -12,6 +12,7 @@ export default function Section(props) {
                           title={card.title}
                           description={card.description}
                           prompt={card.prompt}
+                          action={card.action}
                           usertext={card.usertext} />}
         </For>
       </div>
