@@ -17,7 +17,6 @@ import { listRecents,
         openLocal,
         appReady } from "@/sdk";
 import { CreateCards } from "./components/CreateCards.jsx";
-import { PdfTools } from "./components/PdfTools.jsx";
 import { homeSession, setHomeSession } from "@/stores/home-session.js";
 import { FilesExplorer } from "./components/FilesExplorer.jsx";
 import { RecoverList } from "./components/RecoverList.jsx";
@@ -224,7 +223,6 @@ export default function Index() {
     <div class="home-page" ref={(el) => (page = el)} onScroll={onScroll}>
       <div class="wsh-page">
         <CreateCards />
-        <PdfTools />
 
         <Show when={hasRecovers()}>
           <section class="file-list-section">
