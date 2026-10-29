@@ -1,10 +1,13 @@
 /*
- * The WorkSuite Drive section of the home screen: the full-width account panel (connected / session
- * expired / not connected), then a Drive browser: Recent, Shared with me, Starred, My Drive and search,
+ * The WorkSuite Drive tabs of the home screen's Files explorer (My Drive, Shared with me, Starred; props.tab,
+ * shown while props.active). Always mounted, because it also answers worksuiteoffice:// links and an editor's
+ * Share, but it loads a list only when one of its tabs is shown, and a tab shown again within a minute is not
+ * asked for again (Refresh asks). The account panel (connected / session expired / not connected), then the
+ * explorer's toolbar (FilesToolbar.jsx) and one list: search,
  * type filters, sort, list or grid, multi-select, row and context menus (only what the server and the
  * file's access level allow), paged rendering and lazy pictures. See core.js for signing in and opening.
  */
-import { For, Show, createEffect, createMemo, createSignal, onCleanup, onMount } from "solid-js";
+import { For, Show, createEffect, createMemo, createSignal, onCleanup, onMount, untrack } from "solid-js";
 import { ContextMenu, DropdownMenu } from "@/components";
 import { usePngIcons } from "@/services/display";
 import { L } from "./lang.js";
@@ -15,7 +18,8 @@ import { hostOf, when } from "./cards.jsx";
 import { AccountPanel, ConnectCard } from "./connect.jsx";
 import { mergeAccounts } from "./settings-logic.js";
 import { accountPanelState, driveActions, filterFiles, nextPage, nextSort, reconnectBusy, reconnectStep, selectWith, sortFiles } from "./home-logic.js";
-import { ConfirmDialog, EmptyState, Icon, IconButton, LayoutToggle, SearchBox, SkeletonRows, TypeChips, WsButton } from "./ui/components.jsx";
+import { ConfirmDialog, EmptyState, Icon, IconButton, SkeletonRows, WsButton } from "./ui/components.jsx";
+import { FilesToolbar } from "./FilesToolbar.jsx";
 import { homeSession, setHomeSession } from "@/stores/home-session.js";
 import { online } from "./shell.js";
 import { PlatformNotices } from "./notices.jsx"; // oda-platform hook (G-01, G-04)
@@ -50,14 +54,14 @@ function FileIcon(props) {
   );
 }
 
-const TABS = () => [["recent", L.wsRecent], ["shared", L.wsShared], ["starred", L.wsStarred], ["drive", L.wsMyDrive]];
-const SORTS = () => [["name", L.colFileName], ["modified", L.wsModified], ["owner", L.wsOwner], ["type", L.wshType]];
+const SORTS = () => [["name", L.colFileName], ["modified", L.wsModified], ["owner", L.wsOwner], ["type", L.wshType], ["size", L.wsfSize]];
+// a list shown again within this time is not asked for again (Refresh asks)
+const FRESH_MS = 60 * 1000;
 
-export default function WorkSuiteSection() {
+export default function WorkSuiteSection(props) {
   const [account, setAccount] = createSignal(null);
   const [accounts, setAccounts] = createSignal([]);
   const [folder, setFolder] = createSignal(null);
-  const [query, setQuery] = createSignal("");
   const [data, setData] = createSignal(null);
   const [thumbs, setThumbs] = createSignal({});
   const [shownCount, setShownCount] = createSignal(PAGE);
@@ -83,15 +87,19 @@ export default function WorkSuiteSection() {
   const live = () => account() && !account().signedOut;
   const panel = () => accountPanelState(account());
   const say = (text, error, undo) => setState({ text: text || "", error: !!error, undo: undo || null });
-  const prefs = () => homeSession.drive;
-  const view = () => (query() ? "search" : prefs().view);
+  const tab = () => (["drive", "shared", "starred"].includes(props.tab) ? props.tab : "drive");
+  const prefs = () => homeSession.files[tab()];
+  const setPref = (...a) => setHomeSession("files", tab(), ...a);
+  const query = () => (prefs().query || "").length >= 2 ? prefs().query : "";
+  const view = () => (tab() === "drive" && query() ? "search" : tab());
+  const fetchedAt = {};
   const rc$ = (event) => setRc(reconnectStep(rc(), event));
 
   const visible = createMemo(() => {
     const items = (data() && data().items) || [];
     const org = account() ? WS().companyOf(account()) : null;
     const inOrg = items.filter((i) => WS().inCompany(org, i));
-    return sortFiles(filterFiles(inOrg, { type: prefs().type }), prefs().sort);
+    return sortFiles(filterFiles(inOrg, { type: prefs().type, query: view() === "search" ? "" : query() }), prefs().sort);
   });
   const shown = () => visible().slice(0, shownCount());
   const fileCount = () => visible().filter((i) => i.kind === "file").length;
@@ -103,7 +111,7 @@ export default function WorkSuiteSection() {
     setAccount(WS().active());
     setCompanies((account() && account().companies) || []);
     if (live()) {
-      load();
+      if (props.active) load(true);
       if (!account().companies) WS().companies(account()).then(setCompanies, () => {});
     }
     else findDesktop();
@@ -147,38 +155,48 @@ export default function WorkSuiteSection() {
     setDialog({ kind: "signin", desktopAccount: desktopAccount || null, server: server || null });
   }
 
-  function selectTab(v) {
-    setHomeSession("drive", "view", v);
-    if (v === "drive") setFolder(null);
-    setSelected([]);
-    load();
-  }
+  /* the tab shown (or shown again): its list, lazily */
+  createEffect(() => {
+    const t = tab();
+    if (!props.active) return;
+    untrack(() => {
+      setSelected([]);
+      if (t !== "drive") setFolder(null);
+      if (live()) load();
+    });
+  });
 
   function search(q) {
-    if (q === query()) return;
-    setQuery(q.length >= 2 ? q : "");
+    if (q === prefs().query) return;
+    setPref("query", q);
     setSelected([]);
-    load();
+    if (tab() === "drive") load(true);
   }
 
-  async function load() {
+  async function load(force) {
     const acc = account();
     if (!acc || acc.signedOut) return;
 
-    const opts = { folder: folder(), q: query() };
+    const opts = { folder: view() === "drive" ? folder() : null, q: query() };
+    const key = acc.id + "|" + view() + "|" + (opts.folder || "") + "|" + opts.q;
     const mine = ++seq;
     setShownCount(PAGE);
     setLoadError("");
 
-    // what we saw last time, straight away; then what the server says now
+    // what we saw last time, straight away; then what the server says now (unless it said so a moment ago)
     const cached = WS().cached(acc, view(), opts);
     setThumbs(WS().cachedThumbs(acc) || {});
     setData(cached);
+    if (!force && cached && fetchedAt[key] && Date.now() - fetchedAt[key] < FRESH_MS) {
+      pictures(acc, mine);
+      return;
+    }
     setLoading(true);
 
     try {
       const fresh = await WS().list(acc, view(), opts);
       if (mine !== seq) return;
+      fetchedAt[key] = Date.now();
       setData(fresh);
       setSelected((s) => s.filter((id) => fresh.items.some((i) => i.id === id)));
       pictures(acc, mine);
@@ -229,11 +247,10 @@ export default function WorkSuiteSection() {
 
   function activate(item) {
     if (item.kind === "folder") {
-      setHomeSession("drive", "view", "drive");
-      setQuery("");
       setFolder(item.id);
       setSelected([]);
-      load();
+      if (tab() !== "drive") { setPref("query", ""); props.onTab && props.onTab("drive"); }
+      else { setPref("query", ""); load(); }
     } else open(item);
   }
 
@@ -320,7 +337,7 @@ export default function WorkSuiteSection() {
     try {
       await WS().rename(account(), item, base + ext);
       say(L.wsRenamed);
-      load();
+      load(true);
     } catch (e) {
       failed(e);
     }
@@ -330,7 +347,7 @@ export default function WorkSuiteSection() {
     try {
       const copy = await WS().copy(account(), item);
       say(L.wsCopied.replace("$1", copy.name || item.name));
-      load();
+      load(true);
     } catch (e) {
       failed(e);
     }
@@ -350,10 +367,10 @@ export default function WorkSuiteSection() {
     if (done.length) {
       say(done.length === 1 ? L.wsMovedToBin.replace("$1", done[0].name) : L.wshMovedManyToBin.replace("$1", done.length), false, {
         label: L.wsUndo,
-        run: () => Promise.all(done.map((item) => WS().untrash(acc, item))).then(() => { say(""); load(); }, failed),
+        run: () => Promise.all(done.map((item) => WS().untrash(acc, item))).then(() => { say(""); load(true); }, failed),
       });
       setSelected([]);
-      load();
+      load(true);
     }
   }
 
@@ -363,7 +380,7 @@ export default function WorkSuiteSection() {
     } catch (e) {
       failed(e);
     }
-    load();
+    load(true);
   }
 
   function crumbs() {
@@ -388,7 +405,7 @@ export default function WorkSuiteSection() {
     WS().on("openlink", openLink);
     WS().on("share", shareFromEditor);
     WS().on("error", error);
-    const back = () => live() && load();
+    const back = () => live() && props.active && load(true);
     window.addEventListener("online", back);
     onCleanup(() => {
       WS().off("changed", changed);
@@ -535,7 +552,6 @@ export default function WorkSuiteSection() {
     else if (e.key === "Delete" && driveActions(item, can).includes("trash")) toBin([item]);
   }
 
-  const sortLabel = () => (SORTS().find(([k]) => k === prefs().sort.key) || SORTS()[1])[1];
   const allSelected = () => shown().length > 0 && shown().every((i) => selected().includes(i.id));
   const bulkTrash = () => selectedItems().length > 0 && selectedItems().every((i) => driveActions(i, can).includes("trash"));
 
@@ -630,35 +646,19 @@ export default function WorkSuiteSection() {
 
   const ColHead = (p) => (
     <span class={p.class} role="columnheader" aria-sort={prefs().sort.key === p.k ? (prefs().sort.dir === "asc" ? "ascending" : "descending") : "none"}>
-      <button type="button" class="wsh-sort-head" onClick={() => setHomeSession("drive", "sort", nextSort(prefs().sort, p.k))}>
+      <button type="button" class="wsh-sort-head" onClick={() => setPref("sort", nextSort(prefs().sort, p.k))}>
         {p.label}
         <Show when={prefs().sort.key === p.k}><Icon name="chevron" class={"wsh-sort-dir " + prefs().sort.dir} /></Show>
       </button>
     </span>
   );
 
-  return (
-    <section class="ws-section wsh-drive" classList={{ "signed-in": !!live() }} aria-labelledby="wsh-drive-title">
-      <div class="wsh-head">
-        <h2 class="wsh-h2" id="wsh-drive-title">{L.wsTitle}</h2>
-        <Show when={live()}>
-          <div class="wsh-head-tools">
-            <SearchBox class="wsh-search" placeholder={L.wsSearch} value={query()} onSearch={search} />
-            <WsButton variant="secondary" icon="external" onClick={() => WS().openInBrowser(account(), "/files")}>{L.wsxOpenDrive}</WsButton>
-            <DropdownMenu>
-              <DropdownMenu.Trigger class="wsx-btn wsx-btn-primary">
-                <Icon name="plus" /><span>{L.wsNew}</span>
-              </DropdownMenu.Trigger>
-              <DropdownMenu.Content>
-                <DropdownMenu.Item icon="#docx" onSelect={() => setDialog({ kind: "new", type: "word" })}>{L.wsNewDocument}</DropdownMenu.Item>
-                <DropdownMenu.Item icon="#xlsx" onSelect={() => setDialog({ kind: "new", type: "cell" })}>{L.wsNewSpreadsheet}</DropdownMenu.Item>
-                <DropdownMenu.Item icon="#pptx" onSelect={() => setDialog({ kind: "new", type: "slide" })}>{L.wsNewPresentation}</DropdownMenu.Item>
-              </DropdownMenu.Content>
-            </DropdownMenu>
-          </div>
-        </Show>
-      </div>
+  const placeholder = () => ({ drive: L.wsfSearchDrive, shared: L.wsfSearchShared, starred: L.wsfSearchStarred })[tab()];
+  const sorts = () => SORTS().filter(([k]) => k !== "size" || visible().some((i) => i.size !== undefined));
 
+  return (
+    <section class="ws-section wsh-drive" classList={{ "signed-in": !!live(), "is-idle": !props.active }} aria-label={L.wsTitle}>
+      <Show when={props.active}>
       <PolicyBanner />{/* oda-shell (ADM-01) */}
       {/* oda-platform hook: server too old (G-01), sign-in kept in a file (G-04) */}
       <PlatformNotices account={account()} />
@@ -675,51 +675,29 @@ export default function WorkSuiteSection() {
                       onSelect={chooseAccount} onAdd={() => signIn(null, true)} onManage={manageAccounts}
                       onDisconnect={() => setDialog({ kind: "disconnect" })}
                       onReconnect={reconnect} reconnecting={reconnectBusy(rc())} error={rc().phase === "error" ? rc().message : ""}
-                      onRefresh={load} refreshing={loading()} />
+                      onRefresh={() => load(true)} refreshing={loading()} />
       </Show>
 
       <Show when={live()}>
-        <div class="wsh-bar">
-          <div class="wsh-tabs" role="tablist" aria-label={L.wsTitle}
-               onKeyDown={(e) => {
-                 const tabs = TABS().map(([v]) => v);
-                 const i = tabs.indexOf(prefs().view);
-                 const j = e.key === "ArrowRight" ? (i + 1) % tabs.length : e.key === "ArrowLeft" ? (i - 1 + tabs.length) % tabs.length : -1;
-                 if (j < 0) return;
-                 e.preventDefault();
-                 setQuery("");
-                 selectTab(tabs[j]);
-                 e.currentTarget.querySelectorAll("[role=tab]")[j].focus();
-               }}>
-            <For each={TABS()}>
-              {([v, label]) => (
-                <button type="button" role="tab" aria-selected={view() === v ? "true" : "false"} tabindex={prefs().view === v ? 0 : -1}
-                        onClick={() => { setQuery(""); selectTab(v); }}>{label}</button>
-              )}
-            </For>
-            <Show when={view() === "search"}>
-              <button type="button" role="tab" aria-selected="true" tabindex="-1">{L.wsSearchResults}</button>
-            </Show>
-          </div>
-          <div class="wsh-bar-tools">
-            <TypeChips value={prefs().type} onChange={(t) => { setHomeSession("drive", "type", t); setShownCount(PAGE); }} />
-            <DropdownMenu>
-              <DropdownMenu.Trigger class="wsx-btn wsx-btn-ghost wsx-btn-sm" aria-label={L.wshSortBy.replace("$1", sortLabel())}>
-                <Icon name="sort" /><span>{sortLabel()}</span>
-              </DropdownMenu.Trigger>
-              <DropdownMenu.Content>
-                <For each={SORTS()}>
-                  {([k, label]) => (
-                    <DropdownMenu.Item onSelect={() => setHomeSession("drive", "sort", nextSort(prefs().sort, k))}>
-                      {label}{prefs().sort.key === k ? (prefs().sort.dir === "asc" ? "  ↑" : "  ↓") : ""}
-                    </DropdownMenu.Item>
-                  )}
-                </For>
-              </DropdownMenu.Content>
-            </DropdownMenu>
-            <LayoutToggle value={prefs().layout} onChange={(v) => setHomeSession("drive", "layout", v)} />
-          </div>
-        </div>
+        <FilesToolbar placeholder={placeholder()} query={prefs().query} onSearch={search} delay={250}
+                      type={prefs().type} onType={(t) => { setPref("type", t); setShownCount(PAGE); }}
+                      sorts={sorts()} sort={prefs().sort} onSort={(k) => setPref("sort", nextSort(prefs().sort, k))}
+                      layout={prefs().layout} onLayout={(v) => setPref("layout", v)}
+                      onRefresh={() => load(true).then(() => { if (loadError()) throw new Error(loadError()); })}>
+          <IconButton icon="external" label={L.wsxOpenDrive} onClick={() => WS().openInBrowser(account(), "/files")} />
+          <DropdownMenu>
+            <DropdownMenu.Trigger class="wsx-btn wsx-btn-primary">
+              <Icon name="plus" /><span>{L.wsNew}</span>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content>
+              <DropdownMenu.Item icon="#docx" onSelect={() => setDialog({ kind: "new", type: "word" })}>{L.wsNewDocument}</DropdownMenu.Item>
+              <DropdownMenu.Item icon="#xlsx" onSelect={() => setDialog({ kind: "new", type: "cell" })}>{L.wsNewSpreadsheet}</DropdownMenu.Item>
+              <DropdownMenu.Item icon="#pptx" onSelect={() => setDialog({ kind: "new", type: "slide" })}>{L.wsNewPresentation}</DropdownMenu.Item>
+              <DropdownMenu.Separator />
+              <DropdownMenu.Item onSelect={() => { location.hash = "#/clouds"; }}>{L.wsfUpload}</DropdownMenu.Item>
+            </DropdownMenu.Content>
+          </DropdownMenu>
+        </FilesToolbar>
 
         <Show when={view() === "drive" && !query()}>
           <nav class="ws-crumbs" aria-label={L.wsMyDrive}>
@@ -739,7 +717,7 @@ export default function WorkSuiteSection() {
         <Show when={!online() || loadError()}>
           <div class="wsh-banner" classList={{ "is-danger": !data() }} role="status">
             <span>{!online() ? (data() ? L.wshOfflineCached : L.wshOfflineNone) : (data() ? L.wshUnreachableCached.replace("$1", hostOf(account().server)) : loadError())}</span>
-            <WsButton variant="link" onClick={load}>{L.wsxRetry}</WsButton>
+            <WsButton variant="link" onClick={() => load(true)}>{L.wsxRetry}</WsButton>
           </div>
         </Show>
 
@@ -762,8 +740,8 @@ export default function WorkSuiteSection() {
         <Show when={data()} fallback={<Show when={!loadError() && online()}><SkeletonRows count={5} /></Show>}>
           <Show when={visible().length} fallback={
             <EmptyState icon={view() === "starred" ? "star" : view() === "shared" ? "share" : "drive"} title={emptyText()[0]} text={emptyText()[1]}
-                        action={prefs().type !== "all" ? <WsButton small variant="secondary" onClick={() => setHomeSession("drive", "type", "all")}>{L.wshShowAllTypes}</WsButton>
-                              : view() !== "drive" ? <WsButton small variant="secondary" onClick={() => { setQuery(""); selectTab("drive"); }}>{L.wshOpenMyDrive}</WsButton> : undefined} />
+                        action={prefs().type !== "all" ? <WsButton small variant="secondary" onClick={() => setPref("type", "all")}>{L.wshShowAllTypes}</WsButton>
+                              : view() !== "drive" && view() !== "search" ? <WsButton small variant="secondary" onClick={() => props.onTab && props.onTab("drive")}>{L.wshOpenMyDrive}</WsButton> : undefined} />
           }>
             <div class={prefs().layout === "grid" ? "wsh-grid" : "wsh-table"} role="grid" aria-label={L.wsTitle} aria-multiselectable="true"
                  aria-busy={loading() ? "true" : "false"}>
@@ -773,11 +751,11 @@ export default function WorkSuiteSection() {
                     <input type="checkbox" checked={allSelected()} aria-label={L.wshSelectAll}
                            onChange={() => setSelected(allSelected() ? [] : shown().map((i) => i.id))} />
                   </span>
-                  <ColHead class="wsh-col-name" k="name" label={L.colFileName} />
+                  <ColHead class="wsh-col-name" k="name" label={L.wshName} />
                   <span class="wsh-col-loc" role="columnheader">{L.colLocation}</span>
                   <ColHead class="wsh-col-owner" k="owner" label={L.wsOwner} />
                   <ColHead class="wsh-col-date" k="modified" label={L.wsModified} />
-                  <span class="wsh-row-actions" />
+                  <span class="wsh-row-actions" role="columnheader"><span class="wsx-visually-hidden">{L.wsfActions}</span></span>
                 </div>
               </Show>
               <For each={shown()}>{(item) => <Row item={item} />}</For>
@@ -802,6 +780,7 @@ export default function WorkSuiteSection() {
             {" "}<a href="#" class="ws-link" onClick={(e) => { e.preventDefault(); state().undo.run(); }}>{state().undo.label}</a>
           </Show>
         </p>
+      </Show>
       </Show>
 
       <Show when={dialog() && dialog().kind === "signin"}>

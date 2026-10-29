@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   typeOfExt, whenMs, filterFiles, sortFiles, nextSort, accountPanelState, reconnectStep, reconnectBusy,
-  filterCompanies, placePopover, nextPage, selectWith, driveActions,
+  filterCompanies, placePopover, nextPage, selectWith, driveActions, mergeRecents,
 } from "./home-logic.js";
 
 test("typeOfExt", () => {
@@ -100,4 +100,32 @@ test("driveActions follow access level and server features", () => {
   const edit = driveActions({ kind: "file", level: "edit" }, (f) => f !== "files.share");
   assert.ok(edit.includes("trash") && !edit.includes("share"));
   assert.deepEqual(driveActions({ kind: "folder" }), ["open"]);
+});
+
+test("filterFiles: sources all, local, WorkSuite Drive, other clouds", () => {
+  const rows = [{ name: "a", islocal: true }, { name: "b", islocal: false }, { name: "c", islocal: false, source: "drive" }];
+  const names = (source) => filterFiles(rows, { source }).map((r) => r.name).join("");
+  assert.equal(names("all"), "abc");
+  assert.equal(names("local"), "a");
+  assert.equal(names("drive"), "c");
+  assert.equal(names("cloud"), "b");
+});
+
+test("mergeRecents: native and Drive recents in one list, no duplicates, Drive sessions left out", () => {
+  const native = [
+    { uid: "file-1", name: "Report", ext: ".docx", path: "/home/me/Report.docx", islocal: true },
+    { uid: "file-1", name: "Report", ext: ".docx", path: "/home/me/Report.docx", islocal: true },
+    { uid: "file-2", name: "session#code=x", ext: "", path: "https://ws.example/desktop/office/session#code=x", islocal: false },
+    { uid: "file-3", name: "Plan", ext: ".xlsx", path: "https://cloud.example/Plan.xlsx", islocal: false },
+  ];
+  const drive = [{ kind: "file", id: 7, name: "Budget.xlsx", owner: "Ana", modified: "2026-10-20", location: "Finance", starred: true },
+                 { kind: "file", id: 7, name: "Budget.xlsx" }, { kind: "folder", id: 9, name: "F" }];
+  const rows = mergeRecents(native, drive, { servers: ["https://ws.example"], driveLabel: "WorkSuite Drive" });
+  assert.deepEqual(rows.map((r) => r.uid), ["file-1", "file-3", "drive:7"]);
+  assert.deepEqual(rows.map((r) => r.source), ["local", "cloud", "drive"]);
+  assert.equal(rows[2].name, "Budget");
+  assert.equal(rows[2].ext, ".xlsx");
+  assert.equal(rows[2].owner, "Ana");
+  assert.equal(rows[2].descr, "Finance");
+  assert.equal(mergeRecents(native, [], { servers: ["https://ws.example"] }).length, 3);
 });

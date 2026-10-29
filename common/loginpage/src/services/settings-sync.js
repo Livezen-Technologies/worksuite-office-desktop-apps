@@ -13,8 +13,9 @@ import { setAddonNeedRestart } from "./about";
 import { docPrefsPayload } from "@/worksuite/doc-prefs.js";
 
 
-function injectCustomThemeCss(id, colors) {
+function injectCustomThemeCss(id, colors, type) {
   if (!id || !colors) return;
+  if (type === "dark" || type === "light") themesMap[id] = { type };
   const existing = document.querySelector(`style[data-theme-id="${id}"]`);
   if (existing) existing.remove();
   const vars = Object.entries(colors).map(([k, v]) => `--${k}: ${v};`).join(" ");
@@ -153,7 +154,7 @@ export function initSettingsSync() {
   if (nativevars?.localthemes?.length) {
     const loaded = nativevars.localthemes.flatMap((t) => {
       if (!t?.id) return [];
-      injectCustomThemeCss(t.id, t.colors);
+      injectCustomThemeCss(t.id, t.colors, t.type);
       return [{ value: t.id, label: t.name || t.id }];
     });
     if (loaded.length) setCustomThemes(loaded);
@@ -361,7 +362,7 @@ export function initSettingsSync() {
       const added = [];
       for (const t of arr) {
         if (!t?.id) continue;
-        injectCustomThemeCss(t.id, t.colors);
+        injectCustomThemeCss(t.id, t.colors, t.type);
         added.push({ value: t.id, label: t.name || t.id });
       }
       if (added.length) {

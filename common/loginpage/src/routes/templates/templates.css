@@ -1,4 +1,4 @@
-/* The Templates page. Every colour is a WorkSuite token (worksuite/ui/tokens.css) or the host panel surface. */
+/* The Templates page. Every colour is a theme token (worksuite/ui/tokens.css); template previews keep their own colours. */
 
 /* the page is the one scroll container: no nested scrollbars */
 .tpl-page {
@@ -46,10 +46,10 @@
   padding: 0 var(--wsx-space-2) 0 var(--wsx-space-3);
   border: var(--wsx-border-w) solid var(--wsx-line-strong); border-radius: var(--wsx-radius-md); background: var(--wsx-surface-raised);
   color: var(--wsx-ink); font: inherit; font-size: var(--wsx-font-md); cursor: pointer; white-space: nowrap;
-  &:hover { border-color: var(--wsx-brand); }
+  &:hover { border-color: var(--wsx-emphasis); }
   &:focus-visible { outline: var(--wsx-focus-w) solid var(--wsx-focus); outline-offset: 2px; }
-  &[aria-expanded="true"] { border-color: var(--wsx-brand); }
-  &.is-active { background: var(--wsx-brand-soft); border-color: var(--wsx-brand); color: var(--wsx-brand-ink); }
+  &[aria-expanded="true"] { border-color: var(--wsx-emphasis); }
+  &.is-active { background: var(--accent); border-color: var(--wsx-emphasis); color: var(--foreground); }
   .wsx-icon { flex: none; color: var(--wsx-ink-3); }
 }
 .tpl-select-label { color: var(--wsx-ink-3); flex: none; }
@@ -60,7 +60,7 @@
 .tpl-select-pop {
   min-width: 220px; max-width: 320px; display: flex; flex-direction: column;
   border: var(--wsx-border-w) solid var(--wsx-line); border-radius: 10px;
-  background: var(--background-action-panel); box-shadow: 0 12px 32px rgba(0, 0, 0, .22); overflow: hidden;
+  background: var(--background-action-panel); box-shadow: var(--wsx-shadow-pop); overflow: hidden;
 }
 .tpl-select-search {
   display: flex; align-items: center; gap: var(--wsx-space-2); flex: none; height: 38px; padding: 0 10px;
@@ -92,12 +92,12 @@
   border-radius: var(--wsx-radius-sm) var(--wsx-radius-sm) 0 0;
   &:hover { color: var(--wsx-ink); background: var(--wsx-hover); }
   &[aria-selected="true"] { color: var(--wsx-ink); font-weight: var(--wsx-weight-strong); }
-  &[aria-selected="true"]::after { content: ""; position: absolute; inset-inline: var(--wsx-space-2); bottom: 0; height: 2px; border-radius: 2px; background: var(--wsx-brand); }
+  &[aria-selected="true"]::after { content: ""; position: absolute; inset-inline: var(--wsx-space-2); bottom: 0; height: 2px; border-radius: 2px; background: var(--wsx-emphasis); }
   &:focus { outline: none; }
   &:focus-visible { outline: var(--wsx-focus-w) solid var(--wsx-focus); outline-offset: -2px; }
 }
 .tpl-tab-count { font-size: var(--wsx-font-xs); font-weight: var(--wsx-weight-medium); color: var(--wsx-ink-3); padding: 0 6px; border-radius: var(--wsx-radius-pill); background: var(--wsx-surface-sunken); }
-[aria-selected="true"] > .tpl-tab-count { background: var(--wsx-brand-soft); color: var(--wsx-brand-ink); }
+[aria-selected="true"] > .tpl-tab-count { background: var(--accent-strong); color: var(--foreground); }
 .tpl-loading-more { display: inline-flex; align-items: center; gap: var(--wsx-space-2); font-size: var(--wsx-font-sm); color: var(--wsx-ink-3); white-space: nowrap; padding-inline-end: var(--wsx-space-1); }
 .tpl-banner { margin: 0; }
 
@@ -116,14 +116,11 @@
 .tpl-thumb-none { display: flex; flex-direction: column; align-items: center; gap: var(--wsx-space-2); color: var(--wsx-ink-3); font-size: var(--wsx-font-sm);
   .wsx-icon { width: 28px; height: 28px; } }
 .tpl-type-mark {
-  display: inline-flex; align-items: center; justify-content: center; min-width: 40px; height: 22px; padding: 0 6px; box-sizing: border-box;
-  border-radius: var(--wsx-radius-sm); font-size: var(--wsx-font-xs); font-weight: var(--wsx-weight-strong); color: var(--wsx-on-type);
-  background: var(--wsx-type-template);
-  &.tpl-type-word { background: var(--wsx-type-word); }
-  &.tpl-type-cell { background: var(--wsx-type-cell); }
-  &.tpl-type-slide { background: var(--wsx-type-slide); }
-  &.tpl-type-pdf { background: var(--wsx-type-pdf); }
+  display: inline-flex; align-items: center; justify-content: center; min-width: 40px; height: 20px; padding: 0 6px; box-sizing: border-box;
+  border: var(--wsx-border-w) solid var(--border); border-radius: var(--wsx-radius-sm);
+  font-size: var(--wsx-font-xs); font-weight: var(--wsx-weight-strong); color: var(--muted-foreground); background: var(--card);
 }
+.tpl-thumb-icon { width: 32px; height: 32px; color: var(--muted-foreground); }
 .tpl-hover {
   position: absolute; inset: auto 0 0 0; display: flex; justify-content: center; gap: var(--wsx-space-2); flex-wrap: wrap;
   padding: var(--wsx-space-3) var(--wsx-space-2); border-radius: 0 0 var(--wsx-radius-md) var(--wsx-radius-md);
@@ -131,7 +128,7 @@
   opacity: 0; transform: translateY(4px); transition: opacity .12s, transform .12s; pointer-events: none;
 }
 .tpl-frame:hover .tpl-hover, .tpl-frame:focus-within .tpl-hover, .tpl-card.is-busy .tpl-hover { opacity: 1; transform: none; pointer-events: auto; }
-.tpl-frame:hover .tpl-thumb { border-color: var(--wsx-brand); }
+.tpl-frame:hover .tpl-thumb { border-color: var(--wsx-emphasis); }
 .tpl-fav { position: absolute; top: var(--wsx-space-2); inset-inline-end: var(--wsx-space-2); opacity: 0; transition: opacity .12s;
   .wsx-btn { background: var(--wsx-surface-raised); border: var(--wsx-border-w) solid var(--wsx-line); }
   &.is-on { opacity: 1; .wsx-icon { color: var(--wsx-star); } } }
@@ -142,7 +139,7 @@
 .tpl-name {
   border: 0; background: none; padding: 0; text-align: start; cursor: pointer; font: inherit;
   font-size: var(--wsx-font-md); font-weight: var(--wsx-weight-medium); color: var(--wsx-ink);
-  &:hover { color: var(--wsx-brand-ink); }
+  &:hover { text-decoration: underline; }
   &:focus-visible { outline: var(--wsx-focus-w) solid var(--wsx-focus); outline-offset: 2px; border-radius: 2px; }
 }
 .tpl-sub { font-size: var(--wsx-font-sm); color: var(--wsx-ink-3); }
@@ -164,7 +161,7 @@
 .tpl-skel { display: block; width: 100%; height: 100%; border-radius: var(--wsx-radius-sm); background: var(--wsx-hover); animation: wsx-pulse 1.4s ease-in-out infinite; }
 .tpl-skel-line { height: 10px; width: 70%; }
 .tpl-skel-line.short { width: 40%; }
-.tpl-card-skeleton .tpl-thumb { padding: 0; border-color: transparent; }
+.tpl-card-skeleton .tpl-thumb, .tpl-thumb:has(> .tpl-skel) { padding: 0; border-color: transparent; }
 @media (prefers-reduced-motion: reduce) { .tpl-skel { animation: none; } }
 .tpl-state { padding: var(--wsx-space-6) 0; }
 .tpl-sentinel { height: 1px; }

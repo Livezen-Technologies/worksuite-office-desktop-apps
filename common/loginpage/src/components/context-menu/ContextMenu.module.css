@@ -1,6 +1,6 @@
 .menu {
   z-index: 300;
-  --border-color: #B2B2B2;
+  --border-color: var(--border-regular-control);
   background: var(--background-action-panel);
   border-radius: 8px;
   padding-top: 4px;
