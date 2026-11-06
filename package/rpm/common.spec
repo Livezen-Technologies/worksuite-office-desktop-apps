@@ -65,7 +65,13 @@ cp -rt %{buildroot}/ $BUILD_DIR/help/*
 %else
 ETC_DIR=%{buildroot}%{_sysconfdir}
 mkdir -p $ETC_DIR/%{_package_name}
+# WorkSuite: the offline help ships in the main package
+cp -rt %{buildroot}/ $BUILD_DIR/help/*
 %endif
+
+# WorkSuite: the Sinhala fonts for every app on the computer, not only the editors
+mkdir -p $DATA_DIR/fonts
+ln -s /opt/%{_desktopeditors_prefix}/fonts/worksuite-sinhala $DATA_DIR/fonts/worksuite-sinhala
 
 %{?cc_license:cp %{_builddir}/../../../common/license/opensource/LICENSE-CC.txt \
     %{buildroot}%{_datadir}/licenses/%{_package_name}/LICENSE-CC.txt}
@@ -78,6 +84,7 @@ rm -rf "%{buildroot}"
 %attr(-, root, root) %{_datadir}/applications/*
 %attr(-, root, root) %{_datadir}/doc/*
 %attr(-, root, root) %{_datadir}/icons/*
+%attr(-, root, root) %{_datadir}/fonts/worksuite-sinhala
 %license %{_datadir}/licenses/%{_package_name}/LICENSE
 %license %{_datadir}/licenses/%{_package_name}/3DPARTYLICENSE
 %{?cc_license:%license %{_datadir}/licenses/%{_package_name}/LICENSE-CC.txt}
@@ -98,7 +105,11 @@ rm -rf "%{buildroot}"
 /opt/%{_desktopeditors_prefix}/editors/web-apps/apps/*/main/resources/help
 %endif
 
+%post
+fc-cache -f >/dev/null 2>&1 || :
+
 %postun
+fc-cache -f >/dev/null 2>&1 || :
 rm -f /usr/share/mime/packages/onlyoffice-docxf.xml
 rm -f /usr/share/mime/packages/onlyoffice-oform.xml
 
