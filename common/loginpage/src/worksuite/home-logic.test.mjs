@@ -129,3 +129,37 @@ test("mergeRecents: native and Drive recents in one list, no duplicates, Drive s
   assert.equal(rows[2].descr, "Finance");
   assert.equal(mergeRecents(native, [], { servers: ["https://ws.example"] }).length, 3);
 });
+
+import { pinnedFiles, homeFolders, cloudConnections } from "./home-logic.js";
+
+test("pinnedFiles: only pinned, searched and sorted", () => {
+  const rows = [
+    { uid: "a", name: "Budget", ext: ".xlsx", pinned: true, date: "2026-01-02 10:00" },
+    { uid: "b", name: "Notes", ext: ".docx", pinned: false, date: "2026-01-03 10:00" },
+    { uid: "c", name: "Plan", ext: ".docx", pinned: true, date: "2026-01-04 10:00" },
+  ];
+  assert.deepEqual(pinnedFiles(rows).map((r) => r.uid), ["c", "a"]);
+  assert.deepEqual(pinnedFiles(rows, { query: "bud" }).map((r) => r.uid), ["a"]);
+  assert.deepEqual(pinnedFiles(rows, { sort: { key: "name", dir: "asc" } }).map((r) => r.uid), ["a", "c"]);
+  assert.deepEqual(pinnedFiles(null), []);
+});
+
+test("homeFolders: pinned first, limited", () => {
+  const dirs = [{ uid: 1 }, { uid: 2, pinned: true }, { uid: 3 }];
+  assert.deepEqual(homeFolders(dirs, 2), { shown: [{ uid: 2, pinned: true }, { uid: 1 }], more: 1 });
+  assert.equal(homeFolders([], 4).shown.length, 0);
+});
+
+test("cloudConnections: Drive accounts then portals", () => {
+  const out = cloudConnections(
+    [{ id: 1, server: "https://a.lk", user: { email: "x@a.lk" } }, { id: 2, server: "https://b.lk", signedOut: true }, { id: 3, desktopOnly: true }],
+    [{ portal: "https://n.example", provider: "nextcloud", user: "u", logged: true }, { portal: "https://o.example", provider: "onlyoffice" }],
+    { driveLabel: "Drive", providerName: (p) => (p === "nextcloud" ? "Nextcloud" : "") },
+  );
+  assert.deepEqual(out.map((c) => [c.kind, c.name, c.detail, c.status]), [
+    ["drive", "Drive", "x@a.lk", "connected"],
+    ["drive", "Drive", "b.lk", "signed-out"],
+    ["portal", "Nextcloud", "u", "connected"],
+    ["portal", "onlyoffice", "o.example", "signed-out"],
+  ]);
+});

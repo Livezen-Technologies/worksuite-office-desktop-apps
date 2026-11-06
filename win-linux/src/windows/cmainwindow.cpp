@@ -198,8 +198,11 @@ bool CMainWindow::canPinTabAtPoint(const QPoint& pt)
 {
     QRect _rc_title(m_pMainPanel->geometry());
     _rc_title.setHeight(tabWidget()->tabBar()->height());
-    int dx1 = (AscAppManager::isRtlEnabled()) ? 3 * int(TITLEBTN_WIDTH * m_dpiRatio) : m_pButtonMain->width();
-    int dx2 = (AscAppManager::isRtlEnabled()) ? -1 * m_pButtonMain->width() : -3 * int(TITLEBTN_WIDTH * m_dpiRatio);
+    // the tab strip starts after the app icon, the title and Home (their trailing edge)
+    const int lead = AscAppManager::isRtlEnabled() ? m_boxTitleBtns->width() - m_pButtonMain->geometry().left()
+                                                   : m_pButtonMain->geometry().right() + 1;
+    int dx1 = (AscAppManager::isRtlEnabled()) ? 3 * int(TITLEBTN_WIDTH * m_dpiRatio) : lead;
+    int dx2 = (AscAppManager::isRtlEnabled()) ? -1 * lead : -3 * int(TITLEBTN_WIDTH * m_dpiRatio);
     _rc_title.adjust(dx1, 1, dx2, 0);
     bool containsPoint = _rc_title.contains(mapFromGlobal(pt));
     bool pinAllowed = m_pTabs->isTabPinAllowed();
@@ -265,8 +268,7 @@ void CMainWindow::applyTheme(const std::wstring& theme)
                                                  GetColorQValueByRole(ecrTabDivider),
                                                  GetColorQValueByRole(ecrTabWordActive)));
     m_pTabs->applyUITheme(GetActualTheme(theme));
-    // m_pButtonMain->setIcon(MAIN_ICON_PATH, GetCurrentTheme().isDark() ? "logo-light" : "logo-dark");
-    m_pButtonMain->setIconSize(MAIN_ICON_SIZE * m_dpiRatio);
+    updateTitleBarIcons();
     if (m_pWidgetDownload && m_pWidgetDownload->toolButton()) {
         m_pWidgetDownload->applyTheme();
     }
@@ -295,9 +297,29 @@ void CMainWindow::closeEvent(QCloseEvent * e)
     e->ignore();
 }
 
+void CMainWindow::saveSessionTabs()
+{
+    // Local files open in tabs, in tab order, for "restore previous session" on the next start
+    // (CAscApplicationManagerWrapper::startApp). New, unsaved and cloud documents are not kept.
+    QStringList files;
+    for (int i = 0; i < m_pTabs->count(); i++) {
+        CTabPanel *panel = m_pTabs->panel(i);
+        const CAscTabData *doc = panel ? panel->data() : nullptr;
+        if (!doc || !doc->isLocal() || doc->closed())
+            continue;
+        const QString path = QString::fromStdWString(doc->url());
+        if (!path.isEmpty() && QFileInfo(path).isFile() && !files.contains(path, Qt::CaseInsensitive))
+            files.append(path);
+    }
+    GET_REGISTRY_USER(reg_user);
+    reg_user.setValue("sessionTabs", files);
+}
+
 void CMainWindow::close()
 {
     CWindowBase::saveWindowState();
+    if (!m_isCloseAll)
+        saveSessionTabs();
     m_isCloseAll = true;
 
     if ( m_pTabs->count() == 0 ) {
@@ -428,6 +450,27 @@ void CMainWindow::dropEvent(QDropEvent *event)
 /** MainPanel **/
 
 
+void CMainWindow::updateTitleBarIcons()
+{
+    // 16px at 100%, like the tab icons, so the bar reads as one row at any scaling.
+    const int icon_px = int(16 * m_dpiRatio);
+    if (m_labelAppIcon) {
+        m_labelAppIcon->setFixedSize(int(28 * m_dpiRatio), int(TOOLBTN_HEIGHT * m_dpiRatio));
+        m_labelAppIcon->setPixmap(Utils::appIcon().pixmap(QSize(icon_px, icon_px)));
+    }
+    if (QLabel *title = m_boxTitleBtns ? m_boxTitleBtns->findChild<QLabel*>("labelAppTitle") : nullptr) {
+        const int gap = int(10 * m_dpiRatio);
+        title->setContentsMargins(0, 0, gap, 0);
+        if (AscAppManager::isRtlEnabled())
+            title->setContentsMargins(gap, 0, 0, 0);
+    }
+    if (m_pButtonMain) {
+        m_pButtonMain->setFillDark(!GetCurrentTheme().isDark());
+        m_pButtonMain->setIconSize(QSize(icon_px, icon_px));
+        m_pButtonMain->setIcon(":/title/icons/buttons.svg", "svg-btn-home");
+    }
+}
+
 QWidget* CMainWindow::createMainPanel(QWidget *parent)
 {
     QWidget *mainPanel = new AscMainPanel(parent);
@@ -458,19 +501,24 @@ QWidget* CMainWindow::createMainPanel(QWidget *parent)
         }
     }
 
+    // Title bar, leading edge: [app icon][app title][Home][tabs ...][stretch][download][min][max][close].
+    // The icon and the title are plain labels, so Caption treats them as a drag area (move, double-click
+    // maximize, Aero Snap) like the empty part of the bar.
+    m_labelAppIcon = new QLabel(m_boxTitleBtns);
+    m_labelAppIcon->setObjectName("labelAppIcon");
+    m_labelAppIcon->setAlignment(Qt::AlignCenter);
+    m_labelAppIcon->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+
 #ifdef __DONT_WRITE_IN_APP_TITLE
     QLabel * label = new QLabel(m_boxTitleBtns);
 #else
     QLabel * label = new QLabel(APP_TITLE, m_boxTitleBtns);
 #endif
     label->setObjectName("labelAppTitle");
-    label->setAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-    QSizePolicy spAppTitle(QSizePolicy::Preferred, QSizePolicy::Fixed);
-    spAppTitle.setHorizontalStretch(1);
-    label->setSizePolicy(spAppTitle);
+    label->setAlignment(Qt::AlignLeading|Qt::AlignVCenter);
+    label->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
     QHBoxLayout *pBoxTitleBtnsLayout = static_cast<QHBoxLayout*>(m_boxTitleBtns->layout());
-    pBoxTitleBtnsLayout->insertWidget(1,label);
 
     // Set custom TabBar
     CTabBar *pTabBar = new CTabBar(m_boxTitleBtns);
@@ -479,13 +527,19 @@ QWidget* CMainWindow::createMainPanel(QWidget *parent)
     sizePolicy.setHorizontalStretch(10);
     pTabBar->setSizePolicy(sizePolicy);
 
-    // Main
+    // Home: the start page, shown as the first, always-present tab
     m_pButtonMain = new CSVGPushButton(m_boxTitleBtns);
     m_pButtonMain->setObjectName( "toolButtonMain" );
     m_pButtonMain->setProperty("class", "active");
     m_pButtonMain->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    m_pButtonMain->setText(tr("Home"));
+    m_pButtonMain->setProperty("ToolTip", tr("Home"));
+    m_pButtonMain->setUseStateOpacity(true);
     pBoxTitleBtnsLayout->insertWidget(0, m_pButtonMain, 0, Qt::AlignVCenter);
+    pBoxTitleBtnsLayout->insertWidget(0, label, 0, Qt::AlignVCenter);
+    pBoxTitleBtnsLayout->insertWidget(0, m_labelAppIcon, 0, Qt::AlignVCenter);
     pBoxTitleBtnsLayout->insertSpacing(0, int(BUTTON_MAIN_LEFT_MARGIN * m_dpiRatio));
+    updateTitleBarIcons();
     QObject::connect(m_pButtonMain, SIGNAL(clicked()), this, SLOT(pushButtonMainClicked()));
 
     QPalette palette;
@@ -496,6 +550,8 @@ QWidget* CMainWindow::createMainPanel(QWidget *parent)
         gradient.setColorAt(1, QColor(0xe4e4e4));
         palette.setBrush(QtComp::Palette::Background, QBrush(gradient));
         label->setFixedHeight(0);
+        label->hide();
+        m_labelAppIcon->hide(); // the system caption shows the icon and the title
     }
 
     // Set TabWidget
@@ -1262,7 +1318,9 @@ void CMainWindow::onDocumentDownload(void * info)
             m_pWidgetDownload = nullptr;
         });
         QHBoxLayout * layoutBtns = qobject_cast<QHBoxLayout *>(m_boxTitleBtns->layout());
-        layoutBtns->insertWidget(5, m_pWidgetDownload->toolButton());
+        // right before the window buttons (at the end when the system caption draws them)
+        const int _btns_pos = m_pTopButtons[BtnType::Btn_Minimize] ? layoutBtns->indexOf(m_pTopButtons[BtnType::Btn_Minimize]) : -1;
+        layoutBtns->insertWidget(_btns_pos, m_pWidgetDownload->toolButton());
         m_pWidgetDownload->setLayoutDirection(AscAppManager::isRtlEnabled() ? Qt::RightToLeft : Qt::LeftToRight);
         m_pWidgetDownload->applyTheme();
         m_pWidgetDownload->updateScalingFactor(m_dpiRatio);
@@ -1638,8 +1696,7 @@ void CMainWindow::updateScalingFactor(double dpiratio)
     // m_pTabs->setStyleSheet(_style);
 //    m_pTabs->updateScalingFactor(dpiratio);
     m_pTabs->reloadTabIcons();
-    // m_pButtonMain->setIcon(MAIN_ICON_PATH, GetCurrentTheme().isDark() ? "logo-light" : "logo-dark");
-    m_pButtonMain->setIconSize(MAIN_ICON_SIZE * dpiratio);
+    updateTitleBarIcons();
     if (m_pWidgetDownload && m_pWidgetDownload->toolButton()) {
         m_pWidgetDownload->updateScalingFactor(dpiratio);
         m_pWidgetDownload->toolButton()->style()->polish(m_pWidgetDownload->toolButton());

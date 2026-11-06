@@ -14,6 +14,7 @@ import { initAiPanel } from "@/services/ai-panel";
 import { aichat } from "@/stores/aichat";
 import { extPlugins, pluginRouteId } from "@/stores/ext-plugins";
 import { UpdateBanner, OfflineChoiceDialog, AccountSwitchDialog } from "@/worksuite/ShellParts.jsx";
+import McpConfirmHost from "@/settings/ai-connectors/ConfirmHost.jsx";
 
 const TemplatesPanel = lazy(() => import("./routes/templates/index.jsx"));
 import "./styles/main.css";
@@ -84,6 +85,7 @@ function Shell(props) {
       <About />
       <OfflineChoiceDialog />
       <AccountSwitchDialog />
+      <McpConfirmHost />
       <PluginModal />
     </div>
   );
@@ -106,6 +108,8 @@ const routes = [
       { path: "/worksuite", component: lazy(() => import("./routes/settings/worksuite/index.jsx")) },
       /* Local AI hook: Settings › AI Models (src/settings/ai-models) — keep when the settings redesign lands */
       { path: "/ai-models", component: lazy(() => import("./settings/ai-models/AiModelsPage.jsx")) },
+      /* Settings › AI & MCP Connectors (src/settings/ai-connectors) */
+      { path: "/ai-connectors", component: lazy(() => import("./settings/ai-connectors/ConnectorsPage.jsx")) },
       { path: "/plugin/:pluginId/:section", component: lazy(() => import("./routes/settings/plugin/index.jsx")) },
     ],
   },

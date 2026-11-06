@@ -67,16 +67,20 @@ QPushButton#toolButtonClose:pressed {background-color:#d75050;}
 QPushButton#toolButtonClose[class=normal][unix=false]:hover,
 QPushButton#toolButtonClose[class=normal][unix=false]:pressed {image: url(:/close_light.svg) center no-repeat;}
 
+/* Home: the start page tab. Same font, size, colour and radius as the document tabs (tabbar.qss);
+   the house icon is drawn from :/title/icons/buttons.svg in CMainWindow::updateTitleBarIcons() */
 QPushButton#toolButtonMain {
     background: %5;
-    font-size: 10px;
-    font-family: 'Open Sans',sans-serif;
-    font-weight: bold;
-    /*border-left: 0px;*/
+    color: %2;
+    font-size: 11px;
+    font-family: "Arial", "Helvetica", "Helvetica Neue", sans-serif;
+    font-weight: normal;
+    text-align: center;
     border: 1px solid %7;
     border-radius: 6px;
-    qproperty-icon: url(:/logo_light.png);
 }
+#mainPanel[rtl-font=true] QPushButton#toolButtonMain {font-family: "Segoe UI", "Traditional Arabic", "Noto Sans";}
+#labelAppIcon {background: transparent;}
 /*#mainPanel[rtl=true] QPushButton#toolButtonMain {border: 1px solid %7;}*/
 
 QPushButton#toolButtonMain[class=active] {background: %7;}
@@ -101,7 +105,6 @@ QPushButton#toolButtonDownload {border: none; border-radius: 6px; max-width: 28p
 #mainPanel[uithemetype=dark] QPushButton#toolButtonMaximize[class=min] {image: url(:/maximize_light.svg) center no-repeat;}
 #mainPanel[uithemetype=dark] QPushButton#toolButtonMinimize {image: url(:/minimize_light.svg) center no-repeat;}
 #mainPanel[uithemetype=dark] QPushButton#toolButtonClose {image: url(:/close_light.svg) center no-repeat;}
-#mainPanel[uithemetype=dark] QPushButton#toolButtonMain {qproperty-icon: url(:/logo_dark.png);}
 
 /* Menu */
 

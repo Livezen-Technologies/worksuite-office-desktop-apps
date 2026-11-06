@@ -112,6 +112,7 @@ HEADERS += \
     $$PWD/src/cproviders.h \
     $$PWD/src/cworksuite.h \
     $$PWD/src/cworksuiteai.h \
+    $$PWD/src/cworksuitemcp.h \
     $$PWD/src/cwinsparkle.h \
     $$PWD/src/cwsupdatedownload.h \
     $$PWD/src/cwsed25519.h \
@@ -158,6 +159,7 @@ SOURCES += \
     $$PWD/src/cproviders.cpp \
     $$PWD/src/cworksuite.cpp \
     $$PWD/src/cworksuiteai.cpp \
+    $$PWD/src/cworksuitemcp.cpp \
     $$PWD/src/cwinsparkle.cpp \
     $$PWD/src/cwsupdatedownload.cpp \
     $$PWD/src/cwsed25519.cpp \
