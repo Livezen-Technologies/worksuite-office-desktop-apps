@@ -230,6 +230,18 @@ Source: "{#BRANDING_DIR}\..\common\license\opensource\LICENSE.txt"; DestDir: {ap
 Source: "{#BRANDING_DIR}\..\common\license\worksuite\TERMS.txt"; DestDir: {app};
 #endif
 Source: "{#BRANDING_DIR}\..\common\license\3dparty\3DPARTYLICENSE"; DestDir: {app}; DestName: "3DPARTYLICENSE.txt";
+; WorkSuite: the Sinhala fonts for every app on the computer, not only the editors (kept on uninstall:
+; documents may use them)
+Source: "{#BUILD_DIR}\desktop\fonts\worksuite-sinhala\NotoSansSinhala-Regular.ttf"; DestDir: "{autofonts}"; FontInstall: "Noto Sans Sinhala (TrueType)"; \
+  Flags: onlyifdoesntexist uninsneveruninstall skipifsourcedoesntexist;
+Source: "{#BUILD_DIR}\desktop\fonts\worksuite-sinhala\NotoSansSinhala-Bold.ttf"; DestDir: "{autofonts}"; FontInstall: "Noto Sans Sinhala Bold (TrueType)"; \
+  Flags: onlyifdoesntexist uninsneveruninstall skipifsourcedoesntexist;
+Source: "{#BUILD_DIR}\desktop\fonts\worksuite-sinhala\NotoSerifSinhala-Regular.ttf"; DestDir: "{autofonts}"; FontInstall: "Noto Serif Sinhala (TrueType)"; \
+  Flags: onlyifdoesntexist uninsneveruninstall skipifsourcedoesntexist;
+Source: "{#BUILD_DIR}\desktop\fonts\worksuite-sinhala\NotoSerifSinhala-Bold.ttf"; DestDir: "{autofonts}"; FontInstall: "Noto Serif Sinhala Bold (TrueType)"; \
+  Flags: onlyifdoesntexist uninsneveruninstall skipifsourcedoesntexist;
+Source: "{#BUILD_DIR}\desktop\fonts\worksuite-sinhala\MalithiWeb.ttf"; DestDir: "{autofonts}"; FontInstall: "Malithi Web (TrueType)"; \
+  Flags: onlyifdoesntexist uninsneveruninstall skipifsourcedoesntexist;
 
 [InstallDelete]
 Type: filesandordirs; Name: {app}\editors\sdkjs-plugins
