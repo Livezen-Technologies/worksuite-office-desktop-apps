@@ -250,7 +250,7 @@
                      @"extension"   : @"fb2"
              },
              @(AVS_OFFICESTUDIO_FILE_DOCUMENT_OFORM_PDF): @{
-                     @"description" : NSLocalizedString(@"ONLYOFFICE Form Document", nil),
+                     @"description" : NSLocalizedString(@"WorkSuite Office Form Document", nil),
                      @"extension"   : @"pdf"
              },
              @(AVS_OFFICESTUDIO_FILE_IMAGE_PNG): @{

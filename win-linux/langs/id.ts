@@ -59,7 +59,7 @@
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="496"/>
         <source>You must restart the application to finish addon installation.</source>
-        <translation>Anda harus me-restart aplikasi untuk menyelesaikan penginstalan ONLYOFFICE AI Tools. Restart sekarang?</translation>
+        <translation>Anda harus me-restart aplikasi untuk menyelesaikan penginstalan WorkSuite Office AI Tools. Restart sekarang?</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1728"/>
@@ -80,8 +80,8 @@
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="473"/>
-        <source>Are you sure you want to uninstall ONLYOFFICE AI Tools?</source>
-        <translation>Apakah Anda yakin ingin menghapus instalasi ONLYOFFICE AI Tools?</translation>
+        <source>Are you sure you want to uninstall WorkSuite Office AI Tools?</source>
+        <translation>Apakah Anda yakin ingin menghapus instalasi WorkSuite Office AI Tools?</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="478"/>
@@ -90,8 +90,8 @@
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1351"/>
-        <source>ONLYOFFICE AI Tools successfully uninstalled</source>
-        <translation>ONLYOFFICE AI Tools berhasil dihapus instalasinya</translation>
+        <source>WorkSuite Office AI Tools successfully uninstalled</source>
+        <translation>WorkSuite Office AI Tools berhasil dihapus instalasinya</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1353"/>
@@ -379,12 +379,12 @@
     </message>
     <message>
         <source>OFORM Document</source>
-        <translation type="vanished">Formulir ONLYOFFICE Fillable Online</translation>
+        <translation type="vanished">Formulir WorkSuite Office Fillable Online</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="88"/>
         <source>DOCXF Document</source>
-        <translation>Templat ONLYOFFICE Form</translation>
+        <translation>Templat WorkSuite Office Form</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="91"/>
@@ -491,8 +491,8 @@
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="87"/>
-        <source>ONLYOFFICE Form Document</source>
-        <translation>Formulir PDF ONLYOFFICE</translation>
+        <source>WorkSuite Office Form Document</source>
+        <translation>Formulir PDF WorkSuite Office</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="89"/>

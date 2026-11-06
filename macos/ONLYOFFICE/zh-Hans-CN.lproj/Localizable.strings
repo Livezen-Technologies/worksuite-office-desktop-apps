@@ -23,7 +23,7 @@
 "Application needs to restart" = "应用程序需要重新启动";
 
 /* No comment provided by engineer. */
-"Are you sure you want to uninstall ONLYOFFICE AI Tools?" = "您确定要卸载 ONLYOFFICE AI Tools 吗？";
+"Are you sure you want to uninstall WorkSuite Office AI Tools?" = "您确定要卸载 WorkSuite Office AI Tools 吗？";
 
 /* No comment provided by engineer. */
 "Before signing the document, it must be saved." = "在签名之前，您必须首先保存文档。";
@@ -185,16 +185,16 @@
 "OK" = "确定";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE AI Tools successfully uninstalled" = "ONLYOFFICE AI Tools 已成功卸载";
+"WorkSuite Office AI Tools successfully uninstalled" = "WorkSuite Office AI Tools 已成功卸载";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Digital Signature file. Try opening another file." = "WorkSuite Office无法打开该数字签名文件。请尝试打开另一个文件。";
+"WorkSuite Office can not open the Digital Signature file. Try opening another file." = "WorkSuite Office无法打开该数字签名文件。请尝试打开另一个文件。";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Private Key. Try opening another file." = "WorkSuite Office无法打开该私钥。请尝试打开另一个文件。";
+"WorkSuite Office can not open the Private Key. Try opening another file." = "WorkSuite Office无法打开该私钥。请尝试打开另一个文件。";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE Form Document" = "ONLYOFFICE PDF 表单";
+"WorkSuite Office Form Document" = "WorkSuite Office PDF 表单";
 
 /* No comment provided by engineer. */
 "OpenDocument Document Template" = "OpenDocument文档模板";

@@ -59,7 +59,7 @@
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="496"/>
         <source>You must restart the application to finish addon installation.</source>
-        <translation>Vous devez redémarrer l&apos;application pour terminer l&apos;installation de ONLYOFFICE AI Tools. Redémarrer maintenant ?</translation>
+        <translation>Vous devez redémarrer l&apos;application pour terminer l&apos;installation de WorkSuite Office AI Tools. Redémarrer maintenant ?</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1728"/>
@@ -84,8 +84,8 @@
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="473"/>
-        <source>Are you sure you want to uninstall ONLYOFFICE AI Tools?</source>
-        <translation>Êtes-vous sûr de vouloir désinstaller ONLYOFFICE AI Tools ?</translation>
+        <source>Are you sure you want to uninstall WorkSuite Office AI Tools?</source>
+        <translation>Êtes-vous sûr de vouloir désinstaller WorkSuite Office AI Tools ?</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="478"/>
@@ -94,8 +94,8 @@
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1351"/>
-        <source>ONLYOFFICE AI Tools successfully uninstalled</source>
-        <translation>ONLYOFFICE AI Tools a été désinstallé avec succès</translation>
+        <source>WorkSuite Office AI Tools successfully uninstalled</source>
+        <translation>WorkSuite Office AI Tools a été désinstallé avec succès</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1353"/>
@@ -399,12 +399,12 @@
     </message>
     <message>
         <source>OFORM Document</source>
-        <translation type="vanished">Formulaire ONLYOFFICE en ligne remplissable</translation>
+        <translation type="vanished">Formulaire WorkSuite Office en ligne remplissable</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="88"/>
         <source>DOCXF Document</source>
-        <translation>Modèle de formulaire ONLYOFFICE</translation>
+        <translation>Modèle de formulaire WorkSuite Office</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="91"/>
@@ -475,8 +475,8 @@
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="87"/>
-        <source>ONLYOFFICE Form Document</source>
-        <translation>Formulaire PDF ONLYOFFICE</translation>
+        <source>WorkSuite Office Form Document</source>
+        <translation>Formulaire PDF WorkSuite Office</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="89"/>

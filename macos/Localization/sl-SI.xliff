@@ -114,9 +114,9 @@ Jo želite zamenjati?</target>
         <target state="translated">Aplikacijo je treba znova zagnati</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
-      <trans-unit id="Are you sure you want to uninstall ONLYOFFICE AI Tools?" xml:space="preserve">
-        <source>Are you sure you want to uninstall ONLYOFFICE AI Tools?</source>
-        <target state="translated">Ali ste prepričani, da želite odstraniti ONLYOFFICE AI Tools?</target>
+      <trans-unit id="Are you sure you want to uninstall WorkSuite Office AI Tools?" xml:space="preserve">
+        <source>Are you sure you want to uninstall WorkSuite Office AI Tools?</source>
+        <target state="translated">Ali ste prepričani, da želite odstraniti WorkSuite Office AI Tools?</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="Before signing the document, it must be saved." xml:space="preserve">
@@ -359,34 +359,34 @@ Jo želite zamenjati?</target>
         <target>V redu</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
-      <trans-unit id="ONLYOFFICE Document Form Template" xml:space="preserve">
-        <source>ONLYOFFICE Document Form Template</source>
-        <target state="translated">Predloga obrazca dokumenta ONLYOFFICE</target>
+      <trans-unit id="WorkSuite Office Document Form Template" xml:space="preserve">
+        <source>WorkSuite Office Document Form Template</source>
+        <target state="translated">Predloga obrazca dokumenta WorkSuite Office</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
-      <trans-unit id="ONLYOFFICE Fillable Online Form" xml:space="preserve">
-        <source>ONLYOFFICE Fillable Online Form</source>
-        <target state="translated">Izpolnljiv spletni obrazec ONLYOFFICE</target>
+      <trans-unit id="WorkSuite Office Fillable Online Form" xml:space="preserve">
+        <source>WorkSuite Office Fillable Online Form</source>
+        <target state="translated">Izpolnljiv spletni obrazec WorkSuite Office</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
-      <trans-unit id="ONLYOFFICE AI Tools successfully uninstalled" xml:space="preserve">
-        <source>ONLYOFFICE AI Tools successfully uninstalled</source>
-        <target state="translated">ONLYOFFICE AI Tools je bil uspešno odstranjen</target>
+      <trans-unit id="WorkSuite Office AI Tools successfully uninstalled" xml:space="preserve">
+        <source>WorkSuite Office AI Tools successfully uninstalled</source>
+        <target state="translated">WorkSuite Office AI Tools je bil uspešno odstranjen</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
-      <trans-unit id="ONLYOFFICE Form Document" xml:space="preserve">
-        <source>ONLYOFFICE Form Document</source>
-        <target state="translated">PDF obrazec ONLYOFFICE</target>
+      <trans-unit id="WorkSuite Office Form Document" xml:space="preserve">
+        <source>WorkSuite Office Form Document</source>
+        <target state="translated">PDF obrazec WorkSuite Office</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
-      <trans-unit id="ONLYOFFICE can not open the Digital Signature file. Try opening another file." xml:space="preserve">
-        <source>ONLYOFFICE can not open the Digital Signature file. Try opening another file.</source>
-        <target state="translated">ONLYOFFICE ne more odpreti datoteke Digitalni podpis. Poskusi odpreti drugo datoteko.</target>
+      <trans-unit id="WorkSuite Office can not open the Digital Signature file. Try opening another file." xml:space="preserve">
+        <source>WorkSuite Office can not open the Digital Signature file. Try opening another file.</source>
+        <target state="translated">WorkSuite Office ne more odpreti datoteke Digitalni podpis. Poskusi odpreti drugo datoteko.</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
-      <trans-unit id="ONLYOFFICE can not open the Private Key. Try opening another file." xml:space="preserve">
-        <source>ONLYOFFICE can not open the Private Key. Try opening another file.</source>
-        <target state="translated">ONLYOFFICE ne more odpreti Zasebnega ključa.. Poskusi odpreti drugo datoteko.</target>
+      <trans-unit id="WorkSuite Office can not open the Private Key. Try opening another file." xml:space="preserve">
+        <source>WorkSuite Office can not open the Private Key. Try opening another file.</source>
+        <target state="translated">WorkSuite Office ne more odpreti Zasebnega ključa.. Poskusi odpreti drugo datoteko.</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="OpenDocument Document Template" xml:space="preserve">
@@ -841,9 +841,9 @@ Preizkusno obdobje bo poteklo v %d dneh. Po izteku tega obdobja ne boste mogli u
         <note>Class = "NSMenuItem"; title = "Customize Toolbar…"; ObjectID = "1UK-8n-QPP";</note>
       </trans-unit>
       <trans-unit id="1Xt-HY-uBw.title" xml:space="preserve">
-        <source>ONLYOFFICE</source>
-        <target state="translated">ONLYOFFICE</target>
-        <note>Class = "NSMenuItem"; title = "ONLYOFFICE"; ObjectID = "1Xt-HY-uBw";</note>
+        <source>WorkSuite Office</source>
+        <target state="translated">WorkSuite Office</target>
+        <note>Class = "NSMenuItem"; title = "WorkSuite Office"; ObjectID = "1Xt-HY-uBw";</note>
       </trans-unit>
       <trans-unit id="1b7-l0-nxx.title" xml:space="preserve">
         <source>Find</source>
@@ -896,9 +896,9 @@ Preizkusno obdobje bo poteklo v %d dneh. Po izteku tega obdobja ne boste mogli u
         <note>Class = "NSMenuItem"; title = "License Agreement"; ObjectID = "4et-TX-a4m";</note>
       </trans-unit>
       <trans-unit id="4sb-4s-VLi.title" xml:space="preserve">
-        <source>Quit ONLYOFFICE</source>
-        <target>Končaj ONLYOFFICE</target>
-        <note>Class = "NSMenuItem"; title = "Quit ONLYOFFICE"; ObjectID = "4sb-4s-VLi";</note>
+        <source>Quit WorkSuite Office</source>
+        <target>Končaj WorkSuite Office</target>
+        <note>Class = "NSMenuItem"; title = "Quit WorkSuite Office"; ObjectID = "4sb-4s-VLi";</note>
       </trans-unit>
       <trans-unit id="5QF-Oa-p0T.title" xml:space="preserve">
         <source>Edit</source>
@@ -911,9 +911,9 @@ Preizkusno obdobje bo poteklo v %d dneh. Po izteku tega obdobja ne boste mogli u
         <note>Class = "NSMenuItem"; title = "Copy Style"; ObjectID = "5Vv-lz-BsD";</note>
       </trans-unit>
       <trans-unit id="5kV-Vb-QxS.title" xml:space="preserve">
-        <source>About ONLYOFFICE</source>
-        <target>Vizitka ONLYOFFICE</target>
-        <note>Class = "NSMenuItem"; title = "About ONLYOFFICE"; ObjectID = "5kV-Vb-QxS";</note>
+        <source>About WorkSuite Office</source>
+        <target>Vizitka WorkSuite Office</target>
+        <note>Class = "NSMenuItem"; title = "About WorkSuite Office"; ObjectID = "5kV-Vb-QxS";</note>
       </trans-unit>
       <trans-unit id="6dh-zS-Vam.title" xml:space="preserve">
         <source>Redo</source>
@@ -1071,9 +1071,9 @@ Preizkusno obdobje bo poteklo v %d dneh. Po izteku tega obdobja ne boste mogli u
         <note>Class = "NSMenuItem"; title = "Open…"; ObjectID = "IAo-SY-fd9";</note>
       </trans-unit>
       <trans-unit id="IQv-IB-iLA.title" xml:space="preserve">
-        <source>ONLYOFFICE</source>
-        <target state="translated">ONLYOFFICE</target>
-        <note>Class = "NSWindow"; title = "ONLYOFFICE"; ObjectID = "IQv-IB-iLA";</note>
+        <source>WorkSuite Office</source>
+        <target state="translated">WorkSuite Office</target>
+        <note>Class = "NSWindow"; title = "WorkSuite Office"; ObjectID = "IQv-IB-iLA";</note>
       </trans-unit>
       <trans-unit id="J5U-5w-g23.title" xml:space="preserve">
         <source>Justify</source>
@@ -1136,9 +1136,9 @@ Preizkusno obdobje bo poteklo v %d dneh. Po izteku tega obdobja ne boste mogli u
         <note>Class = "NSMenuItem"; title = "Baseline"; ObjectID = "OaQ-X3-Vso";</note>
       </trans-unit>
       <trans-unit id="Olw-nP-bQN.title" xml:space="preserve">
-        <source>Hide ONLYOFFICE</source>
-        <target>Skrij ONLYOFFICE</target>
-        <note>Class = "NSMenuItem"; title = "Hide ONLYOFFICE"; ObjectID = "Olw-nP-bQN";</note>
+        <source>Hide WorkSuite Office</source>
+        <target>Skrij WorkSuite Office</target>
+        <note>Class = "NSMenuItem"; title = "Hide WorkSuite Office"; ObjectID = "Olw-nP-bQN";</note>
       </trans-unit>
       <trans-unit id="OwM-mh-QMV.title" xml:space="preserve">
         <source>Find Previous</source>
@@ -1296,9 +1296,9 @@ Preizkusno obdobje bo poteklo v %d dneh. Po izteku tega obdobja ne boste mogli u
         <note>Class = "NSButtonCell"; title = "Commercial"; ObjectID = "aiL-Ab-t22";</note>
       </trans-unit>
       <trans-unit id="aiN-Ab-t14.title" xml:space="preserve">
-        <source>ONLYOFFICE AI Tools</source>
-        <target state="translated">ONLYOFFICE AI Tools</target>
-        <note>Class = "NSTextFieldCell"; title = "ONLYOFFICE AI Tools"; ObjectID = "aiN-Ab-t14";</note>
+        <source>WorkSuite Office AI Tools</source>
+        <target state="translated">WorkSuite Office AI Tools</target>
+        <note>Class = "NSTextFieldCell"; title = "WorkSuite Office AI Tools"; ObjectID = "aiN-Ab-t14";</note>
       </trans-unit>
       <trans-unit id="aiV-Ab-t16.title" xml:space="preserve">
         <source>Version</source>
@@ -1426,9 +1426,9 @@ Preizkusno obdobje bo poteklo v %d dneh. Po izteku tega obdobja ne boste mogli u
         <note>Class = "NSMenuItem"; title = "Format"; ObjectID = "jxT-CU-nIS";</note>
       </trans-unit>
       <trans-unit id="kcg-El-49G.label" xml:space="preserve">
-        <source>ONLYOFFICE</source>
-        <target state="translated">ONLYOFFICE</target>
-        <note>Class = "NSTabViewItem"; label = "ONLYOFFICE"; ObjectID = "kcg-El-49G";</note>
+        <source>WorkSuite Office</source>
+        <target state="translated">WorkSuite Office</target>
+        <note>Class = "NSTabViewItem"; label = "WorkSuite Office"; ObjectID = "kcg-El-49G";</note>
       </trans-unit>
       <trans-unit id="lLc-Ab-t05.title" xml:space="preserve">
         <source>Licensed under</source>
@@ -1536,9 +1536,9 @@ Preizkusno obdobje bo poteklo v %d dneh. Po izteku tega obdobja ne boste mogli u
         <note>Class = "NSTextFieldCell"; title = "Downloads"; ObjectID = "ttl-Cl-d03";</note>
       </trans-unit>
       <trans-unit id="uQy-DD-JDr.title" xml:space="preserve">
-        <source>ONLYOFFICE</source>
-        <target state="translated">ONLYOFFICE</target>
-        <note>Class = "NSMenu"; title = "ONLYOFFICE"; ObjectID = "uQy-DD-JDr";</note>
+        <source>WorkSuite Office</source>
+        <target state="translated">WorkSuite Office</target>
+        <note>Class = "NSMenu"; title = "WorkSuite Office"; ObjectID = "uQy-DD-JDr";</note>
       </trans-unit>
       <trans-unit id="uRl-iY-unG.title" xml:space="preserve">
         <source>Cut</source>
@@ -1682,8 +1682,8 @@ Preizkusno obdobje bo poteklo v %d dneh. Po izteku tega obdobja ne boste mogli u
     </header>
     <body>
       <trans-unit id="CFBundleName" xml:space="preserve">
-        <source>ONLYOFFICE</source>
-        <target state="translated">ONLYOFFICE</target>
+        <source>WorkSuite Office</source>
+        <target state="translated">WorkSuite Office</target>
         <note>Bundle name</note>
       </trans-unit>
       <trans-unit id="NSHumanReadableCopyright" xml:space="preserve">
@@ -1699,8 +1699,8 @@ Preizkusno obdobje bo poteklo v %d dneh. Po izteku tega obdobja ne boste mogli u
     </header>
     <body>
       <trans-unit id="CFBundleName" xml:space="preserve">
-        <source>ONLYOFFICE</source>
-        <target state="translated">ONLYOFFICE</target>
+        <source>WorkSuite Office</source>
+        <target state="translated">WorkSuite Office</target>
         <note>Bundle name</note>
       </trans-unit>
       <trans-unit id="NSHumanReadableCopyright" xml:space="preserve">
@@ -1716,8 +1716,8 @@ Preizkusno obdobje bo poteklo v %d dneh. Po izteku tega obdobja ne boste mogli u
     </header>
     <body>
       <trans-unit id="CFBundleName" xml:space="preserve">
-        <source>ONLYOFFICE</source>
-        <target state="translated">ONLYOFFICE</target>
+        <source>WorkSuite Office</source>
+        <target state="translated">WorkSuite Office</target>
         <note>Bundle name</note>
       </trans-unit>
       <trans-unit id="NSHumanReadableCopyright" xml:space="preserve">

@@ -23,7 +23,7 @@
 "Application needs to restart" = "Uygulamanın yeniden başlatılması gerekiyor";
 
 /* No comment provided by engineer. */
-"Are you sure you want to uninstall ONLYOFFICE AI Tools?" = "ONLYOFFICE AI Tools'u kaldırmak istediğinizden emin misiniz?";
+"Are you sure you want to uninstall WorkSuite Office AI Tools?" = "WorkSuite Office AI Tools'u kaldırmak istediğinizden emin misiniz?";
 
 /* No comment provided by engineer. */
 "Before signing the document, it must be saved." = "Belgenin imzalanmasından önce kaydedilmesi gerekir.";
@@ -185,16 +185,16 @@
 "OK" = "Tamam";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE AI Tools successfully uninstalled" = "ONLYOFFICE AI Tools başarıyla kaldırıldı";
+"WorkSuite Office AI Tools successfully uninstalled" = "WorkSuite Office AI Tools başarıyla kaldırıldı";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Digital Signature file. Try opening another file." = "WorkSuite Office Elektronik İmza dosyasını açamıyor. Başka bir dosya açmayı deneyin.";
+"WorkSuite Office can not open the Digital Signature file. Try opening another file." = "WorkSuite Office Elektronik İmza dosyasını açamıyor. Başka bir dosya açmayı deneyin.";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Private Key. Try opening another file." = "WorkSuite Office Özel Anahtar dosyasını açamıyor. Başka bir dosya açmayı deneyin.";
+"WorkSuite Office can not open the Private Key. Try opening another file." = "WorkSuite Office Özel Anahtar dosyasını açamıyor. Başka bir dosya açmayı deneyin.";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE Form Document" = "ONLYOFFICE PDF Formu";
+"WorkSuite Office Form Document" = "WorkSuite Office PDF Formu";
 
 /* No comment provided by engineer. */
 "OpenDocument Document Template" = "OpenDocument Belge Şablonu";

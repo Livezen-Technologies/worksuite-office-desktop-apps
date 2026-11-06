@@ -59,7 +59,7 @@
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="496"/>
         <source>You must restart the application to finish addon installation.</source>
-        <translation>ONLYOFFICE AI Toolsのインストールを完了するには、アプリケーションを再起動する必要があります。今すぐ再起動しますか？</translation>
+        <translation>WorkSuite Office AI Toolsのインストールを完了するには、アプリケーションを再起動する必要があります。今すぐ再起動しますか？</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1728"/>
@@ -84,8 +84,8 @@
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="473"/>
-        <source>Are you sure you want to uninstall ONLYOFFICE AI Tools?</source>
-        <translation>ONLYOFFICE AI Toolsをアンインストールしてもよろしいですか？</translation>
+        <source>Are you sure you want to uninstall WorkSuite Office AI Tools?</source>
+        <translation>WorkSuite Office AI Toolsをアンインストールしてもよろしいですか？</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="478"/>
@@ -94,8 +94,8 @@
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1351"/>
-        <source>ONLYOFFICE AI Tools successfully uninstalled</source>
-        <translation>ONLYOFFICE AI Toolsが正常にアンインストールされました</translation>
+        <source>WorkSuite Office AI Tools successfully uninstalled</source>
+        <translation>WorkSuite Office AI Toolsが正常にアンインストールされました</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1353"/>
@@ -399,12 +399,12 @@
     </message>
     <message>
         <source>OFORM Document</source>
-        <translation type="vanished">ONLYOFFICE記入可能なオンライン フォーム</translation>
+        <translation type="vanished">WorkSuite Office記入可能なオンライン フォーム</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="88"/>
         <source>DOCXF Document</source>
-        <translation>ONLYOFFICE フォーム テンプレート</translation>
+        <translation>WorkSuite Office フォーム テンプレート</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="91"/>
@@ -475,8 +475,8 @@
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="87"/>
-        <source>ONLYOFFICE Form Document</source>
-        <translation>ONLYOFFICE PDFフォーム</translation>
+        <source>WorkSuite Office Form Document</source>
+        <translation>WorkSuite Office PDFフォーム</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="89"/>

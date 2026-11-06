@@ -1,6 +1,6 @@
 export default {
   addonTitle: "Shkoni përtej redaktimit standard me AI Tools",
-  addonDescr: "Kurseni kohë dhe punoni më mençur në ONLYOFFICE Docs me një shtresë opsionale AI për dokumente, fletëllogaritje, prezantime dhe PDF.",
+  addonDescr: "Kurseni kohë dhe punoni më mençur në WorkSuite Office me një shtresë opsionale AI për dokumente, fletëllogaritje, prezantime dhe PDF.",
   addonSlide1: "Punoni më shpejt në të gjithë redaktorët duke përdorur AI në skedarë të çdo lloji, me ofrues të personalizuar, MCP dhe kërkim në internet.",
   addonSlide2: "Krijoni dokumente dhe formularë me më pak përpjekje – gjeneroni përmbajtje, shtoni fusha automatikisht dhe strukturoni formularët në pak minuta.",
   addonSlide3: "Përmirësoni cilësinë e përmbajtjes – rishkruani tekstin, përktheni përmbajtjen, përmblidhni informacionin dhe përshtatni gjuhën për çdo audiencë.",
@@ -13,8 +13,8 @@ export default {
   addonLicenseLink: "Marrëveshjen e Licencës",
   addonBtnLater: "Ndoshta më vonë",
   addonBtnInstall: "Prano dhe instalo",
-  addonDontShow: "Mos m'i shfaq ONLYOFFICE AI Tools",
-  addonInstallingTitle: "ONLYOFFICE AI Tools",
+  addonDontShow: "Mos m'i shfaq WorkSuite Office AI Tools",
+  addonInstallingTitle: "WorkSuite Office AI Tools",
   addonInstalling: "Duke instaluar...",
   addonDownloading: "Duke shkarkuar...",
   addonInstalledTitle: "Instalimi u krye me sukses",

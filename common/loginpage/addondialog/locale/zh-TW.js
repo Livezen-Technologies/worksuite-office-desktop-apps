@@ -1,6 +1,6 @@
 export default {
   addonTitle: "透過 AI Tools，超越標準編輯體驗",
-  addonDescr: "透過適用於文件、試算表、簡報和 PDF 的選用 AI 層，在 ONLYOFFICE Docs 中節省時間、更聰明地工作。",
+  addonDescr: "透過適用於文件、試算表、簡報和 PDF 的選用 AI 層，在 WorkSuite Office 中節省時間、更聰明地工作。",
   addonSlide1: "在所有編輯器中更快完成工作——透過自訂服務供應商、MCP 及網路搜尋，在文件、試算表、簡報和 PDF 中使用 AI。",
   addonSlide2: "更輕鬆地建立文件和表單——產生內容、自動新增欄位，並在幾分鐘內完成表單結構設計。",
   addonSlide3: "提升內容品質——重寫文字、翻譯內容、彙整資訊摘要，並針對不同對象調整用詞。",
@@ -13,8 +13,8 @@ export default {
   addonLicenseLink: "授權合約",
   addonBtnLater: "之後再說",
   addonBtnInstall: "同意並安裝",
-  addonDontShow: "不再顯示 ONLYOFFICE AI Tools",
-  addonInstallingTitle: "ONLYOFFICE AI Tools",
+  addonDontShow: "不再顯示 WorkSuite Office AI Tools",
+  addonInstallingTitle: "WorkSuite Office AI Tools",
   addonInstalling: "安裝中...",
   addonDownloading: "下載中...",
   addonInstalledTitle: "安裝成功",

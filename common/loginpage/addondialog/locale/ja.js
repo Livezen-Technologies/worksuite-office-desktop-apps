@@ -1,6 +1,6 @@
 export default {
   addonTitle: "AI Toolsで標準の編集を超える",
-  addonDescr: "ドキュメント、スプレッドシート、プレゼンテーション、PDFに対応したオプションのAIレイヤーで、ONLYOFFICE Docsでの作業時間を短縮し、より効率的に作業できます。",
+  addonDescr: "ドキュメント、スプレッドシート、プレゼンテーション、PDFに対応したオプションのAIレイヤーで、WorkSuite Officeでの作業時間を短縮し、より効率的に作業できます。",
   addonSlide1: "すべてのエディターでより速く作業できます。カスタムプロバイダー、MCP、Web検索を利用して、ドキュメント、スプレッドシート、プレゼンテーション、PDFでAIを使用できます。",
   addonSlide2: "少ない手間でドキュメントとフォームを作成できます。コンテンツを生成し、フィールドを自動的に追加して、数分でフォームを構成できます。",
   addonSlide3: "コンテンツの品質を向上させます。テキストの書き直し、コンテンツの翻訳、情報の要約、対象読者に合わせた文章の調整ができます。",
@@ -13,8 +13,8 @@ export default {
   addonLicenseLink: "ライセンス契約",
   addonBtnLater: "後で",
   addonBtnInstall: "同意してインストール",
-  addonDontShow: "今後ONLYOFFICE AI Toolsを表示しない",
-  addonInstallingTitle: "ONLYOFFICE AI Tools",
+  addonDontShow: "今後WorkSuite Office AI Toolsを表示しない",
+  addonInstallingTitle: "WorkSuite Office AI Tools",
   addonInstalling: "インストール中...",
   addonDownloading: "ダウンロード中...",
   addonInstalledTitle: "インストールが完了しました",

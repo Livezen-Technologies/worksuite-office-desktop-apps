@@ -23,7 +23,7 @@
 "Application needs to restart" = "ایپلیکیشن کو دوبارہ شروع کرنا ضروری ہے";
 
 /* No comment provided by engineer. */
-"Are you sure you want to uninstall ONLYOFFICE AI Tools?" = "کیا آپ واقعی ONLYOFFICE AI Tools کو ان انسٹال کرنا چاہتے ہیں؟";
+"Are you sure you want to uninstall WorkSuite Office AI Tools?" = "کیا آپ واقعی WorkSuite Office AI Tools کو ان انسٹال کرنا چاہتے ہیں؟";
 
 /* No comment provided by engineer. */
 "Before signing the document, it must be saved." = "دستاویز پر دستخط کرنے سے پہلے، اسے محفوظ کرنا ضروری ہے۔";
@@ -185,16 +185,16 @@
 "OK" = "ٹھیک ہے";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE AI Tools successfully uninstalled" = "ONLYOFFICE AI Tools کامیابی سے ان انسٹال ہو گیا";
+"WorkSuite Office AI Tools successfully uninstalled" = "WorkSuite Office AI Tools کامیابی سے ان انسٹال ہو گیا";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Digital Signature file. Try opening another file." = "ONLYOFFICE ڈیجیٹل دستخط فائل نہیں کھول سکتا۔ دوسری فائل کھولنے کی کوشش کریں۔";
+"WorkSuite Office can not open the Digital Signature file. Try opening another file." = "WorkSuite Office ڈیجیٹل دستخط فائل نہیں کھول سکتا۔ دوسری فائل کھولنے کی کوشش کریں۔";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Private Key. Try opening another file." = "ONLYOFFICE نجی کلید نہیں کھول سکتا۔ دوسری فائل کھولنے کی کوشش کریں۔";
+"WorkSuite Office can not open the Private Key. Try opening another file." = "WorkSuite Office نجی کلید نہیں کھول سکتا۔ دوسری فائل کھولنے کی کوشش کریں۔";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE Form Document" = "ONLYOFFICE پی ڈی ایف فارم";
+"WorkSuite Office Form Document" = "WorkSuite Office پی ڈی ایف فارم";
 
 /* No comment provided by engineer. */
 "OpenDocument Document Template" = "دستاویز دستاویز ٹیمپلیٹ کھولیں۔";

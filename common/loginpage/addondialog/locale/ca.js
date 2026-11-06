@@ -1,6 +1,6 @@
 export default {
   addonTitle: "Supera l'edició estàndard amb AI Tools",
-  addonDescr: "Estalvieu temps i esforços treballant a ONLYOFFICE Docs amb una capa addicional per a documents, fulls de càlcul, presentacions i fitxers PDF.",
+  addonDescr: "Estalvieu temps i esforços treballant a WorkSuite Office amb una capa addicional per a documents, fulls de càlcul, presentacions i fitxers PDF.",
   addonSlide1: "Treballeu més ràpidament a tots els editors utilitzant IA en qualsevol tipus de fitxer, amb proveïdors personalitzats, MCP i cerca web.",
   addonSlide2: "Crea documents i formularis amb menys esforç — genera contingut, afegeix camps automàticament i estructura formularis en minuts.",
   addonSlide3: "Millora la qualitat del contingut — reescriu text, tradueix contingut, resumeix informació i adapta la redacció a qualsevol audiència.",
@@ -13,8 +13,8 @@ export default {
   addonLicenseLink: "Acord de llicència",
   addonBtnLater: "Potser més tard",
   addonBtnInstall: "Acceptar i instal·lar",
-  addonDontShow: "No em mostris ONLYOFFICE AI Tools",
-  addonInstallingTitle: "ONLYOFFICE AI Tools",
+  addonDontShow: "No em mostris WorkSuite Office AI Tools",
+  addonInstallingTitle: "WorkSuite Office AI Tools",
   addonInstalling: "Instal·lant...",
   addonDownloading: "Descarregant...",
   addonInstalledTitle: "Instal·lat correctament",

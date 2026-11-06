@@ -59,7 +59,7 @@
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="496"/>
         <source>You must restart the application to finish addon installation.</source>
-        <translation>您必須重新啟動應用程式才能完成 ONLYOFFICE AI Tools 的安裝。要立即重新啟動嗎？</translation>
+        <translation>您必須重新啟動應用程式才能完成 WorkSuite Office AI Tools 的安裝。要立即重新啟動嗎？</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1728"/>
@@ -84,8 +84,8 @@
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="473"/>
-        <source>Are you sure you want to uninstall ONLYOFFICE AI Tools?</source>
-        <translation>您確定要解除安裝 ONLYOFFICE AI Tools 嗎？</translation>
+        <source>Are you sure you want to uninstall WorkSuite Office AI Tools?</source>
+        <translation>您確定要解除安裝 WorkSuite Office AI Tools 嗎？</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="478"/>
@@ -94,8 +94,8 @@
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1351"/>
-        <source>ONLYOFFICE AI Tools successfully uninstalled</source>
-        <translation>ONLYOFFICE AI Tools 已成功解除安裝</translation>
+        <source>WorkSuite Office AI Tools successfully uninstalled</source>
+        <translation>WorkSuite Office AI Tools 已成功解除安裝</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1353"/>
@@ -399,12 +399,12 @@
     </message>
     <message>
         <source>OFORM Document</source>
-        <translation type="vanished">ONLYOFFICE可填写的在线表格</translation>
+        <translation type="vanished">WorkSuite Office可填写的在线表格</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="88"/>
         <source>DOCXF Document</source>
-        <translation>ONLYOFFICE 文档表单模板</translation>
+        <translation>WorkSuite Office 文档表单模板</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="91"/>
@@ -470,8 +470,8 @@
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="87"/>
-        <source>ONLYOFFICE Form Document</source>
-        <translation>ONLYOFFICE PDF 表格</translation>
+        <source>WorkSuite Office Form Document</source>
+        <translation>WorkSuite Office PDF 表格</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="89"/>

@@ -23,7 +23,7 @@
 "Application needs to restart" = "היישום צריך להפעיל מחדש";
 
 /* No comment provided by engineer. */
-"Are you sure you want to uninstall ONLYOFFICE AI Tools?" = "האם אתה בטוח שברצונך להסיר את ההתקנה של ONLYOFFICE AI Tools?";
+"Are you sure you want to uninstall WorkSuite Office AI Tools?" = "האם אתה בטוח שברצונך להסיר את ההתקנה של WorkSuite Office AI Tools?";
 
 /* No comment provided by engineer. */
 "Before signing the document, it must be saved." = "לפני החתימה על המסמך, יש לשמור אותו.";
@@ -185,16 +185,16 @@
 "OK" = "אוקיי";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE AI Tools successfully uninstalled" = "ONLYOFFICE AI Tools הוסר בהצלחה";
+"WorkSuite Office AI Tools successfully uninstalled" = "WorkSuite Office AI Tools הוסר בהצלחה";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Digital Signature file. Try opening another file." = "ל- WorkSuite Office אין אפשרות לפתוח את קובץ החתימה הדיגיטלית. נסה לפתוח קובץ אחר.";
+"WorkSuite Office can not open the Digital Signature file. Try opening another file." = "ל- WorkSuite Office אין אפשרות לפתוח את קובץ החתימה הדיגיטלית. נסה לפתוח קובץ אחר.";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Private Key. Try opening another file." = "ל- WorkSuite Office אין אפשרות לפתוח את המפתח הפרטי. נסה לפתוח קובץ אחר.";
+"WorkSuite Office can not open the Private Key. Try opening another file." = "ל- WorkSuite Office אין אפשרות לפתוח את המפתח הפרטי. נסה לפתוח קובץ אחר.";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE Form Document" = "טופס ONLYOFFICE PDF";
+"WorkSuite Office Form Document" = "טופס WorkSuite Office PDF";
 
 /* No comment provided by engineer. */
 "OpenDocument Document Template" = "תבנית מסמך OpenDocument";

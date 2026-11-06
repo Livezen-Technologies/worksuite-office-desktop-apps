@@ -1,6 +1,6 @@
 export default {
   addonTitle: "Gå videre end standardredigering med AI Tools",
-  addonDescr: "Spar tid og kræfter, når du arbejder i ONLYOFFICE Docs, med et ekstra lag til dokumenter, regneark, præsentationer og PDF-filer.",
+  addonDescr: "Spar tid og kræfter, når du arbejder i WorkSuite Office, med et ekstra lag til dokumenter, regneark, præsentationer og PDF-filer.",
   addonSlide1: "Arbejd hurtigere i alle editorer ved at bruge AI i alle filtyper med tilpassede udbydere, MCP og websøgning.",
   addonSlide2: "Opret dokumenter og formularer med mindre besvær — generer indhold, tilføj felter automatisk, og strukturer formularer på få minutter.",
   addonSlide3: "Forbedr indholdskvaliteten — omskriv tekst, oversæt indhold, opsummer information, og tilpas formuleringen til enhver målgruppe.",
@@ -13,8 +13,8 @@ export default {
   addonLicenseLink: "licensaftale",
   addonBtnLater: "Måske senere",
   addonBtnInstall: "Accepter og installer",
-  addonDontShow: "Vis mig ikke ONLYOFFICE AI Tools",
-  addonInstallingTitle: "ONLYOFFICE AI Tools",
+  addonDontShow: "Vis mig ikke WorkSuite Office AI Tools",
+  addonInstallingTitle: "WorkSuite Office AI Tools",
   addonInstalling: "Installerer...",
   addonDownloading: "Downloader...",
   addonInstalledTitle: "Installeret med succes",

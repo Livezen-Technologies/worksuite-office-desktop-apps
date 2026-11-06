@@ -1,7 +1,7 @@
 export default {
   addonTitle: "Posuňte štandardné úpravy na vyššiu úroveň s AI Tools",
   addonDescr:
-    "Ušetrite čas a pracujte efektívnejšie v ONLYOFFICE Docs s voliteľnou vrstvou AI pre dokumenty, tabuľky, prezentácie a PDF súbory.",
+    "Ušetrite čas a pracujte efektívnejšie v WorkSuite Office s voliteľnou vrstvou AI pre dokumenty, tabuľky, prezentácie a PDF súbory.",
   addonSlide1:
     "Pracujte rýchlejšie vo všetkých editoroch pomocou AI v súboroch akéhokoľvek typu, s vlastnými poskytovateľmi, MCP a webovým vyhľadávaním.",
   addonSlide2:
@@ -20,8 +20,8 @@ export default {
   addonLicenseLink: "Licenčná zmluva",
   addonBtnLater: "Možno neskôr",
   addonBtnInstall: "Prijať a nainštalovať",
-  addonDontShow: "Nezobrazovať mi ONLYOFFICE AI Tools",
-  addonInstallingTitle: "ONLYOFFICE AI Tools",
+  addonDontShow: "Nezobrazovať mi WorkSuite Office AI Tools",
+  addonInstallingTitle: "WorkSuite Office AI Tools",
   addonInstalling: "Inštaluje sa...",
   addonDownloading: "Sťahuje sa...",
   addonInstalledTitle: "Úspešne nainštalované",

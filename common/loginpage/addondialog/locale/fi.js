@@ -1,6 +1,6 @@
 export default {
   addonTitle: "Mene tavallista muokkausta pidemmälle AI Toolsin avulla",
-  addonDescr: "Säästä aikaa ONLYOFFICE Docsissa valinnaisella AI-tasolla asiakirjoja, laskentataulukoita, esityksiä ja PDF-tiedostoja varten.",
+  addonDescr: "Säästä aikaa WorkSuite Officeissa valinnaisella AI-tasolla asiakirjoja, laskentataulukoita, esityksiä ja PDF-tiedostoja varten.",
   addonSlide1: "Työskentele nopeammin kaikissa editoreissa tekoälyn avulla mukautettujen palveluntarjoajien, MCP:n ja verkkohaun kanssa.",
   addonSlide2: "Luo asiakirjoja ja lomakkeita vaivattomammin — luo sisältöä, lisää kenttiä automaattisesti ja jäsennä lomakkeita minuuteissa.",
   addonSlide3: "Paranna sisällön laatua — kirjoita tekstiä uudelleen, käännä sisältöä, tiivistä tietoa ja mukauta sanamuotoa eri yleisöille.",
@@ -13,8 +13,8 @@ export default {
   addonLicenseLink: "Käyttöoikeussopimus",
   addonBtnLater: "Ehkä myöhemmin",
   addonBtnInstall: "Hyväksy ja asenna",
-  addonDontShow: "Älä näytä minulle ONLYOFFICE AI Tools -ilmoitusta",
-  addonInstallingTitle: "ONLYOFFICE AI Tools",
+  addonDontShow: "Älä näytä minulle WorkSuite Office AI Tools -ilmoitusta",
+  addonInstallingTitle: "WorkSuite Office AI Tools",
   addonInstalling: "Asennetaan...",
   addonDownloading: "Ladataan...",
   addonInstalledTitle: "Asennus onnistui",

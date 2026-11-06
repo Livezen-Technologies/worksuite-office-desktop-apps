@@ -59,7 +59,7 @@
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="496"/>
         <source>You must restart the application to finish addon installation.</source>
-        <translation>ONLYOFFICE AI Tools इंस्टॉलेशन पूरा करने के लिए आपको एप्लिकेशन को रीस्टार्ट करना होगा। क्या अभी रीस्टार्ट करें?</translation>
+        <translation>WorkSuite Office AI Tools इंस्टॉलेशन पूरा करने के लिए आपको एप्लिकेशन को रीस्टार्ट करना होगा। क्या अभी रीस्टार्ट करें?</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1728"/>
@@ -84,8 +84,8 @@
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="473"/>
-        <source>Are you sure you want to uninstall ONLYOFFICE AI Tools?</source>
-        <translation>क्या आप सुनिश्चित हैं कि आप ONLYOFFICE AI Tools को अनइंस्टॉल करना चाहते हैं?</translation>
+        <source>Are you sure you want to uninstall WorkSuite Office AI Tools?</source>
+        <translation>क्या आप सुनिश्चित हैं कि आप WorkSuite Office AI Tools को अनइंस्टॉल करना चाहते हैं?</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="478"/>
@@ -94,8 +94,8 @@
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1351"/>
-        <source>ONLYOFFICE AI Tools successfully uninstalled</source>
-        <translation>ONLYOFFICE AI Tools सफलतापूर्वक अनइंस्टॉल हो गया</translation>
+        <source>WorkSuite Office AI Tools successfully uninstalled</source>
+        <translation>WorkSuite Office AI Tools सफलतापूर्वक अनइंस्टॉल हो गया</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1353"/>
@@ -454,8 +454,8 @@
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="87"/>
-        <source>ONLYOFFICE Form Document</source>
-        <translation>पीडीएफ फॉर्म ONLYOFFICE</translation>
+        <source>WorkSuite Office Form Document</source>
+        <translation>पीडीएफ फॉर्म WorkSuite Office</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="89"/>

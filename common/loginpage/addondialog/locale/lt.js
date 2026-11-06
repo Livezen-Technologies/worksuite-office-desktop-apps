@@ -1,6 +1,6 @@
 export default {
   addonTitle: "Pasiekite daugiau nei standartinis redagavimas su AI įrankiais",
-  addonDescr: "Sutaupykite laiko ir pastangų dirbdami ONLYOFFICE Docs su papildomu sluoksniu dokumentams, skaičiuoklėms, pristatymams ir PDF failams.",
+  addonDescr: "Sutaupykite laiko ir pastangų dirbdami WorkSuite Office su papildomu sluoksniu dokumentams, skaičiuoklėms, pristatymams ir PDF failams.",
   addonSlide1: "Dirbkite greičiau visuose redaktoriuose naudodami AI bet kokio tipo failams su pasirinktinais teikėjais, MCP ir žiniatinklio paieška.",
   addonSlide2: "Kurkite dokumentus ir formas su mažiau pastangų — generuokite turinį, automatiškai pridėkite laukus ir sutvarkykite formų struktūrą per kelias minutes.",
   addonSlide3: "Pagerinkite turinio kokybę — perrašykite tekstą, verskite turinį, apibendrinkite informaciją ir pritaikykite formuluotes bet kuriai auditorijai.",
@@ -13,8 +13,8 @@ export default {
   addonLicenseLink: "Licencine sutartimi",
   addonBtnLater: "Galbūt vėliau",
   addonBtnInstall: "Sutikti ir įdiegti",
-  addonDontShow: "Nerodyti ONLYOFFICE AI įrankių",
-  addonInstallingTitle: "ONLYOFFICE AI įrankiai",
+  addonDontShow: "Nerodyti WorkSuite Office AI įrankių",
+  addonInstallingTitle: "WorkSuite Office AI įrankiai",
   addonInstalling: "Diegiama...",
   addonDownloading: "Atsisiunčiama...",
   addonInstalledTitle: "Sėkmingai įdiegta",

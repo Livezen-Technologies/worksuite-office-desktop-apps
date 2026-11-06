@@ -23,7 +23,7 @@
 "Application needs to restart" = "Az alkalmazást újra kell indítani";
 
 /* No comment provided by engineer. */
-"Are you sure you want to uninstall ONLYOFFICE AI Tools?" = "Biztosan el szeretné távolítani az ONLYOFFICE AI Tools alkalmazást?";
+"Are you sure you want to uninstall WorkSuite Office AI Tools?" = "Biztosan el szeretné távolítani az WorkSuite Office AI Tools alkalmazást?";
 
 /* No comment provided by engineer. */
 "Before signing the document, it must be saved." = "Mielőtt alá lenne írva a dokumentum, el kell menteni.";
@@ -182,16 +182,16 @@
 "OK" = "OK";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE AI Tools successfully uninstalled" = "Az ONLYOFFICE AI Tools sikeresen eltávolítva";
+"WorkSuite Office AI Tools successfully uninstalled" = "Az WorkSuite Office AI Tools sikeresen eltávolítva";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Digital Signature file. Try opening another file." = "Az WorkSuite Office nem tudja megnyitni a Digitális Aláírás fájlját. Próbáljon meg megnyitni egy másik fájlt.";
+"WorkSuite Office can not open the Digital Signature file. Try opening another file." = "Az WorkSuite Office nem tudja megnyitni a Digitális Aláírás fájlját. Próbáljon meg megnyitni egy másik fájlt.";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Private Key. Try opening another file." = "Az WorkSuite Office nem tudja megnyitni a Privát Kulcsot.. Próbáljon meg megnyitni egy másik fájlt.";
+"WorkSuite Office can not open the Private Key. Try opening another file." = "Az WorkSuite Office nem tudja megnyitni a Privát Kulcsot.. Próbáljon meg megnyitni egy másik fájlt.";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE Form Document" = "PDF űrlap ONLYOFFICE";
+"WorkSuite Office Form Document" = "PDF űrlap WorkSuite Office";
 
 /* No comment provided by engineer. */
 "OpenDocument Document Template" = "OpenDocument dokumentumsablon";

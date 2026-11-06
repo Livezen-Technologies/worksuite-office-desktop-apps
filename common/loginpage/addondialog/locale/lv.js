@@ -1,6 +1,6 @@
 export default {
   addonTitle: "Panāciet tālāk par standarta redigēšanu ar AI rīkiem",
-  addonDescr: "Ietaupiet laiku un pūles, strādājot ONLYOFFICE Docs ar papildu slāni dokumentiem, izklājlapām, prezentācijām un PDF failiem.",
+  addonDescr: "Ietaupiet laiku un pūles, strādājot WorkSuite Office ar papildu slāni dokumentiem, izklājlapām, prezentācijām un PDF failiem.",
   addonSlide1: "Strādājiet ātrāk visos redaktoros, izmantojot AI jebkura veida failiem, ar pielāgotiem nodrošinātājiem, MCP un tīmekļa meklēšanu.",
   addonSlide2: "Veidojiet dokumentus un formas ar mazāku piepūli — ģenerējiet saturu, automātiski pievienojiet laukus un strukturējiet formas dažu minūšu laikā.",
   addonSlide3: "Uzlabojiet satura kvalitāti — pārrakstiet tekstu, tulkojiet saturu, apkopojiet informāciju un pielāgojiet formulējumu jebkurai auditorijai.",
@@ -13,8 +13,8 @@ export default {
   addonLicenseLink: "Licences līgumam",
   addonBtnLater: "Varbūt vēlāk",
   addonBtnInstall: "Piekrist un instalēt",
-  addonDontShow: "Nerādīt man ONLYOFFICE AI rīkus",
-  addonInstallingTitle: "ONLYOFFICE AI rīki",
+  addonDontShow: "Nerādīt man WorkSuite Office AI rīkus",
+  addonInstallingTitle: "WorkSuite Office AI rīki",
   addonInstalling: "Instalē...",
   addonDownloading: "Lejupielādē...",
   addonInstalledTitle: "Veiksmīgi instalēts",

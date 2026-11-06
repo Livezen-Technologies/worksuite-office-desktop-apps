@@ -23,7 +23,7 @@
 "Application needs to restart" = "යෙදුම නැවත ආරම්භ කළ යුතුය";
 
 /* No comment provided by engineer. */
-"Are you sure you want to uninstall ONLYOFFICE AI Tools?" = "ඔබට ONLYOFFICE AI Tools අස්ථාපනය කිරීමට අවශ්‍ය බව ඔබ ස්ථිරද?";
+"Are you sure you want to uninstall WorkSuite Office AI Tools?" = "ඔබට WorkSuite Office AI Tools අස්ථාපනය කිරීමට අවශ්‍ය බව ඔබ ස්ථිරද?";
 
 /* No comment provided by engineer. */
 "Before signing the document, it must be saved." = "ලේඛනය අත්සන් කිරීමට පෙර, එය සුරැකිය යුතුය.";
@@ -185,16 +185,16 @@
 "OK" = "හරි";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE AI Tools successfully uninstalled" = "ONLYOFFICE AI Tools සාර්ථකව අස්ථාපනය කරන ලදී";
+"WorkSuite Office AI Tools successfully uninstalled" = "WorkSuite Office AI Tools සාර්ථකව අස්ථාපනය කරන ලදී";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Digital Signature file. Try opening another file." = "ඔන්ලිඔෆිස් සඳහා සංඛ්‍යාංක අත්සන ගොනුව ඇරීමට නොහැකිය. වෙනත් ගොනුවක් ඇරීමට උත්සාහ කරන්න.";
+"WorkSuite Office can not open the Digital Signature file. Try opening another file." = "ඔන්ලිඔෆිස් සඳහා සංඛ්‍යාංක අත්සන ගොනුව ඇරීමට නොහැකිය. වෙනත් ගොනුවක් ඇරීමට උත්සාහ කරන්න.";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Private Key. Try opening another file." = "ඔන්ලිඔෆිස් සඳහා පෞද්. යතුර ඇරීමට නොහැකිය. වෙනත් ගොනුවක් ඇරීමට උත්සාහ කරන්න.";
+"WorkSuite Office can not open the Private Key. Try opening another file." = "ඔන්ලිඔෆිස් සඳහා පෞද්. යතුර ඇරීමට නොහැකිය. වෙනත් ගොනුවක් ඇරීමට උත්සාහ කරන්න.";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE Form Document" = "ONLYOFFICE PDF පෝරමය";
+"WorkSuite Office Form Document" = "WorkSuite Office PDF පෝරමය";
 
 /* No comment provided by engineer. */
 "OpenDocument Document Template" = "ඕපන්ඩොකියුමන්ට් ලේඛන අච්චුව";

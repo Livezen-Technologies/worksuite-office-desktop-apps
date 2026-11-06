@@ -2098,7 +2098,7 @@
         NSAlert *alert = [[NSAlert alloc] init];
         [[alert addButtonWithTitle:NSLocalizedString(@"No", nil)] setKeyEquivalent:@"\e"];
         [alert addButtonWithTitle:NSLocalizedString(@"Yes", nil)];
-        [alert setMessageText:NSLocalizedString(@"Are you sure you want to uninstall ONLYOFFICE AI Tools?", nil)];
+        [alert setMessageText:NSLocalizedString(@"Are you sure you want to uninstall WorkSuite Office AI Tools?", nil)];
         [alert setInformativeText:NSLocalizedString(@"AI Tools features will be unavailable after uninstalling. All AI settings (including API keys) will not be removed.", nil)];
         [alert setAlertStyle:NSAlertStyleWarning];
 
@@ -2129,7 +2129,7 @@
         [[alert addButtonWithTitle:NSLocalizedString(@"No", nil)] setKeyEquivalent:@"\e"];
         [alert addButtonWithTitle:NSLocalizedString(@"Yes", nil)];
         [[alert.buttons objectAtIndex:1] setAccessibilityFocused:YES];
-        [alert setMessageText:@"You need to restart the application to finish ONLYOFFICE AI Tools installation.\nRestart now?"];
+        [alert setMessageText:@"You need to restart the application to finish WorkSuite Office AI Tools installation.\nRestart now?"];
         [alert setAlertStyle:NSAlertStyleInformational];
 
         NSInteger code = [alert runModalSheet];
@@ -2175,7 +2175,7 @@
     NSAlert *alert = [[NSAlert alloc] init];
     [alert addButtonWithTitle:NSLocalizedString(@"Restart now", nil)];
     [alert addButtonWithTitle:NSLocalizedString(@"I'll do it later", nil)];
-    [alert setMessageText:NSLocalizedString(@"ONLYOFFICE AI Tools successfully uninstalled", nil)];
+    [alert setMessageText:NSLocalizedString(@"WorkSuite Office AI Tools successfully uninstalled", nil)];
     [alert setInformativeText:NSLocalizedString(@"Application needs to restart", nil)];
     [alert setAlertStyle:NSAlertStyleInformational];
     NSInteger result = [alert runModal];

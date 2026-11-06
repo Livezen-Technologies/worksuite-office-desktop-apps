@@ -1,7 +1,7 @@
 export default {
   addonTitle: "Vá além da edição padrão com o AI Tools",
   addonDescr:
-    "Economize tempo e esforço ao trabalhar no ONLYOFFICE Docs com uma camada adicional para documentos, planilhas, apresentações e arquivos PDF.",
+    "Economize tempo e esforço ao trabalhar no WorkSuite Office com uma camada adicional para documentos, planilhas, apresentações e arquivos PDF.",
   addonSlide1:
     "Trabalhe mais rápido em todos os editores usando IA em arquivos de qualquer tipo, com provedores personalizados, MCP e pesquisa na web.",
   addonSlide2:
@@ -20,8 +20,8 @@ export default {
   addonLicenseLink: "Contrato de Licença",
   addonBtnLater: "Talvez depois",
   addonBtnInstall: "Aceitar e instalar",
-  addonDontShow: "Não me mostrar o ONLYOFFICE AI Tools",
-  addonInstallingTitle: "ONLYOFFICE AI Tools",
+  addonDontShow: "Não me mostrar o WorkSuite Office AI Tools",
+  addonInstallingTitle: "WorkSuite Office AI Tools",
   addonInstalling: "Instalando...",
   addonDownloading: "Baixando...",
   addonInstalledTitle: "Instalado com sucesso",

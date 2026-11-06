@@ -1084,7 +1084,7 @@
                                                         <subviews>
                                                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="aiN-Ab-t13">
                                                                 <rect key="frame" x="0.0" y="0.0" width="185" height="22"/>
-                                                                <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" alignment="left" title="ONLYOFFICE AI Tools" id="aiN-Ab-t14">
+                                                                <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" alignment="left" title="WorkSuite Office AI Tools" id="aiN-Ab-t14">
                                                                     <font key="font" metaFont="systemSemibold" size="18"/>
                                                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -1210,7 +1210,7 @@
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="18" id="wsB-Ab-t27"/>
                                                 </constraints>
-                                                <buttonCell key="cell" type="bevel" title="onlyoffice.com" bezelStyle="regularSquare" alignment="left" imageScaling="proportionallyDown" inset="2" id="wsB-Ab-t28">
+                                                <buttonCell key="cell" type="bevel" title="worksuitecloud.com" bezelStyle="regularSquare" alignment="left" imageScaling="proportionallyDown" inset="2" id="wsB-Ab-t28">
                                                     <behavior key="behavior" lightByContents="YES"/>
                                                     <font key="font" metaFont="system"/>
                                                     <connections>

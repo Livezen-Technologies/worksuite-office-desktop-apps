@@ -23,7 +23,7 @@
 "Application needs to restart" = "Aplicația trebuie repornită";
 
 /* No comment provided by engineer. */
-"Are you sure you want to uninstall ONLYOFFICE AI Tools?" = "Sigur doriți să dezinstalați ONLYOFFICE AI Tools?";
+"Are you sure you want to uninstall WorkSuite Office AI Tools?" = "Sigur doriți să dezinstalați WorkSuite Office AI Tools?";
 
 /* No comment provided by engineer. */
 "Before signing the document, it must be saved." = "Salvați fișierul înainte de semnarea";
@@ -185,16 +185,16 @@
 "OK" = "OK";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE AI Tools successfully uninstalled" = "ONLYOFFICE AI Tools a fost dezinstalat cu succes";
+"WorkSuite Office AI Tools successfully uninstalled" = "WorkSuite Office AI Tools a fost dezinstalat cu succes";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Digital Signature file. Try opening another file." = "WorkSuite Office nu poate deschide fişierul de Semnătură Digitală. Încercați să deschideți un alt fișier.";
+"WorkSuite Office can not open the Digital Signature file. Try opening another file." = "WorkSuite Office nu poate deschide fişierul de Semnătură Digitală. Încercați să deschideți un alt fișier.";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Private Key. Try opening another file." = "WorkSuite Office nu poate deschide Cheia Privată. Încercați să deschideți un alt fișier.";
+"WorkSuite Office can not open the Private Key. Try opening another file." = "WorkSuite Office nu poate deschide Cheia Privată. Încercați să deschideți un alt fișier.";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE Form Document" = "Formular PDF ONLYOFFICE";
+"WorkSuite Office Form Document" = "Formular PDF WorkSuite Office";
 
 /* No comment provided by engineer. */
 "OpenDocument Document Template" = "Șablon document OpenDocument";

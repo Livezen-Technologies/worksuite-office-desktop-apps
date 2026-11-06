@@ -23,7 +23,7 @@
 "Application needs to restart" = "يحتاج التطبيق إلى إعادة التشغيل";
 
 /* No comment provided by engineer. */
-"Are you sure you want to uninstall ONLYOFFICE AI Tools?" = "هل أنت متأكد أنك تريد إلغاء تثبيت ONLYOFFICE AI Tools؟";
+"Are you sure you want to uninstall WorkSuite Office AI Tools?" = "هل أنت متأكد أنك تريد إلغاء تثبيت WorkSuite Office AI Tools؟";
 
 /* No comment provided by engineer. */
 "Before signing the document, it must be saved." = "لإجراء توقيع المستند، يجب الحفظ أولًا";
@@ -185,16 +185,16 @@
 "OK" = "حسنًا";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE AI Tools successfully uninstalled" = "تم إلغاء تثبيت ONLYOFFICE AI Tools بنجاح";
+"WorkSuite Office AI Tools successfully uninstalled" = "تم إلغاء تثبيت WorkSuite Office AI Tools بنجاح";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Digital Signature file. Try opening another file." = "WorkSuite Office غير قادر على فتح ملف التوقيع الرقمي. جرّب ملفًّا آخر.";
+"WorkSuite Office can not open the Digital Signature file. Try opening another file." = "WorkSuite Office غير قادر على فتح ملف التوقيع الرقمي. جرّب ملفًّا آخر.";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Private Key. Try opening another file." = "WorkSuite Office غير قادر على فتح المفتاح الخاص، حاول فتح ملف آخر.";
+"WorkSuite Office can not open the Private Key. Try opening another file." = "WorkSuite Office غير قادر على فتح المفتاح الخاص، حاول فتح ملف آخر.";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE Form Document" = "نموذج ONLYOFFICE PDF";
+"WorkSuite Office Form Document" = "نموذج WorkSuite Office PDF";
 
 /* No comment provided by engineer. */
 "OpenDocument Document Template" = "مستند ليبري أوفس";

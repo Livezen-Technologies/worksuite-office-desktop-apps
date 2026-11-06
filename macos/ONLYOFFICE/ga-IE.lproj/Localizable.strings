@@ -23,7 +23,7 @@
 "Application needs to restart" = "Ní mór don fheidhmchlár atosú";
 
 /* No comment provided by engineer. */
-"Are you sure you want to uninstall ONLYOFFICE AI Tools?" = "An bhfuil tú cinnte gur mhaith leat ONLYOFFICE AI Tools a dhíshuiteáil?";
+"Are you sure you want to uninstall WorkSuite Office AI Tools?" = "An bhfuil tú cinnte gur mhaith leat WorkSuite Office AI Tools a dhíshuiteáil?";
 
 /* No comment provided by engineer. */
 "Before signing the document, it must be saved." = "Sula síneofar an doiciméad, caithfear é a shábháil.";
@@ -182,16 +182,16 @@
 "OK" = "OK";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE AI Tools successfully uninstalled" = "Díshuiteáladh ONLYOFFICE AI Tools go rathúil";
+"WorkSuite Office AI Tools successfully uninstalled" = "Díshuiteáladh WorkSuite Office AI Tools go rathúil";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Digital Signature file. Try opening another file." = "Ní féidir le WorkSuite Office an comhad Síniú Digiteach a oscailt. Bain triail as comhad eile a oscailt.";
+"WorkSuite Office can not open the Digital Signature file. Try opening another file." = "Ní féidir le WorkSuite Office an comhad Síniú Digiteach a oscailt. Bain triail as comhad eile a oscailt.";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Private Key. Try opening another file." = "Ní féidir le WorkSuite Office an Eochair Phríobháideach a oscailt. Bain triail as comhad eile a oscailt.";
+"WorkSuite Office can not open the Private Key. Try opening another file." = "Ní féidir le WorkSuite Office an Eochair Phríobháideach a oscailt. Bain triail as comhad eile a oscailt.";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE Form Document" = "Foirm PDF ONLYOFFICE";
+"WorkSuite Office Form Document" = "Foirm PDF WorkSuite Office";
 
 /* No comment provided by engineer. */
 "OpenDocument Document Template" = "Teimpléad doiciméad OpenDocument";

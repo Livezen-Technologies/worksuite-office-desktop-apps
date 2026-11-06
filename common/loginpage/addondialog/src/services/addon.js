@@ -157,12 +157,12 @@ export async function startInstall({ appcast, package: pkg, version: app_version
       } else if (cmpr < 0) {
         throw new Error(t("errorInstallVersionLow")
           .replace("%1", addon_version)
-          .replace("%mail", '<a href="mailto:support@onlyoffice.com">support team</a>')
+          .replace("%mail", '<a href="https://worksuitecloud.com/support">support team</a>')
         );
       }
     } else if (!server_version || !app_version) {
       throw new Error(t("errorInstallVersionUnknown")
-        .replace("%mail", '<a href="mailto:support@onlyoffice.com">support team</a>'));
+        .replace("%mail", '<a href="https://worksuitecloud.com/support">support team</a>'));
     }
 
     const pkgBlock = json?.addon?.package?.[pkg];

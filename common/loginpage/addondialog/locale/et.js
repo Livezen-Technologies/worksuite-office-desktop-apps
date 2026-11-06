@@ -1,6 +1,6 @@
 export default {
   addonTitle: "Jõudke standardsest redigeerimisest kaugemale AI Tools abil",
-  addonDescr: "Säästke aega ja vaeva ONLYOFFICE Docs-is töötades täiendava kihiga dokumentide, arvutustabelite, esitluste ja PDF-failide jaoks.",
+  addonDescr: "Säästke aega ja vaeva WorkSuite Office-is töötades täiendava kihiga dokumentide, arvutustabelite, esitluste ja PDF-failide jaoks.",
   addonSlide1: "Töötage kiiremini kõigis redaktorites, kasutades AI-d mis tahes tüüpi failide puhul, kohandatud pakkujate, MCP ja veebi otsimisega.",
   addonSlide2: "Looge dokumente ja vorme väiksema vaevaga — genereerige sisu, lisage välju automaatselt ja struktureerige vorme minutitega.",
   addonSlide3: "Parandage sisu kvaliteeti — kirjutage tekst ümber, tõlkige sisu, koostage kokkuvõtteid ja kohandage sõnastust vastavalt sihtrühmale.",
@@ -13,8 +13,8 @@ export default {
   addonLicenseLink: "Litsentsileping",
   addonBtnLater: "Võib-olla hiljem",
   addonBtnInstall: "Nõustu ja installi",
-  addonDontShow: "Ära näita mulle ONLYOFFICE AI Tools",
-  addonInstallingTitle: "ONLYOFFICE AI Tools",
+  addonDontShow: "Ära näita mulle WorkSuite Office AI Tools",
+  addonInstallingTitle: "WorkSuite Office AI Tools",
   addonInstalling: "Installimine...",
   addonDownloading: "Allalaadimine...",
   addonInstalledTitle: "Installimine õnnestus",

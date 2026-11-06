@@ -23,7 +23,7 @@
 "Application needs to restart" = "アプリケーションを再起動する必要があります";
 
 /* No comment provided by engineer. */
-"Are you sure you want to uninstall ONLYOFFICE AI Tools?" = "ONLYOFFICE AI Toolsをアンインストールしてもよろしいですか？";
+"Are you sure you want to uninstall WorkSuite Office AI Tools?" = "WorkSuite Office AI Toolsをアンインストールしてもよろしいですか？";
 
 /* No comment provided by engineer. */
 "Before signing the document, it must be saved." = "署名する前に、ドキュメントを保存する必要があります。";
@@ -182,16 +182,16 @@
 "OK" = "OK";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE AI Tools successfully uninstalled" = "ONLYOFFICE AI Toolsが正常にアンインストールされました";
+"WorkSuite Office AI Tools successfully uninstalled" = "WorkSuite Office AI Toolsが正常にアンインストールされました";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Digital Signature file. Try opening another file." = "WorkSuite Officeでは、デジタル署名ファイルを開けません。別のファイルを開いてみてください。";
+"WorkSuite Office can not open the Digital Signature file. Try opening another file." = "WorkSuite Officeでは、デジタル署名ファイルを開けません。別のファイルを開いてみてください。";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Private Key. Try opening another file." = "WorkSuite Officeは、非公開鍵を開けません。別のファイルを開いてみてください。";
+"WorkSuite Office can not open the Private Key. Try opening another file." = "WorkSuite Officeは、非公開鍵を開けません。別のファイルを開いてみてください。";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE Form Document" = "ONLYOFFICE PDFフォーム";
+"WorkSuite Office Form Document" = "WorkSuite Office PDFフォーム";
 
 /* No comment provided by engineer. */
 "OpenDocument Document Template" = "OpenDocument ドキュメントテンプレート";

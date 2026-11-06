@@ -1,6 +1,6 @@
 export default {
   addonTitle: "Դուրս եկեք ստանդարտ խմբագրման սահմաններից AI Tools-ի միջոցով",
-  addonDescr: "Խնայեք ժամանակ ONLYOFFICE Docs-ում՝ AI շերտով փաստաթղթերի, աղյուսակների, ներկայացումների և PDF-ների համար։",
+  addonDescr: "Խնայեք ժամանակ WorkSuite Office-ում՝ AI շերտով փաստաթղթերի, աղյուսակների, ներկայացումների և PDF-ների համար։",
   addonSlide1: "Աշխատեք ավելի արագ բոլոր խմբագիրներում՝ օգտագործելով AI ցանկացած տեսակի ֆայլերի համար, հատուկ մատակարարների, MCP-ի և վեբ-որոնման միջոցով:",
   addonSlide2: "Ստեղծեք փաստաթղթեր և ձևաթղթեր ավելի քիչ ջանքով. գեներացրեք բովանդակություն, ավտոմատ կերպով ավելացրեք դաշտեր և կառուցեք ձևաթղթեր րոպեների ընթացքում։",
   addonSlide3: "Բարելավեք բովանդակության որակը. վերաշարադրեք տեքստը, թարգմանեք բովանդակությունը, ամփոփեք տեղեկատվությունը և հարմարեցրեք ձևակերպումը ցանկացած լսարանի համար։",
@@ -13,8 +13,8 @@ export default {
   addonLicenseLink: "Լիցենզային համաձայնագիր",
   addonBtnLater: "Հետո, հավանաբար",
   addonBtnInstall: "Ընդունել և տեղադրել",
-  addonDontShow: "Այլևս ցույց չտալ ONLYOFFICE AI Tools-ը",
-  addonInstallingTitle: "ONLYOFFICE AI Tools",
+  addonDontShow: "Այլևս ցույց չտալ WorkSuite Office AI Tools-ը",
+  addonInstallingTitle: "WorkSuite Office AI Tools",
   addonInstalling: "Տեղադրում...",
   addonDownloading: "Ներբեռնում...",
   addonInstalledTitle: "Հաջողությամբ տեղադրվեց",

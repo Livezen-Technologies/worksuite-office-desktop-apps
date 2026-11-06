@@ -23,7 +23,7 @@
 "Application needs to restart" = "Праграма патрабуе перазапуску";
 
 /* No comment provided by engineer. */
-"Are you sure you want to uninstall ONLYOFFICE AI Tools?" = "Вы ўпэўнены, што хочаце выдаліць ONLYOFFICE AI Tools?";
+"Are you sure you want to uninstall WorkSuite Office AI Tools?" = "Вы ўпэўнены, што хочаце выдаліць WorkSuite Office AI Tools?";
 
 /* No comment provided by engineer. */
 "Before signing the document, it must be saved." = "Перад падпісаннем дакумента яго неабходна захаваць.";
@@ -182,16 +182,16 @@
 "OK" = "Добра";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE AI Tools successfully uninstalled" = "ONLYOFFICE AI Tools паспяхова выдалены";
+"WorkSuite Office AI Tools successfully uninstalled" = "WorkSuite Office AI Tools паспяхова выдалены";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Digital Signature file. Try opening another file." = "WorkSuite Office не можа адкрыць файл лічбавага подпісу. Паспрабуйце адкрыць іншы файл.";
+"WorkSuite Office can not open the Digital Signature file. Try opening another file." = "WorkSuite Office не можа адкрыць файл лічбавага подпісу. Паспрабуйце адкрыць іншы файл.";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Private Key. Try opening another file." = "WorkSuite Office не можа адкрыць прыватны ключ. Паспрабуйце адкрыць іншы файл.";
+"WorkSuite Office can not open the Private Key. Try opening another file." = "WorkSuite Office не можа адкрыць прыватны ключ. Паспрабуйце адкрыць іншы файл.";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE Form Document" = "Форма PDF ONLYOFFICE";
+"WorkSuite Office Form Document" = "Форма PDF WorkSuite Office";
 
 /* No comment provided by engineer. */
 "OpenDocument Document Template" = "Шаблон дакумента OpenDocument";

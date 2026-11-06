@@ -59,7 +59,7 @@
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="496"/>
         <source>You must restart the application to finish addon installation.</source>
-        <translation>Πρέπει να επανεκκινήσετε την εφαρμογή για να ολοκληρωθεί η εγκατάσταση του ONLYOFFICE AI Tools. Θέλετε να γίνει επανεκκίνηση τώρα;</translation>
+        <translation>Πρέπει να επανεκκινήσετε την εφαρμογή για να ολοκληρωθεί η εγκατάσταση του WorkSuite Office AI Tools. Θέλετε να γίνει επανεκκίνηση τώρα;</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1728"/>
@@ -84,8 +84,8 @@
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="473"/>
-        <source>Are you sure you want to uninstall ONLYOFFICE AI Tools?</source>
-        <translation>Είστε βέβαιοι ότι θέλετε να απεγκαταστήσετε το ONLYOFFICE AI Tools;</translation>
+        <source>Are you sure you want to uninstall WorkSuite Office AI Tools?</source>
+        <translation>Είστε βέβαιοι ότι θέλετε να απεγκαταστήσετε το WorkSuite Office AI Tools;</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="478"/>
@@ -94,8 +94,8 @@
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1351"/>
-        <source>ONLYOFFICE AI Tools successfully uninstalled</source>
-        <translation>Το ONLYOFFICE AI Tools απεγκαταστάθηκε επιτυχώς</translation>
+        <source>WorkSuite Office AI Tools successfully uninstalled</source>
+        <translation>Το WorkSuite Office AI Tools απεγκαταστάθηκε επιτυχώς</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1353"/>
@@ -383,12 +383,12 @@
     </message>
     <message>
         <source>OFORM Document</source>
-        <translation type="vanished">Διαδικτυακή Φόρμα ONLYOFFICE με δυνατότητα συμπλήρωσης</translation>
+        <translation type="vanished">Διαδικτυακή Φόρμα WorkSuite Office με δυνατότητα συμπλήρωσης</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="88"/>
         <source>DOCXF Document</source>
-        <translation>Πρότυπο φόρμας εγγράφου ONLYOFFICE</translation>
+        <translation>Πρότυπο φόρμας εγγράφου WorkSuite Office</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="91"/>
@@ -454,8 +454,8 @@
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="87"/>
-        <source>ONLYOFFICE Form Document</source>
-        <translation>Φόρμα PDF ONLYOFFICE</translation>
+        <source>WorkSuite Office Form Document</source>
+        <translation>Φόρμα PDF WorkSuite Office</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="89"/>

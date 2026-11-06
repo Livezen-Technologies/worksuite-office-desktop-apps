@@ -59,7 +59,7 @@
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="496"/>
         <source>You must restart the application to finish addon installation.</source>
-        <translation>يجب إعادة تشغيل التطبيق لإتمام تثبيت ONLYOFFICE AI Tools. هل تريد إعادة التشغيل الآن؟</translation>
+        <translation>يجب إعادة تشغيل التطبيق لإتمام تثبيت WorkSuite Office AI Tools. هل تريد إعادة التشغيل الآن؟</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1728"/>
@@ -80,8 +80,8 @@
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="473"/>
-        <source>Are you sure you want to uninstall ONLYOFFICE AI Tools?</source>
-        <translation>هل أنت متأكد أنك تريد إلغاء تثبيت ONLYOFFICE AI Tools؟</translation>
+        <source>Are you sure you want to uninstall WorkSuite Office AI Tools?</source>
+        <translation>هل أنت متأكد أنك تريد إلغاء تثبيت WorkSuite Office AI Tools؟</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="478"/>
@@ -90,8 +90,8 @@
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1351"/>
-        <source>ONLYOFFICE AI Tools successfully uninstalled</source>
-        <translation>تم إلغاء تثبيت ONLYOFFICE AI Tools بنجاح</translation>
+        <source>WorkSuite Office AI Tools successfully uninstalled</source>
+        <translation>تم إلغاء تثبيت WorkSuite Office AI Tools بنجاح</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1353"/>
@@ -384,7 +384,7 @@
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="88"/>
         <source>DOCXF Document</source>
-        <translation>قالب استبيان ONLYOFFICE</translation>
+        <translation>قالب استبيان WorkSuite Office</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="91"/>
@@ -445,8 +445,8 @@
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="87"/>
-        <source>ONLYOFFICE Form Document</source>
-        <translation>نموذج ONLYOFFICE PDF</translation>
+        <source>WorkSuite Office Form Document</source>
+        <translation>نموذج WorkSuite Office PDF</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="89"/>

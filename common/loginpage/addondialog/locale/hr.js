@@ -1,6 +1,6 @@
 export default {
   addonTitle: "Idite dalje od standardnog uređivanja s alatima AI",
-  addonDescr: "Uštedite vrijeme i radite pametnije u ONLYOFFICE Docs uz dodatni AI sloj za dokumente, proračunske tablice, prezentacije i PDF datoteke.",
+  addonDescr: "Uštedite vrijeme i radite pametnije u WorkSuite Office uz dodatni AI sloj za dokumente, proračunske tablice, prezentacije i PDF datoteke.",
   addonSlide1: "Radite brže u svim urednicima koristeći AI u datotekama bilo koje vrste, s prilagođenim davateljima usluga, MCP-om i pretraživanjem weba.",
   addonSlide2: "Izrađujte dokumente i obrasce uz manje truda — generirajte sadržaj, automatski dodajte polja i strukturirajte obrasce u nekoliko minuta.",
   addonSlide3: "Poboljšajte kvalitetu sadržaja — prepisujte tekst, prevodite sadržaj, sažimajte informacije i prilagodite izričaj bilo kojoj publici.",
@@ -13,8 +13,8 @@ export default {
   addonLicenseLink: "Ugovor o licenciji",
   addonBtnLater: "Možda kasnije",
   addonBtnInstall: "Prihvati i instaliraj",
-  addonDontShow: "Ne prikazuj mi ONLYOFFICE AI Tools",
-  addonInstallingTitle: "ONLYOFFICE AI Tools",
+  addonDontShow: "Ne prikazuj mi WorkSuite Office AI Tools",
+  addonInstallingTitle: "WorkSuite Office AI Tools",
   addonInstalling: "Instaliranje...",
   addonDownloading: "Preuzimanje...",
   addonInstalledTitle: "Uspješno instalirano",

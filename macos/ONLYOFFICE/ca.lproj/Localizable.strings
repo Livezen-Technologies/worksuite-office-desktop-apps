@@ -23,7 +23,7 @@
 "Application needs to restart" = "L'aplicació s'ha de reiniciar";
 
 /* No comment provided by engineer. */
-"Are you sure you want to uninstall ONLYOFFICE AI Tools?" = "Esteu segur que voleu desinstal·lar ONLYOFFICE AI Tools?";
+"Are you sure you want to uninstall WorkSuite Office AI Tools?" = "Esteu segur que voleu desinstal·lar WorkSuite Office AI Tools?";
 
 /* No comment provided by engineer. */
 "Before signing the document, it must be saved." = "Abans de signar el document, s'ha de desar.";
@@ -182,16 +182,16 @@
 "OK" = "D'ACORD";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE AI Tools successfully uninstalled" = "ONLYOFFICE AI Tools s'ha desinstal·lat correctament";
+"WorkSuite Office AI Tools successfully uninstalled" = "WorkSuite Office AI Tools s'ha desinstal·lat correctament";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Digital Signature file. Try opening another file." = "WorkSuite Office no pot obrir el fitxer de Signatura Digital. Prova d'obrir un altre fitxer.";
+"WorkSuite Office can not open the Digital Signature file. Try opening another file." = "WorkSuite Office no pot obrir el fitxer de Signatura Digital. Prova d'obrir un altre fitxer.";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Private Key. Try opening another file." = "WorkSuite Office no pot obrir la clau privada. Prova d'obrir un altre fitxer.";
+"WorkSuite Office can not open the Private Key. Try opening another file." = "WorkSuite Office no pot obrir la clau privada. Prova d'obrir un altre fitxer.";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE Form Document" = "Formulari PDF ONLYOFFICE";
+"WorkSuite Office Form Document" = "Formulari PDF WorkSuite Office";
 
 /* No comment provided by engineer. */
 "OpenDocument Document Template" = "Plantilla de document OpenDocument";

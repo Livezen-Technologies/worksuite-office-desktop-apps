@@ -23,7 +23,7 @@
 "Application needs to restart" = "Приложението трябва да се рестартира";
 
 /* No comment provided by engineer. */
-"Are you sure you want to uninstall ONLYOFFICE AI Tools?" = "Сигурни ли сте, че искате да деинсталирате ONLYOFFICE AI Tools?";
+"Are you sure you want to uninstall WorkSuite Office AI Tools?" = "Сигурни ли сте, че искате да деинсталирате WorkSuite Office AI Tools?";
 
 /* No comment provided by engineer. */
 "Before signing the document, it must be saved." = "Преди подписване документът трябва да бъде запазен.";
@@ -182,16 +182,16 @@
 "OK" = "ОК";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE AI Tools successfully uninstalled" = "ONLYOFFICE AI Tools е деинсталиран успешно";
+"WorkSuite Office AI Tools successfully uninstalled" = "WorkSuite Office AI Tools е деинсталиран успешно";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Digital Signature file. Try opening another file." = "WorkSuite Office не може да отвори файла \"Дигитален подпис\". Опитайте да отворите друг файл.";
+"WorkSuite Office can not open the Digital Signature file. Try opening another file." = "WorkSuite Office не може да отвори файла \"Дигитален подпис\". Опитайте да отворите друг файл.";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Private Key. Try opening another file." = "WorkSuite Office не може да отвори „Личен ключ“.";
+"WorkSuite Office can not open the Private Key. Try opening another file." = "WorkSuite Office не може да отвори „Личен ключ“.";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE Form Document" = "PDF формуляр ONLYOFFICE";
+"WorkSuite Office Form Document" = "PDF формуляр WorkSuite Office";
 
 /* No comment provided by engineer. */
 "OpenDocument Document Template" = "OpenDocument Шаблон за документ";

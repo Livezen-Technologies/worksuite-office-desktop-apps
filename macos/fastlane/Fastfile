@@ -58,11 +58,7 @@ platform :mac do
       preprocessor_defs << "USE_ADDON_MODE" unless scheme == "ONLYOFFICE-v8"
     else
       sh("mkdir -p ../Vendor/ONLYOFFICE/license && cp -fv ../../package/common/license/commercial/LICENSE.html ../Vendor/ONLYOFFICE/license/EULA.html")
-      set_info_plist_value(
-        path: "ONLYOFFICE/Resources/#{scheme}/Info.plist",
-        key: "SUFeedURL",
-        value: "https://download.onlyoffice.com/install/desktop/editors-enterprise/mac/#{git_suffix}/onlyoffice.xml"
-      )
+      # WorkSuite: keep the WorkSuite appcast (SUFeedURL in Info.plist) for every edition
     end
 
     desc 'Copy json with supported formats'
@@ -72,7 +68,7 @@ platform :mac do
     end
 
     desc 'Pass URLs'
-    xcargs = "URL_WEBAPPS_HELP=https://download.onlyoffice.com/install/desktop/editors/help/v7.2.0-1/apps"
+    xcargs = "URL_WEBAPPS_HELP=https://worksuitecloud.com/help"
 
     url_appcast_main = ENV["DESKTOP_URL_UPDATES_MAIN_CHANNEL"]
     unless url_appcast_main.to_s.empty?

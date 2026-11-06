@@ -23,7 +23,7 @@
 "Application needs to restart" = "Lietotne ir jārestartē";
 
 /* No comment provided by engineer. */
-"Are you sure you want to uninstall ONLYOFFICE AI Tools?" = "Vai esat pārliecināts, ka vēlaties atinstalēt ONLYOFFICE AI Tools?";
+"Are you sure you want to uninstall WorkSuite Office AI Tools?" = "Vai esat pārliecināts, ka vēlaties atinstalēt WorkSuite Office AI Tools?";
 
 /* No comment provided by engineer. */
 "Before signing the document, it must be saved." = "Dokuments pirms parakstīšanas jāsaglabā.";
@@ -182,16 +182,16 @@
 "OK" = "Labi";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE AI Tools successfully uninstalled" = "ONLYOFFICE AI Tools veiksmīgi atinstalēts";
+"WorkSuite Office AI Tools successfully uninstalled" = "WorkSuite Office AI Tools veiksmīgi atinstalēts";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Digital Signature file. Try opening another file." = "WorkSuite Office nevar atvērt Digitālā Paraksta failu. Mēģiniet atvērt citu failu.";
+"WorkSuite Office can not open the Digital Signature file. Try opening another file." = "WorkSuite Office nevar atvērt Digitālā Paraksta failu. Mēģiniet atvērt citu failu.";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Private Key. Try opening another file." = "WorkSuite Office nevar atvērt Privāto Atslēgu. Mēģiniet atvērt citu failu.";
+"WorkSuite Office can not open the Private Key. Try opening another file." = "WorkSuite Office nevar atvērt Privāto Atslēgu. Mēģiniet atvērt citu failu.";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE Form Document" = "ONLYOFFICE PDF veidlapa";
+"WorkSuite Office Form Document" = "WorkSuite Office PDF veidlapa";
 
 /* No comment provided by engineer. */
 "OpenDocument Document Template" = "OpenDocument Dokumenta veidne";

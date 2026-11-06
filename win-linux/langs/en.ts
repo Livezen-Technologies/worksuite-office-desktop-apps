@@ -77,11 +77,11 @@
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="496"/>
         <source>You must restart the application to finish addon installation.</source>
-        <translation>You need to restart the application to finish ONLYOFFICE AI Tools installation. Restart now?</translation>
+        <translation>You need to restart the application to finish WorkSuite Office AI Tools installation. Restart now?</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="473"/>
-        <source>Are you sure you want to uninstall ONLYOFFICE AI Tools?</source>
+        <source>Are you sure you want to uninstall WorkSuite Office AI Tools?</source>
         <translation></translation>
     </message>
     <message>
@@ -91,7 +91,7 @@
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1351"/>
-        <source>ONLYOFFICE AI Tools successfully uninstalled</source>
+        <source>WorkSuite Office AI Tools successfully uninstalled</source>
         <translation></translation>
     </message>
     <message>
@@ -360,12 +360,12 @@
     </message>
     <message>
         <source>OFORM Document</source>
-        <translation type="vanished">ONLYOFFICE Fillable Online Form</translation>
+        <translation type="vanished">WorkSuite Office Fillable Online Form</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="88"/>
         <source>DOCXF Document</source>
-        <translation>ONLYOFFICE Form Template</translation>
+        <translation>WorkSuite Office Form Template</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="91"/>
@@ -426,8 +426,8 @@
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="87"/>
-        <source>ONLYOFFICE Form Document</source>
-        <translation>ONLYOFFICE PDF Form</translation>
+        <source>WorkSuite Office Form Document</source>
+        <translation>WorkSuite Office PDF Form</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="89"/>

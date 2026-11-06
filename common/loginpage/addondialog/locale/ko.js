@@ -1,6 +1,6 @@
 export default {
   addonTitle: "AI Tools로 기본 편집을 넘어서세요",
-  addonDescr: "문서, 스프레드시트, 프레젠테이션, PDF를 위한 선택적 AI 레이어로 ONLYOFFICE Docs에서 시간을 절약하고 더 스마트하게 작업하세요.",
+  addonDescr: "문서, 스프레드시트, 프레젠테이션, PDF를 위한 선택적 AI 레이어로 WorkSuite Office에서 시간을 절약하고 더 스마트하게 작업하세요.",
   addonSlide1: "모든 편집기에서 더 빠르게 작업할 수 있습니다. 사용자 지정 공급자, MCP, 웹 검색을 활용하여 문서, 스프레드시트, 프레젠테이션, PDF에서 AI를 사용할 수 있습니다.",
   addonSlide2: "더 적은 노력으로 문서와 양식을 작성할 수 있습니다. 콘텐츠를 생성하고 필드를 자동으로 추가하며 몇 분 만에 양식을 구성할 수 있습니다.",
   addonSlide3: "콘텐츠 품질을 향상시킬 수 있습니다. 텍스트를 다시 작성하고, 콘텐츠를 번역하고, 정보를 요약하고, 모든 대상에 맞게 문구를 조정할 수 있습니다.",
@@ -13,8 +13,8 @@ export default {
   addonLicenseLink: "라이선스 계약",
   addonBtnLater: "다음에 하겠습니다",
   addonBtnInstall: "동의 및 설치",
-  addonDontShow: "ONLYOFFICE AI Tools를 다시 표시하지 않음",
-  addonInstallingTitle: "ONLYOFFICE AI Tools",
+  addonDontShow: "WorkSuite Office AI Tools를 다시 표시하지 않음",
+  addonInstallingTitle: "WorkSuite Office AI Tools",
   addonInstalling: "설치 중...",
   addonDownloading: "다운로드 중...",
   addonInstalledTitle: "설치가 완료되었습니다",

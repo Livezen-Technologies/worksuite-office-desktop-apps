@@ -1,6 +1,6 @@
 export default {
   addonTitle: "借助 AI Tools，超越标准编辑体验",
-  addonDescr: "借助面向文档、表格、演示文稿和 PDF 的可选 AI 层，在 ONLYOFFICE Docs 中节省时间、更高效地工作。",
+  addonDescr: "借助面向文档、表格、演示文稿和 PDF 的可选 AI 层，在 WorkSuite Office 中节省时间、更高效地工作。",
   addonSlide1: "在所有编辑器中更快地工作——通过自定义服务提供商、MCP 和网络搜索，在文档、表格、演示文稿和 PDF 中使用 AI。",
   addonSlide2: "更轻松地创建文档和表单——生成内容、自动添加字段，并在几分钟内构建表单结构。",
   addonSlide3: "提升内容质量——改写文本、翻译内容、总结信息，并针对不同受众调整措辞。",
@@ -13,8 +13,8 @@ export default {
   addonLicenseLink: "许可协议",
   addonBtnLater: "以后再说",
   addonBtnInstall: "同意并安装",
-  addonDontShow: "不再显示 ONLYOFFICE AI Tools",
-  addonInstallingTitle: "ONLYOFFICE AI Tools",
+  addonDontShow: "不再显示 WorkSuite Office AI Tools",
+  addonInstallingTitle: "WorkSuite Office AI Tools",
   addonInstalling: "正在安装...",
   addonDownloading: "正在下载...",
   addonInstalledTitle: "安装成功",

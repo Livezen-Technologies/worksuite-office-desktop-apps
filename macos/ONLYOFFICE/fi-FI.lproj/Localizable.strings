@@ -23,7 +23,7 @@
 "Application needs to restart" = "Sovellus täytyy käynnistää uudelleen";
 
 /* No comment provided by engineer. */
-"Are you sure you want to uninstall ONLYOFFICE AI Tools?" = "Haluatko varmasti poistaa ONLYOFFICE AI Tools -ohjelman asennuksen?";
+"Are you sure you want to uninstall WorkSuite Office AI Tools?" = "Haluatko varmasti poistaa WorkSuite Office AI Tools -ohjelman asennuksen?";
 
 /* No comment provided by engineer. */
 "Before signing the document, it must be saved." = "Ennen asiakirjan allekirjoittamista se on tallennettava.";
@@ -182,16 +182,16 @@
 "OK" = "OK";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE AI Tools successfully uninstalled" = "ONLYOFFICE AI Tools poistettiin onnistuneesti";
+"WorkSuite Office AI Tools successfully uninstalled" = "WorkSuite Office AI Tools poistettiin onnistuneesti";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Digital Signature file. Try opening another file." = "WorkSuite Office ei voi avata digitaalisen allekirjoituksen tiedostoa. Yritä avata toinen tiedosto.";
+"WorkSuite Office can not open the Digital Signature file. Try opening another file." = "WorkSuite Office ei voi avata digitaalisen allekirjoituksen tiedostoa. Yritä avata toinen tiedosto.";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Private Key. Try opening another file." = "WorkSuite Office ei voi avata yksityistä avainta. Yritä avata toinen tiedosto.";
+"WorkSuite Office can not open the Private Key. Try opening another file." = "WorkSuite Office ei voi avata yksityistä avainta. Yritä avata toinen tiedosto.";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE Form Document" = "ONLYOFFICE PDF-lomake";
+"WorkSuite Office Form Document" = "WorkSuite Office PDF-lomake";
 
 /* No comment provided by engineer. */
 "OpenDocument Document Template" = "OpenDocument-asiakirjamalli";
