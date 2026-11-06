@@ -65,6 +65,7 @@
 #include "cproviders.h"
 #include "cworksuite.h"
 #include "cworksuiteai.h"
+#include "cworksuitemcp.h"
 #include "cwinsparkle.h"
 #ifndef __OS_WIN_XP
 # include "components/cnotification.h"
@@ -132,7 +133,7 @@ CAscApplicationManagerWrapper::CAscApplicationManagerWrapper(CAscApplicationMana
     QObject::connect(CExistanceController::getInstance(), &CExistanceController::checked, this, &CAscApplicationManagerWrapper::onFileChecked);
     QObject::connect(&commonEvents(), &CEventDriver::onEditorClosed, this, &CAscApplicationManagerWrapper::onEditorWidgetClosed);
     // Local AI: stop worksuite-ai on exit when this app started it and it is idle
-    QObject::connect(this, &CAscApplicationManagerWrapper::aboutToQuit, this, []() { CWorkSuiteAi::stopIfIdle(); });
+    QObject::connect(this, &CAscApplicationManagerWrapper::aboutToQuit, this, []() { CWorkSuiteAi::stopIfIdle(); CWorkSuiteMcp::shutdown(); });
 #ifndef _CAN_SCALE_IMMEDIATELY
     QObject::connect(this, &CAscApplicationManagerWrapper::aboutToQuit, this, [=]() {
         if (!m_private->uiscaling.empty()) {
@@ -452,6 +453,14 @@ bool CAscApplicationManagerWrapper::processCommonEvent(NSEditorApi::CAscCefMenuE
                         sendCommandTo(view, L"ws-ai:endpoint", answer.toStdWString());
                 });
             }
+            return true;
+        } else
+        if ( cmd.compare(L"ws-mcp") == 0 ) {
+            // Settings › AI & MCP Connectors: MCP transports, provider checks and their secrets, for the start page only
+            if ( m_pMainWindow && event->get_SenderId() == m_pMainWindow->startPanelId() )
+                CWorkSuiteMcp::handle(QString::fromStdWString(pData->get_Param()), [](const QString& answer) {
+                    sendCommandTo(SEND_TO_ALL_START_PAGE, L"ws-mcp", answer.toStdWString());
+                });
             return true;
         } else
         if ( cmd.compare(L"worksuite:app") == 0 ) {

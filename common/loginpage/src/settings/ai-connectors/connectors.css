@@ -1,0 +1,88 @@
+/* Settings › AI & MCP Connectors. Builds on Settings › AI Models' classes (../ai-models/ai-models.css);
+ * colours are the design tokens only. Dialogs are portalled outside .aim-page, so .aic-scope repeats
+ * the --aim-* names for them. */
+.aic-scope {
+  --aim-surface: var(--background-normal-element-light, #f9f9f9);
+  --aim-border: var(--border-divider, #dfdfdf);
+  --aim-control-border: var(--border-regular-control, #c0c0c0);
+  --aim-focus: var(--background-accent-button, #3483db);
+  --aim-text: var(--text-normal, #000c);
+  --aim-muted: var(--text-secondary, #0009);
+  --aim-accent: var(--background-accent-button, #3483db);
+  --aim-accent-text: var(--text-inverse, #fff);
+  --aim-hover: var(--highlight-button-hover, #e0e0e0);
+  --aim-warn-bg: #fdf1dc;
+  --aim-warn-text: #8a5300;
+  --aim-bad-bg: #fde7e7;
+  --aim-bad-text: #9b1c1c;
+  --aim-radius: 8px;
+  color: var(--aim-text);
+  font-size: 13px;
+}
+:is(.theme-type-dark, .theme-dark, .theme-dark-modern, .theme-contrast-dark, .theme-night) .aic-scope {
+  --aim-warn-bg: #3d3018;
+  --aim-warn-text: #f3c776;
+  --aim-bad-bg: #432222;
+  --aim-bad-text: #f5a3a3;
+}
+
+.aic-muted { color: var(--aim-muted); margin: 0; }
+.aic-end { justify-content: flex-end; }
+.aic-confirm { display: flex; flex-direction: column; gap: 10px; }
+.aic-confirm-text { margin: 0; line-height: 1.45; }
+.aic-warn { margin: 0; padding: 8px 10px; border-radius: var(--aim-radius); background: var(--aim-warn-bg); color: var(--aim-warn-text); }
+.aic-error { margin: 0; padding: 8px 10px; border-radius: var(--aim-radius); background: var(--aim-bad-bg); color: var(--aim-bad-text); overflow-wrap: anywhere; }
+.aic-pre {
+  margin: 0;
+  max-height: 220px;
+  overflow: auto;
+  padding: 8px 10px;
+  border: 1px solid var(--aim-border);
+  border-radius: var(--aim-radius);
+  background: var(--aim-surface);
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 12px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.aic-check { display: flex; gap: 8px; align-items: center; cursor: pointer; }
+
+.aic-form { display: flex; flex-direction: column; gap: 12px; }
+.aic-field { display: flex; flex-direction: column; gap: 4px; }
+.aic-field > span:first-child { font-weight: 500; }
+.aic-field .aim-input, .aic-field .aim-select, .aic-field textarea { width: 100%; box-sizing: border-box; flex: none; }
+.aic-field textarea {
+  min-height: 64px;
+  resize: vertical;
+  padding: 6px 8px;
+  border: 1px solid var(--aim-control-border);
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 12px;
+}
+.aic-field textarea:focus-visible { outline: 2px solid var(--aim-focus); outline-offset: 1px; }
+.aic-field-error { color: var(--aim-bad-text); font-size: 12px; }
+.aic-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.aic-detail { display: flex; flex-direction: column; gap: 10px; width: 100%; padding: 4px 0 2px; }
+.aic-items { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.aic-item { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; padding: 6px 10px; border: 1px solid var(--aim-border); border-radius: var(--aim-radius); }
+.aic-item-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.aic-mono { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; overflow-wrap: anywhere; }
+.aic-h3 { margin: 0; font-size: 13px; font-weight: 600; }
+
+.aic-log { list-style: none; margin: 0; padding: 0; max-height: 320px; overflow: auto; border: 1px solid var(--aim-border); border-radius: var(--aim-radius); }
+.aic-log li { display: grid; grid-template-columns: auto auto 1fr; gap: 10px; padding: 4px 10px; border-top: 1px solid var(--aim-border); font-size: 12px; }
+.aic-log li:first-child { border-top: 0; }
+.aic-log-time { color: var(--aim-muted); white-space: nowrap; }
+.aic-log-kind-error, .aic-log-kind-denied { color: var(--aim-bad-text); }
+.aic-log-text { overflow-wrap: anywhere; }
+
+.aic-dlg-wide { width: min(620px, calc(100vw - 32px)); }
+
+@container (max-width: 520px) {
+  .aic-pair { grid-template-columns: 1fr; }
+  .aic-log li { grid-template-columns: 1fr; gap: 0; }
+}
