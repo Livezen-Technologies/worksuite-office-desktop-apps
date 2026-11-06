@@ -1,0 +1,43 @@
+WORKSUITE OFFICE — TERMS OF USE
+
+Last updated: 6 November 2026
+
+These terms apply when you install or use WorkSuite Office ("the Software"), the desktop office suite published by Livezen Technologies ("Livezen", "we", "us"). Please read them before you continue. By choosing "I accept the agreement" and installing the Software, you agree to these terms.
+
+1. Who these terms are with
+These terms are between you and Livezen Technologies. If you install the Software for an organisation, you confirm that you may accept these terms on its behalf.
+
+2. Open-source licence
+WorkSuite Office is built on ONLYOFFICE Desktop Editors and other open-source components. The Software's source code is licensed under the GNU Affero General Public License, version 3 (AGPL-3.0), which follows these terms in full. Nothing in these terms limits any right the AGPL-3.0 or another open-source licence gives you; where these terms and such a licence differ, the licence wins for the code it covers. The licences of third-party components are listed in the 3DPARTYLICENSE file installed with the Software. You can obtain the corresponding source code from Livezen on request at support@worksuitecloud.com or from https://github.com/Livezen-Technologies.
+
+3. The WorkSuite name and brand
+"WorkSuite", "WorkSuite Office", "WorkSuite Cloud", the WorkSuite logos and the Livezen name are trademarks of Livezen Technologies. The open-source licence covers the code, not these marks. You may not use them to name or promote a modified version of the Software, or in a way that suggests Livezen endorses you, without our written permission. If you redistribute a modified version, remove the WorkSuite branding or make it clear that it is not an official WorkSuite build.
+
+4. WorkSuite online services
+Some features connect to online services run by Livezen, such as WorkSuite sign-in, WorkSuite Cloud storage and sync, the Update Center, AI assistance and Sinhala language tools. These services are optional. When you use them, the WorkSuite Cloud Terms of Service and Privacy Policy at https://worksuitecloud.com apply as well, and your organisation's WorkSuite subscription may set further rules. We may change, limit or end an online service; the Software keeps working for documents on your computer without them.
+
+5. Your documents and data
+Your documents stay yours. The Software opens and edits files on your computer without sending them to us. Content leaves your computer only when you use an online feature that needs it — for example saving to WorkSuite Cloud or sending text to the AI assistant — and only as that feature describes. To keep the Software working and up to date it may send us basic technical information (version, operating system, update channel and crash or error reports); it does not include your document content. See the Privacy Policy for details.
+
+6. Updates
+The Software checks the WorkSuite Update Center for new versions and may download and install them, according to the update settings in the app or set by your organisation. Updates may add, change or remove features. Keep the Software up to date to receive security fixes.
+
+7. Acceptable use
+Do not use the Software or the online services to break the law, to infringe anyone's rights, to distribute malware, or to try to get unauthorised access to WorkSuite systems or other people's data.
+
+8. No warranty
+The Software is provided "as is" and "as available", without warranty of any kind, express or implied, including fitness for a particular purpose, to the extent the law allows. This repeats, and does not narrow, the disclaimer in the AGPL-3.0. Keep backups of important documents.
+
+9. Limitation of liability
+To the extent the law allows, Livezen is not liable for lost data, lost profits or indirect, incidental or consequential damages arising from your use of the Software. Nothing in these terms limits liability that cannot be limited by law, or rights you have as a consumer.
+
+10. Changes to these terms
+We may update these terms with a new version of the Software. The version shown when you install or update is the one that applies. If you do not agree to new terms, do not install the update.
+
+11. Governing law
+These terms are governed by the laws of Sri Lanka, without regard to conflict-of-law rules, unless the law where you live requires otherwise.
+
+12. Contact
+Livezen Technologies — https://worksuitecloud.com — support@worksuitecloud.com
+
+The full text of the GNU Affero General Public License, version 3, follows.

@@ -9,7 +9,8 @@
 #define sAppPublisher                   "Livezen Technologies LLC"
 #define sAppPublisherURL                "https://worksuitecloud.com/"
 #define sAppSupportURL                  "https://worksuitecloud.com/"
-#define sAppCopyright                   str("© Ascensio System SIA and contributors, " + sAppPublisher + " " + GetDateTimeString("yyyy",,))
+#define sAppCopyright                   str("© " + sAppPublisher + " " + GetDateTimeString("yyyy",,) + ". Based on ONLYOFFICE © Ascensio System SIA and contributors")
+#define sAppTermsURL                    "https://worksuitecloud.com/terms"
 #define sAppIconName                    "WorkSuite Office"
 #define sOldAppIconName                 "WorkSuite Editors"
 #define sAppProtocol                    'oo-office'

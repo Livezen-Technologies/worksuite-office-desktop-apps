@@ -1266,6 +1266,8 @@ ur.extPDF =پورٹیبل دستاویز
 
 ;======================================================================================================
 
+;WorkSuite: Start-menu link to the Terms of Use (no language prefix: every language falls back to it)
+TermsOfUse =WorkSuite Office Terms of Use
 en.jumpDOCX =New document
 en_GB.jumpDOCX =New document
 ar_SA.jumpDOCX =مستند جديد
