@@ -47,6 +47,7 @@
 #include "components/cdownloadwidget.h"
 #include "components/csvgpushbutton.h"
 #include <QSettings>
+#include <QLabel>
 #include <math.h>
 
 
@@ -167,12 +168,15 @@ public slots:
 
 private:
     QWidget * createMainPanel(QWidget *parent);
+    void updateTitleBarIcons();
+    void saveSessionTabs();
     int  trySaveDocument(int);
     void setTabMenu(int index, const QPoint &pos);
     void importUserTemplates(const QStringList &filePaths);
 
     CAscTabWidget *  m_pTabs = nullptr;
     CSVGPushButton*  m_pButtonMain = nullptr;
+    QLabel*          m_labelAppIcon = nullptr;
     QWidget*         m_pMainWidget = nullptr;
     QPushButton*     m_pButtonProfile = nullptr;
     CDownloadWidget* m_pWidgetDownload = nullptr;

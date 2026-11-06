@@ -185,6 +185,24 @@ static QColor GetBorderColor(bool isActive, const QColor &bkgColor)
     return QColor(res, res, res);
 }
 
+static void SetDwmDarkMode(HWND hwnd, bool dark)
+{
+    // Windows 10 1809+ / 11: the DWM frame (Win11 border, rounded-corner edge, shadow) follows the app theme
+    // instead of the system light/dark setting. Attribute 20 is DWMWA_USE_IMMERSIVE_DARK_MODE (19 before 20H1).
+    using DwmSetWindowAttribute_t = HRESULT (WINAPI*)(HWND, DWORD, LPCVOID, DWORD);
+    static DwmSetWindowAttribute_t pDwmSetWindowAttribute = []() -> DwmSetWindowAttribute_t {
+        HMODULE module = GetModuleHandleA("dwmapi");
+        if (!module)
+            module = LoadLibraryA("dwmapi.dll");
+        return module ? (DwmSetWindowAttribute_t)GetProcAddress(module, "DwmSetWindowAttribute") : nullptr;
+    }();
+    if (!pDwmSetWindowAttribute || !hwnd)
+        return;
+    const BOOL value = dark ? TRUE : FALSE;
+    if (FAILED(pDwmSetWindowAttribute(hwnd, 20, &value, sizeof(value))))
+        pDwmSetWindowAttribute(hwnd, 19, &value, sizeof(value));
+}
+
 static bool isTaskbarAutoHideOn()
 {
     APPBARDATA ABData = { sizeof(APPBARDATA) };
@@ -328,6 +346,8 @@ void CWindowPlatform::setWindowColors(const QColor& background, const QColor& bo
     } else {
         css = QString("QMainWindow{background-color: %1;}").arg(background.name());
     }
+    if (m_borderless && Utils::getWinVersion() >= Utils::WinVer::Win10)
+        SetDwmDarkMode(m_hWnd, AscAppManager::themes().current().isDark());
     setStyleSheet(css);
 }
 
