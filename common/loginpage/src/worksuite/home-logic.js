@@ -224,3 +224,47 @@ export function mergeRecents(native, drive, opts) {
   }
   return out;
 }
+
+/*
+ * Home › Pinned files: the pinned native recents (pinned with "recent:pinned"), sorted and searched like the
+ * Recent list. opts {query, sort: {key, dir}} → rows
+ */
+export function pinnedFiles(recents, opts) {
+  opts = opts || {};
+  const pinned = (recents || []).filter((r) => r && r.pinned);
+  return sortFiles(filterFiles(pinned, { query: opts.query }), opts.sort || { key: "opened", dir: "desc" });
+}
+
+/*
+ * Home › Local files: the folders of the recent files on this computer (parseRecentDirs), pinned folders first,
+ * at most `limit`. → {shown, more}
+ */
+export function homeFolders(dirs, limit) {
+  const all = (dirs || []).filter(Boolean);
+  const sorted = all.filter((d) => d.pinned).concat(all.filter((d) => !d.pinned));
+  const n = Math.max(0, limit ?? 6);
+  return { shown: sorted.slice(0, n), more: Math.max(0, sorted.length - n) };
+}
+
+/*
+ * Home › Connected cloud storage: WorkSuite Drive accounts first, then the other clouds' connected portals, each
+ * {id, kind: "drive" | "portal", name, detail, status: "connected" | "signed-out"}.
+ */
+export function cloudConnections(accounts, portals, opts) {
+  opts = opts || {};
+  const out = [];
+  for (const a of accounts || []) {
+    if (!a || a.desktopOnly) continue;
+    out.push({ id: "drive:" + (a.id ?? a.server), kind: "drive", name: opts.driveLabel || "WorkSuite Drive",
+               detail: (a.user && (a.user.email || a.user.name)) || a.email || String(a.server || "").replace(/^https?:\/\//, ""),
+               status: a.signedOut ? "signed-out" : "connected", account: a });
+  }
+  for (const p of portals || []) {
+    if (!p || !p.portal) continue;
+    const label = (opts.providerName && opts.providerName(p.provider)) || p.provider || "";
+    out.push({ id: "portal:" + p.portal, kind: "portal", name: label || String(p.portal).replace(/^https?:\/\//, ""),
+               detail: p.user || p.email || String(p.portal).replace(/^https?:\/\//, ""),
+               status: p.logged ? "connected" : "signed-out", portal: p });
+  }
+  return out;
+}

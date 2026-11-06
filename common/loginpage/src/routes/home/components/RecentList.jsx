@@ -53,7 +53,7 @@ function FileMenuItems(props) {
   );
 }
 
-function FormatIcon(props) {
+export function FormatIcon(props) {
   const format = () => {
     if (props.model.source !== "drive") return props.model.format;
     const ext = String(props.model.ext || "").replace(/^\./, "").toLowerCase();

@@ -1,4 +1,4 @@
-/* Create New: five neutral cards with monochrome icons, one row when there is room (issue #31) */
+/* Quick actions: New Document, Spreadsheet, Presentation, Open file and From template; neutral cards with monochrome icons, one row when there is room */
 .wsh-create-grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
