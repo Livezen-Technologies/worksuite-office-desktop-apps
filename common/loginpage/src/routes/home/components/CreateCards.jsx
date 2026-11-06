@@ -5,13 +5,13 @@ import { L } from "@/worksuite/lang.js";
 import { Icon } from "@/worksuite/ui/components.jsx";
 import "./CreateCards.styles.css";
 
-/* The create commands are the native ones ("create:new" word | cell | slide); the PDF editor opens a PDF through
-   the native Open dialog ("open:folder"), since there is no blank PDF to create */
+/* Quick actions: the native create commands ("create:new" word | cell | slide) and Open file, the native Open
+   dialog ("open:folder"), which also opens PDFs in the PDF editor (there is no blank PDF to create) */
 const KINDS = () => [
   { id: "word", label: L.wshDocument, ext: "DOCX", icon: "file-text" },
   { id: "cell", label: L.wshSpreadsheet, ext: "XLSX", icon: "file-sheet" },
   { id: "slide", label: L.wshPresentation, ext: "PPTX", icon: "presentation" },
-  { id: "pdf", label: L.wshPdfEditor, ext: L.wshPdfEditorHint, icon: "file-type", open: true },
+  { id: "open", label: L.wshOpenFileCard, ext: L.wshOpenFileHint, icon: "folder", open: true },
 ];
 
 export function CreateCards(props) {
@@ -34,7 +34,7 @@ export function CreateCards(props) {
 
   return (
     <section class="wsh-create" aria-labelledby="wsh-create-title">
-      <h2 class="wsh-eyebrow" id="wsh-create-title">{L.wshCreateNew}</h2>
+      <h2 class="wsh-eyebrow" id="wsh-create-title">{L.wshQuickActions}</h2>
       <div class="wsh-create-grid" role="list" onKeyDown={onKey}>
         <For each={KINDS()}>
           {(k, i) => (

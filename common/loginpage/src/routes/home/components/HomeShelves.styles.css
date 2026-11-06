@@ -1,0 +1,58 @@
+/* Home's shelves (HomeShelves.jsx): one card layout for pinned files, folders and clouds. Theme tokens only (ui/tokens.css). */
+.wsh-shelves {
+  display: grid; gap: var(--wsx-space-6) var(--wsx-space-5); min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+}
+.wsh-shelf { display: flex; flex-direction: column; gap: var(--wsx-space-2); min-width: 0; container-type: inline-size; }
+.wsh-shelf-head { display: flex; align-items: center; gap: var(--wsx-space-2); flex-wrap: wrap; min-height: var(--wsx-control-h); }
+.wsh-shelf-head .wsh-eyebrow { margin: 0; }
+.wsh-shelf-tools { display: flex; align-items: center; gap: var(--wsx-space-2); flex-wrap: wrap; margin-inline-start: auto; }
+.wsh-shelf-tools .wsx-icon { width: 14px; height: 14px; }
+.wsh-shelf-search { width: 220px; max-width: 100%; }
+.wsh-shelf .wsx-empty { padding: var(--wsx-space-4); border: var(--wsx-border-w) dashed var(--border); border-radius: var(--wsx-radius-lg); }
+
+.wsh-tiles {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; gap: var(--wsx-space-3); grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+.wsh-tile {
+  position: relative; display: flex; align-items: stretch; min-width: 0;
+  border: var(--wsx-border-w) solid var(--border); border-radius: var(--wsx-radius-lg);
+  background: var(--card); color: var(--card-foreground);
+  transition: border-color .12s, background-color .12s;
+  &:hover { border-color: var(--input); background: var(--accent); }
+  &.is-missing .wsh-tile-name { color: var(--muted-foreground); text-decoration: line-through; }
+}
+.wsh-tile-main {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: var(--wsx-space-3);
+  height: 64px; padding: 0 var(--wsx-space-3); box-sizing: border-box;
+  border: 0; background: none; color: inherit; font: inherit; text-align: start; cursor: pointer; border-radius: inherit;
+  &:focus { outline: none; }
+  &:focus-visible { outline: var(--wsx-focus-w) solid var(--ring); outline-offset: 2px; }
+}
+.wsh-tile-preview {
+  width: 40px; height: 40px; flex: none; display: grid; place-items: center;
+  border-radius: var(--wsx-radius-md); background: var(--muted); color: var(--foreground);
+  .wsx-icon { width: 22px; height: 22px; }
+  .wsh-recent-icon .icon, .wsh-recent-icon svg.icon { width: 28px; height: 28px; }
+}
+.wsh-tile-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; line-height: var(--wsx-line-tight); }
+.wsh-tile-name {
+  font-size: var(--wsx-font-md); font-weight: var(--wsx-weight-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  .ext { font-weight: 400; color: var(--muted-foreground); }
+}
+.wsh-tile-meta {
+  display: flex; align-items: center; gap: 6px; min-width: 0;
+  font-size: var(--wsx-font-xs); color: var(--muted-foreground); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.wsh-tile-action { align-self: center; margin-inline-end: var(--wsx-space-2); flex: none; }
+.wsh-tile:not(:hover):not(:focus-within) .wsh-tile-action[aria-pressed="false"] { opacity: 0; }
+.wsh-dot { width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--wsx-warning); &.is-on { background: var(--wsx-success); } }
+
+/* wide windows: Local files and Connected cloud storage side by side */
+@media (min-width: 1100px) {
+  .wsh-shelves { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .wsh-shelves > .wsh-shelf-wide { grid-column: 1 / -1; }
+}
+@container (max-width: 360px) { .wsh-tiles { grid-template-columns: minmax(0, 1fr); } }
+@media (prefers-reduced-motion: reduce) { .wsh-tile { transition: none; } }

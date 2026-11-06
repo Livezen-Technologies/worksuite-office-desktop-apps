@@ -19,6 +19,7 @@ import { listRecents,
 import { CreateCards } from "./components/CreateCards.jsx";
 import { homeSession, setHomeSession } from "@/stores/home-session.js";
 import { FilesExplorer } from "./components/FilesExplorer.jsx";
+import { CloudShelf, LocalShelf, PinnedShelf } from "./components/HomeShelves.jsx";
 import { RecoverList } from "./components/RecoverList.jsx";
 import { FileDropZone } from "./components/FileDropZone.jsx";
 import { aichat, openFullAIPanel, openSidePanel } from "@/stores/aichat.js";
@@ -40,6 +41,7 @@ export default function Index() {
   const [recovers, setRecovers] = createSignal([]);
   const [loaded, setLoaded] = createSignal(false);
   const [visibleCount, setVisibleCount] = createSignal(BATCH);
+  const [wsVersion, setWsVersion] = createSignal(0);
   let revealId = 0;
   let recentsCountChanged = true;
 
@@ -211,7 +213,13 @@ export default function Index() {
       }
     });
 
+    /* Connected cloud storage re-reads WorkSuite's accounts when they change */
+    const ws = window.WorkSuite;
+    const wsChanged = () => setWsVersion(wsVersion() + 1);
+    if (ws) { ws.on("changed", wsChanged); ws.on("signedin", wsChanged); }
+
     onCleanup(() => {
+      if (ws) { ws.off("changed", wsChanged); ws.off("signedin", wsChanged); }
       ++revealId;
       unsubRecents();
       unsubRecovers();
@@ -223,6 +231,14 @@ export default function Index() {
     <div class="home-page" ref={(el) => (page = el)} onScroll={onScroll}>
       <div class="wsh-page">
         <CreateCards />
+
+        <Show when={loaded()}>
+          <div class="wsh-shelves">
+            <div class="wsh-shelf-wide"><PinnedShelf recents={recents} onTogglePin={togglePin} /></div>
+            <LocalShelf recents={recents} />
+            <CloudShelf version={wsVersion()} onShowDrive={() => page && page.querySelector(".wsf")?.scrollIntoView({ block: "start" })} />
+          </div>
+        </Show>
 
         <Show when={hasRecovers()}>
           <section class="file-list-section">
