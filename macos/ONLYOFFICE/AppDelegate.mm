@@ -99,6 +99,34 @@
 #endif
 @end
 
+/* WorkSuite: the Sinhala fonts that ship with the app (Resources/login/fonts/worksuite-sinhala, which
+   the editors read too) are copied to ~/Library/Fonts, so every app on the Mac can use them, as the
+   Windows and Linux installers do. A font already there (same file name) is left alone, and nothing
+   is removed when the app is: documents may use them. */
+static void WSInstallSinhalaFonts(void) {
+#ifndef _MAS
+    dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
+        NSFileManager * fm = [NSFileManager defaultManager];
+        NSString * src = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"login/fonts/worksuite-sinhala"];
+        NSArray<NSString *> * names = [fm contentsOfDirectoryAtPath:src error:nil];
+        if (!names.count) return;
+        NSURL * lib = [[fm URLsForDirectory:NSLibraryDirectory inDomains:NSUserDomainMask] firstObject];
+        if (!lib) return;
+        NSString * dest = [[lib path] stringByAppendingPathComponent:@"Fonts"];
+        [fm createDirectoryAtPath:dest withIntermediateDirectories:YES attributes:nil error:nil];
+        for (NSString * name in names) {
+            NSString * ext = [[name pathExtension] lowercaseString];
+            if (![ext isEqualToString:@"ttf"] && ![ext isEqualToString:@"otf"]) continue;
+            NSString * to = [dest stringByAppendingPathComponent:name];
+            if ([fm fileExistsAtPath:to]) continue;
+            NSError * error = nil;
+            if (![fm copyItemAtPath:[src stringByAppendingPathComponent:name] toPath:to error:&error])
+                NSLog(@"WorkSuite: could not install font %@: %@", name, error);
+        }
+    });
+#endif
+}
+
 @implementation AppDelegate
 
 - (void)loadDocumentFormats {
@@ -150,6 +178,7 @@
     
     [self loadDocumentFormats];
     [self updateAppAppearance];
+    WSInstallSinhalaFonts();
     
 #ifndef _MAS
     PFMoveToApplicationsFolderIfNecessary();
