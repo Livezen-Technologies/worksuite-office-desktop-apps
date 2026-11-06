@@ -7,6 +7,7 @@ import { isOptsChanged, applySettings, pendingApplyText } from "@/services/setti
 import { pluginConfigs } from "@/stores/plugin-settings";
 import { L } from "@/worksuite/lang.js";
 import { S as AiS } from "@/settings/ai-models/strings.js"; /* Local AI hook */
+import { S as AicS } from "@/settings/ai-connectors/strings.js";
 
 export default function SettingsLayout(props) {
   const location = useLocation();
@@ -15,6 +16,7 @@ export default function SettingsLayout(props) {
     const parts = location.pathname.split("/");
     if (parts[2] === "worksuite") return L.wsSettingsTab;
     if (parts[2] === "ai-models") return AiS.title; /* Local AI hook */
+    if (parts[2] === "ai-connectors") return AicS.title;
     if (parts[2] !== "plugin") return t("settingsGeneral");
     const pluginId = decodeURIComponent(parts[3] ?? "");
     const sectionId = decodeURIComponent(parts[4] ?? "");
@@ -35,7 +37,7 @@ export default function SettingsLayout(props) {
   };
 
   const isIframePage = () => currentIframeKey() !== null;
-  const isWorkSuitePage = () => ["worksuite", "ai-models"].includes(location.pathname.split("/")[2]); /* ai-models: Local AI hook, saves as it goes */
+  const isWorkSuitePage = () => ["worksuite", "ai-models", "ai-connectors"].includes(location.pathname.split("/")[2]); /* ai-models: Local AI hook, saves as it goes */
 
   const iframePages = () => {
     const pages = [];
@@ -74,6 +76,11 @@ export default function SettingsLayout(props) {
           <li class={styles.item}>
             <A href="/settings/ai-models" activeClass={styles.selected} end>
               {AiS.title}
+            </A>
+          </li>
+          <li class={styles.item}>
+            <A href="/settings/ai-connectors" activeClass={styles.selected} end>
+              {AicS.title}
             </A>
           </li>
           <For each={pluginConfigs()}>

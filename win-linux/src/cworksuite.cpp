@@ -359,6 +359,9 @@ QString CWorkSuite::handleSecret(const QString& json)
                   key = in["key"].toString();
 
     QJsonObject out{{"req", in["req"]}, {"ok", false}};
+    if ( key.startsWith("ai:") ) {
+        // AI provider and MCP server keys: written and used through "ws-mcp" (cworksuitemcp.h), never read back
+    } else
     if ( op == "get" ) {
         const QString value = secret(key);
         out["ok"] = !value.isEmpty();
