@@ -690,13 +690,25 @@ namespace {
     }
 }
 
+/* Offline, a request would otherwise hang until the OS gives up: stop a transfer after
+   30 s with no data so the start page can show its offline state. */
+static QNetworkAccessManager * makeNam()
+{
+    QNetworkAccessManager * nam = new QNetworkAccessManager();
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+    nam->setTransferTimeout(30000);
+#endif
+    return nam;
+}
+
+
 void CWorkSuite::transfer(const QString& json, std::function<void(const QString&)> reply)
 {
     const QJsonObject in = QJsonDocument::fromJson(json.toUtf8()).object();
     const QString op = in.value("op").toString();
     const QString req = in.value("req").toString().left(64);
     auto send = [reply](const QJsonObject& out) { reply(QString::fromUtf8(QJsonDocument(out).toJson(QJsonDocument::Compact))); };
-    static QNetworkAccessManager * nam = new QNetworkAccessManager();
+    static QNetworkAccessManager * nam = makeNam();
 
     if ( op == "cancel" ) {
         if ( QNetworkReply * r = downloads().value(req) ) r->abort();
@@ -838,7 +850,7 @@ void CWorkSuite::upload(const QString& json, std::function<void(const QString&)>
     file->setParent(multi);
     multi->append(filePart);
 
-    static QNetworkAccessManager * nam = new QNetworkAccessManager();
+    static QNetworkAccessManager * nam = makeNam();
     QNetworkRequest request(url);
     request.setRawHeader("Authorization", "Bearer " + token.toUtf8());
     request.setRawHeader("Accept", "application/json");

@@ -27,6 +27,7 @@
  *     {"op":"reveal","path"}                                 shows a downloaded file in the file manager
  */
 import { createSignal } from "solid-js";
+import { isOnline, onNetChange, setBrowserOnline } from "./net-state.js";
 import { normalizePolicy, cloudAllowed, aiPolicyOf, reconcileOffline, offlineCopyName } from "./shell-logic.js";
 
 const native = () => window.AscDesktopEditor;
@@ -197,7 +198,8 @@ function onTransfer(param) {
 
 /* ---- offline editing (DOC-07) ---------------------------------------- */
 
-const [online, setOnline] = createSignal(typeof navigator === "undefined" ? true : navigator.onLine !== false);
+const [online, setOnline] = createSignal(isOnline());
+onNetChange((v) => setOnline(v));
 const [offlineChoice, setOfflineChoice] = createSignal(null);
 export { online, offlineChoice };
 
@@ -297,8 +299,8 @@ let started = false;
 export function initWorkSuiteShell() {
   if (started) return;
   started = true;
-  window.addEventListener("online", () => setOnline(true));
-  window.addEventListener("offline", () => setOnline(false));
+  window.addEventListener("online", () => setBrowserOnline(true));
+  window.addEventListener("offline", () => setBrowserOnline(false));
 
   const n = native();
   if (n && n.on) {
