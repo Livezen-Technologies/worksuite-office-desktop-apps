@@ -38,6 +38,7 @@
 #include "components/cmenu.h"
 #include "utils.h"
 #include "cascapplicationmanagerwrapper.h"
+#include <QAction>
 #include <QApplication>
 #include <QHBoxLayout>
 #include <QLabel>
