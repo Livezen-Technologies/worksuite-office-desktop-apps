@@ -1684,6 +1684,20 @@ void CAscApplicationManagerWrapper::startApp()
         in_args.push_back(L"--new:word");
     }
 
+    // Restore the previous session's tabs: the local files that were open in the main window when it was last
+    // closed (CMainWindow::saveSessionTabs). On by default; "restoreTabs" = false turns it off. Skipped when
+    // documents open in separate windows, and files that are gone are left out (handleInputCmd would otherwise
+    // create a new file for a missing path). Files from the command line open after them, so they end up active.
+    if ( !open_in_new_window && !_app.m_private->preferOpenEditorWindow() && reg_user.value("restoreTabs", true).toBool() ) {
+        std::vector<std::wstring> _session_files;
+        for (const QString& _path : reg_user.value("sessionTabs").toStringList()) {
+            if ( QFileInfo(_path).isFile() )
+                _session_files.push_back(_path.toStdWString());
+        }
+        if ( !_session_files.empty() )
+            handleInputCmd(_session_files);
+    }
+
     handleInputCmd(in_args);
     if ( _app.m_vecEditors.empty() && !_app.m_pMainWindow ) {
         _app.m_pMainWindow = _app.prepareMainWindow();

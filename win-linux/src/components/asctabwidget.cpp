@@ -36,6 +36,7 @@
 #include "components/asctabwidget.h"
 #include <QHBoxLayout>
 #include <QApplication>
+#include <QDir>
 #include "casctabdata.h"
 #include "common/Types.h"
 #include "defines.h"
@@ -710,6 +711,20 @@ int CAscTabWidget::tabIndexByUrl(const wstring& url)
             if (doc && Utils::normalizeAppProtocolUrl(doc->url()).compare(Utils::normalizeAppProtocolUrl(url)) == 0)
                 return i;
         }
+#ifdef _WIN32
+        // Windows paths are case-insensitive and come with either slash ("C:\\Docs\\a.docx" from Explorer,
+        // "c:/docs/A.docx" from the recent list): one file must not open in a second tab.
+        const QString _path = QDir::cleanPath(Utils::replaceBackslash(QString::fromStdWString(url)));
+        if ( !_path.isEmpty() ) {
+            for (int i(count()); !(--i < 0);) {
+                CTabPanel *cefpanel = panel(i);
+                doc = cefpanel ? cefpanel->data() : nullptr;
+                if ( doc && doc->isLocal() && !doc->url().empty() &&
+                        QDir::cleanPath(Utils::replaceBackslash(QString::fromStdWString(doc->url()))).compare(_path, Qt::CaseInsensitive) == 0 )
+                    return i;
+            }
+        }
+#endif
     }
 
     return -1;

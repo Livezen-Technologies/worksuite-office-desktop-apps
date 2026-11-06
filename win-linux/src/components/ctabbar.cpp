@@ -56,6 +56,7 @@
 #define ANIMATION_MOVE_TAB_MS 350
 #define TABSPACING 4
 #define TAB_BORDER_RADIUS 6
+#define TAB_PADDING 6
 #define DEFAULT_ICON_SIZE QSize(16,16)
 #define _tabRect(i) tabList[i]->geometry()
 #define tabIndex(i) tabList[i]->index
@@ -82,6 +83,7 @@ public:
     void refreshIcon(const QString& themetype);
     void refreshTextColor();
     void refreshCloseButton();
+    void updateLayoutMetrics();
 
     QIcon  *tab_icon = nullptr;
     CAnimatedIcon *icon_label = nullptr;
@@ -119,8 +121,8 @@ Tab::Tab(QWidget *parent) :
     tabBar = dynamic_cast<CTabBar*>(parent->parent());
 
     QHBoxLayout *lut = new QHBoxLayout(this);
-    lut->setContentsMargins(6, 0, 6, 0);
-    lut->setSpacing(6);
+    lut->setContentsMargins(TAB_PADDING, 0, TAB_PADDING, 0);
+    lut->setSpacing(TAB_PADDING);
     setLayout(lut);
 
     icon_label = new CAnimatedIcon(this);
@@ -287,6 +289,22 @@ void Tab::polish()
     close_btn->style()->polish(close_btn);
 }
 
+void Tab::updateLayoutMetrics()
+{
+    // icon, name and close button keep the 100% proportions at 125-500% scaling
+    if (QLayout *lut = layout()) {
+        const int gap = qRound(TAB_PADDING * dpi_ratio);
+        if (lut->spacing() != gap) {
+            lut->setContentsMargins(gap, 0, gap, 0);
+            lut->setSpacing(gap);
+            // the name gets a different width: elide it again once the layout has settled
+            QTimer::singleShot(0, this, [=]() {
+                elideText(tabBar ? tabBar->elideMode() : Qt::ElideRight);
+            });
+        }
+    }
+}
+
 void Tab::resizeEvent(QResizeEvent *event)
 {
     QFrame::resizeEvent(event);
@@ -294,10 +312,12 @@ void Tab::resizeEvent(QResizeEvent *event)
     if (tab_width < 0) {
         tab_width = new_width;
         dpi_ratio = Utils::getScreenDpiRatioByWidget(window());
+        updateLayoutMetrics();
     } else {
         if (tab_width != new_width) {
             tab_width = new_width;
             dpi_ratio = Utils::getScreenDpiRatioByWidget(window());
+            updateLayoutMetrics();
             SKIP_EVENTS_QUEUE([=]() {
                 emit onTabWidthChanged(tab_width);
             });
@@ -377,6 +397,7 @@ public:
     QFrame*      scrollFrame = nullptr;
     QToolButton* leftButton = nullptr;
     QToolButton* rightButton = nullptr;
+    QToolButton* menuButton = nullptr;
     QVector<Tab*>  tabList;
     QVector<QRect> tabLayouts;
     Qt::TextElideMode elideMode;
@@ -687,10 +708,17 @@ CTabBar::CTabBar(QWidget *parent) :
     d->leftButton->setObjectName(AscAppManager::isRtlEnabled() ? "rightButton" : "leftButton");
     d->rightButton->setObjectName(AscAppManager::isRtlEnabled() ? "leftButton" : "rightButton");
 
+    // overflow menu: every tab by name, for when the strip does not fit (shown with the scroll buttons)
+    d->menuButton = new QToolButton(d->scrollFrame);
+    d->menuButton->setObjectName("menuButton");
+    d->menuButton->setProperty("ToolTip", tr("All tabs"));
+
     scrollLayout->addWidget(d->leftButton);
     scrollLayout->addWidget(d->rightButton);
+    scrollLayout->addWidget(d->menuButton);
     d->leftButton->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
     d->rightButton->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+    d->menuButton->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
 
     main_layout->addWidget(d->scrollFrame);
     connect(d->leftButton, &QToolButton::clicked, this, [=]() {
@@ -699,10 +727,12 @@ CTabBar::CTabBar(QWidget *parent) :
     connect(d->rightButton, &QToolButton::clicked, this, [=]() {
         d->scrollToDirection(d->Direction::Left);
     });
+    connect(d->menuButton, &QToolButton::clicked, this, &CTabBar::showTabListMenu);
 
     show();
     d->leftButton->hide();
     d->rightButton->hide();
+    d->menuButton->hide();
     d->leftButton->setEnabled(false);
     d->rightButton->setEnabled(false);
 }
@@ -1060,6 +1090,35 @@ void CTabBar::polish()
     d->scrollFrame->style()->polish(d->scrollFrame);
     d->leftButton->style()->polish(d->leftButton);
     d->rightButton->style()->polish(d->rightButton);
+    d->menuButton->style()->polish(d->menuButton);
+}
+
+void CTabBar::showTabListMenu()
+{
+    if (d->tabList.isEmpty() || d->animationInProgress)
+        return;
+
+    CMenu *menu = new CMenu(this);
+    connect(menu, &CMenu::wasHidden, menu, &QObject::deleteLater);
+    for (int i = 0; i < d->tabList.size(); i++) {
+        const Tab *tab = d->tabList[i];
+        QString text = tab->text;
+        if (i == d->currentIndex && d->isActive)
+            text = QString(QChar(0x2022)) + QChar(' ') + text; // "• name" marks the open tab
+        QAction *act = menu->addSection(text, tab->tab_icon ? *tab->tab_icon : QIcon());
+        connect(act, &QAction::triggered, this, [=]() {
+            if (!d->indexIsValid(i) || d->animationInProgress)
+                return;
+            emit tabBarClicked(i);
+            if (i != d->currentIndex)
+                d->onCurrentChanged(i);
+            else
+                d->scrollTo(i);
+        }, Qt::QueuedConnection);
+    }
+    const QPoint pos = d->menuButton->mapToGlobal(QPoint(AscAppManager::isRtlEnabled() ? d->menuButton->width() : 0,
+                                                         d->menuButton->height()));
+    menu->exec(pos);
 }
 
 void CTabBar::activate(bool isActive)
@@ -1159,6 +1218,7 @@ void CTabBar::resizeEvent(QResizeEvent *event)
     bool visible = (tabsWidth > d->tabArea->width());
     d->leftButton->setVisible(visible);
     d->rightButton->setVisible(visible);
+    d->menuButton->setVisible(visible);
 
     const int lastIndex = d->tabList.size() - 1;
     const int offsetX = (lastIndex == -1) ? 0 : d->tabArea->rect().right() - d->_tabRect(lastIndex).right();

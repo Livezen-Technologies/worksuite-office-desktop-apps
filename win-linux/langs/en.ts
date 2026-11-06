@@ -709,7 +709,20 @@
     </message>
 </context>
 <context>
+    <name>CTabBar</name>
+    <message>
+        <location filename="../src/components/ctabbar.cpp" line="723"/>
+        <source>All tabs</source>
+        <translation>All tabs</translation>
+    </message>
+</context>
+<context>
     <name>CMainWindow</name>
+    <message>
+        <location filename="../src/windows/cmainwindow.cpp" line="505"/>
+        <source>Home</source>
+        <translation>Home</translation>
+    </message>
     <message>
         <location filename="../src/windows/cmainwindow.cpp" line="87"/>
         <location filename="../src/windows/cmainwindow.cpp" line="641"/>

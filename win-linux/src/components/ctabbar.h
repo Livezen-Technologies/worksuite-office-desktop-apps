@@ -92,6 +92,7 @@ public:
     QString tabText(int index) const;
     QVariant tabProperty(int index, const char *name);
     virtual void tabInserted(int index);
+    void showTabListMenu();
 
 signals:
     void currentChanged(int index);
