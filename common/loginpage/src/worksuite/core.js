@@ -7,6 +7,7 @@ import "@/sdk/bridge.js";
 import { FileFormat } from "@/sdk/format.js";
 import { L } from "./lang.js";
 import "./ai.js";
+import { shouldTry, noteFailure, reportNetwork, REQUEST_TIMEOUT_MS } from "./net-state.js";
 
 const native = window.AscDesktopEditor || {};
 if (!window.sdk) {
@@ -225,11 +226,18 @@ import {
     }
 
     function send(method, url, payload, h) {
+        /* offline: fail at once and let the caller show what it has cached */
+        if (!shouldTry()) return Promise.reject(new Error(utils.Lang.wsErrNetwork));
         return new Promise((resolve, reject) => {
             const done = (status, text) => {
+                reportNetwork(true);
                 let json = null;
                 try { json = text ? JSON.parse(text) : null; } catch (e) { /* not JSON */ }
                 resolve({ status: status, json: json });
+            };
+            const fail = () => {
+                noteFailure();
+                reject(new Error(utils.Lang.wsErrNetwork));
             };
 
             if (window.AscSimpleRequest && window.AscSimpleRequest.createRequest) {
@@ -238,13 +246,16 @@ import {
                     method: method,
                     body: payload,
                     headers: h,
-                    timeout: 30000,
+                    timeout: REQUEST_TIMEOUT_MS,
                     complete: e => done(e.responseStatus || 200, e.responseText),
-                    error: e => (e && e.responseStatus) ? done(e.responseStatus, e.responseText) : reject(new Error(utils.Lang.wsErrNetwork)),
+                    error: e => (e && e.responseStatus) ? done(e.responseStatus, e.responseText) : fail(),
                 });
             } else {
-                fetch(url, { method: method, headers: h, body: payload })
-                    .then(r => r.text().then(t => done(r.status, t)), () => reject(new Error(utils.Lang.wsErrNetwork)));
+                const ctl = typeof AbortController === 'function' ? new AbortController() : null;
+                const timer = ctl && setTimeout(() => ctl.abort(), REQUEST_TIMEOUT_MS);
+                fetch(url, { method: method, headers: h, body: payload, signal: ctl ? ctl.signal : undefined })
+                    .then(r => r.text().then(t => done(r.status, t)), fail)
+                    .finally(() => timer && clearTimeout(timer));
             }
         });
     }
