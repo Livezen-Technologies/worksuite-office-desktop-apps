@@ -23,7 +23,7 @@
 "Application needs to restart" = "Aplikacioni duhet të riniset";
 
 /* No comment provided by engineer. */
-"Are you sure you want to uninstall ONLYOFFICE AI Tools?" = "Jeni i sigurt që dëshironi të çinstaloni ONLYOFFICE AI Tools?";
+"Are you sure you want to uninstall WorkSuite Office AI Tools?" = "Jeni i sigurt që dëshironi të çinstaloni WorkSuite Office AI Tools?";
 
 /* No comment provided by engineer. */
 "Before signing the document, it must be saved." = "Para nënshkrimit të dokumentit ai duhet të ruhet.";
@@ -185,16 +185,16 @@
 "OK" = "OK";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE AI Tools successfully uninstalled" = "ONLYOFFICE AI Tools u çinstalua me sukses";
+"WorkSuite Office AI Tools successfully uninstalled" = "WorkSuite Office AI Tools u çinstalua me sukses";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Digital Signature file. Try opening another file." = "WorkSuite Office nuk mund të hapë skedarin e nënshkrimit dixhital. Provoni të hapni një skedar tjetër.";
+"WorkSuite Office can not open the Digital Signature file. Try opening another file." = "WorkSuite Office nuk mund të hapë skedarin e nënshkrimit dixhital. Provoni të hapni një skedar tjetër.";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Private Key. Try opening another file." = "WorkSuite Office nuk mund të hapë çelësin privat. Provoni të hapni një skedar tjetër.";
+"WorkSuite Office can not open the Private Key. Try opening another file." = "WorkSuite Office nuk mund të hapë çelësin privat. Provoni të hapni një skedar tjetër.";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE Form Document" = "Formë PDF ONLYOFFICE";
+"WorkSuite Office Form Document" = "Formë PDF WorkSuite Office";
 
 /* No comment provided by engineer. */
 "OpenDocument Document Template" = "Shabllon dokumenti OpenDocument";

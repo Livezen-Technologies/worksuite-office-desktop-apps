@@ -59,7 +59,7 @@
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="496"/>
         <source>You must restart the application to finish addon installation.</source>
-        <translation>Ní mór duit an feidhmchlár a atosú chun suiteáil ONLYOFFICE AI Tools a chríochnú. An bhfuil fonn ort atosú anois?</translation>
+        <translation>Ní mór duit an feidhmchlár a atosú chun suiteáil WorkSuite Office AI Tools a chríochnú. An bhfuil fonn ort atosú anois?</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1728"/>
@@ -84,8 +84,8 @@
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="473"/>
-        <source>Are you sure you want to uninstall ONLYOFFICE AI Tools?</source>
-        <translation>An bhfuil tú cinnte gur mhaith leat ONLYOFFICE AI Tools a dhíshuiteáil?</translation>
+        <source>Are you sure you want to uninstall WorkSuite Office AI Tools?</source>
+        <translation>An bhfuil tú cinnte gur mhaith leat WorkSuite Office AI Tools a dhíshuiteáil?</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="478"/>
@@ -94,8 +94,8 @@
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1351"/>
-        <source>ONLYOFFICE AI Tools successfully uninstalled</source>
-        <translation>Díshuiteáladh ONLYOFFICE AI Tools go rathúil</translation>
+        <source>WorkSuite Office AI Tools successfully uninstalled</source>
+        <translation>Díshuiteáladh WorkSuite Office AI Tools go rathúil</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1353"/>
@@ -388,7 +388,7 @@
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="88"/>
         <source>DOCXF Document</source>
-        <translation>Teimpléad Foirm ONLYOFFICE</translation>
+        <translation>Teimpléad Foirm WorkSuite Office</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="91"/>
@@ -539,8 +539,8 @@
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="87"/>
-        <source>ONLYOFFICE Form Document</source>
-        <translation>Foirm PDF ONLYOFFICE</translation>
+        <source>WorkSuite Office Form Document</source>
+        <translation>Foirm PDF WorkSuite Office</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="89"/>

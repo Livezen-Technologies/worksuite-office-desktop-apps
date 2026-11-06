@@ -23,7 +23,7 @@
 "Application needs to restart" = "Aplikácia potrebuje reštartovať";
 
 /* No comment provided by engineer. */
-"Are you sure you want to uninstall ONLYOFFICE AI Tools?" = "Naozaj chcete odinštalovať ONLYOFFICE AI Tools?";
+"Are you sure you want to uninstall WorkSuite Office AI Tools?" = "Naozaj chcete odinštalovať WorkSuite Office AI Tools?";
 
 /* No comment provided by engineer. */
 "Before signing the document, it must be saved." = "Pred podpísaním musí byť dokument uložený.";
@@ -185,16 +185,16 @@
 "OK" = "Áno";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE AI Tools successfully uninstalled" = "ONLYOFFICE AI Tools bol úspešne odinštalovaný";
+"WorkSuite Office AI Tools successfully uninstalled" = "WorkSuite Office AI Tools bol úspešne odinštalovaný";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Digital Signature file. Try opening another file." = "WorkSuite Office nemôže otvoriť súbor digitálneho podpisu. Skúste otvoriť iný súbor.";
+"WorkSuite Office can not open the Digital Signature file. Try opening another file." = "WorkSuite Office nemôže otvoriť súbor digitálneho podpisu. Skúste otvoriť iný súbor.";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Private Key. Try opening another file." = "WorkSuite Office nemôže otvoriť súkromný kľúč. Skúste otvoriť iný súbor.";
+"WorkSuite Office can not open the Private Key. Try opening another file." = "WorkSuite Office nemôže otvoriť súkromný kľúč. Skúste otvoriť iný súbor.";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE Form Document" = "Formulár PDF ONLYOFFICE";
+"WorkSuite Office Form Document" = "Formulár PDF WorkSuite Office";
 
 /* No comment provided by engineer. */
 "OpenDocument Document Template" = "Šablóna dokumentu OpenDocument";

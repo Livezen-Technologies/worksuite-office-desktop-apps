@@ -1,7 +1,7 @@
 export default {
   addonTitle: "AI මෙවලම් සමඟ සම්මත සංස්කරණයෙන් ඔබ්බට යන්න",
   addonDescr:
-    "ලේඛන, පැතුරුම්පත්, ප්‍රස්තුති සහ PDF සඳහා විකල්ප AI ස්තරයක් සමඟින් ONLYOFFICE Docs හි කාලය ඉතිරි කර වඩාත් දක්ෂ ලෙස වැඩ කරන්න.",
+    "ලේඛන, පැතුරුම්පත්, ප්‍රස්තුති සහ PDF සඳහා විකල්ප AI ස්තරයක් සමඟින් WorkSuite Office හි කාලය ඉතිරි කර වඩාත් දක්ෂ ලෙස වැඩ කරන්න.",
   addonSlide1:
     "අභිරුචි සපයන්නන්, MCP සහ වෙබ් සෙවීම සමඟ ඕනෑම ගොනු වර්ගයක AI භාවිතා කරමින් සියලු සංස්කාරකවල වේගයෙන් කටයුතු කරන්න.",
   addonSlide2:
@@ -20,8 +20,8 @@ export default {
   addonLicenseLink: "බලපත්‍ර ගිවිසුම",
   addonBtnLater: "පසුව බලමු",
   addonBtnInstall: "පිළිගෙන ස්ථාපනය කරන්න",
-  addonDontShow: "මට ONLYOFFICE AI Tools නොපෙන්වන්න",
-  addonInstallingTitle: "ONLYOFFICE AI Tools",
+  addonDontShow: "මට WorkSuite Office AI Tools නොපෙන්වන්න",
+  addonInstallingTitle: "WorkSuite Office AI Tools",
   addonInstalling: "ස්ථාපනය කරමින්...",
   addonDownloading: "බාගත කරමින්...",
   addonInstalledTitle: "සාර්ථකව ස්ථාපනය කරන ලදී",

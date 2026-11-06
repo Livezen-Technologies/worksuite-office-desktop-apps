@@ -23,7 +23,7 @@
 "Application needs to restart" = "ແອັບພລິເຄຊັນຕ້ອງການເລີ່ມຕົ້ນໃໝ່";
 
 /* No comment provided by engineer. */
-"Are you sure you want to uninstall ONLYOFFICE AI Tools?" = "ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການຖອດຖອນ ONLYOFFICE AI Tools?";
+"Are you sure you want to uninstall WorkSuite Office AI Tools?" = "ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການຖອດຖອນ WorkSuite Office AI Tools?";
 
 /* No comment provided by engineer. */
 "Before signing the document, it must be saved." = "ກະລຸນນາບັນທືກກ່ອນລົງລາຍເຊັນເອກະສານ.";
@@ -185,16 +185,16 @@
 "OK" = "ໄດ້";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE AI Tools successfully uninstalled" = "ONLYOFFICE AI Tools ຖືກຖອດຖອນສໍາເລັດແລ້ວ";
+"WorkSuite Office AI Tools successfully uninstalled" = "WorkSuite Office AI Tools ຖືກຖອດຖອນສໍາເລັດແລ້ວ";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Digital Signature file. Try opening another file." = "WorkSuite Office ບໍສາມາດເປີດຟາຍລາຍເຊັນດິຈິຕອນ. ລອງເປີດຟາຍອື່ນ.";
+"WorkSuite Office can not open the Digital Signature file. Try opening another file." = "WorkSuite Office ບໍສາມາດເປີດຟາຍລາຍເຊັນດິຈິຕອນ. ລອງເປີດຟາຍອື່ນ.";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Private Key. Try opening another file." = "WorkSuite Office ບໍ່ສາມາດເປີດກຸນແຈສ່ວນບຸກຄົນ. ລອງເປີດຟາຍອື່ນ.";
+"WorkSuite Office can not open the Private Key. Try opening another file." = "WorkSuite Office ບໍ່ສາມາດເປີດກຸນແຈສ່ວນບຸກຄົນ. ລອງເປີດຟາຍອື່ນ.";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE Form Document" = "ONLYOFFICE ແບບຟອມ PDF";
+"WorkSuite Office Form Document" = "WorkSuite Office ແບບຟອມ PDF";
 
 /* No comment provided by engineer. */
 "OpenDocument Document Template" = "ເປີດເອກະສານ ເປັນຮູບແບບເອກະສານ";

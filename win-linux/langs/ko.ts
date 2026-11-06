@@ -59,7 +59,7 @@
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="496"/>
         <source>You must restart the application to finish addon installation.</source>
-        <translation>ONLYOFFICE AI Tools 설치를 완료하려면 애플리케이션을 다시 시작해야 합니다. 지금 다시 시작하시겠습니까?</translation>
+        <translation>WorkSuite Office AI Tools 설치를 완료하려면 애플리케이션을 다시 시작해야 합니다. 지금 다시 시작하시겠습니까?</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1728"/>
@@ -80,8 +80,8 @@
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="473"/>
-        <source>Are you sure you want to uninstall ONLYOFFICE AI Tools?</source>
-        <translation>ONLYOFFICE AI Tools를 제거하시겠습니까?</translation>
+        <source>Are you sure you want to uninstall WorkSuite Office AI Tools?</source>
+        <translation>WorkSuite Office AI Tools를 제거하시겠습니까?</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="478"/>
@@ -90,8 +90,8 @@
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1351"/>
-        <source>ONLYOFFICE AI Tools successfully uninstalled</source>
-        <translation>ONLYOFFICE AI Tools가 성공적으로 제거되었습니다</translation>
+        <source>WorkSuite Office AI Tools successfully uninstalled</source>
+        <translation>WorkSuite Office AI Tools가 성공적으로 제거되었습니다</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1353"/>
@@ -379,12 +379,12 @@
     </message>
     <message>
         <source>OFORM Document</source>
-        <translation type="vanished">ONLYOFFICE 작성 가능한 온라인 양식</translation>
+        <translation type="vanished">WorkSuite Office 작성 가능한 온라인 양식</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="88"/>
         <source>DOCXF Document</source>
-        <translation>ONLYOFFICE 문서 양식 템플릿</translation>
+        <translation>WorkSuite Office 문서 양식 템플릿</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="91"/>
@@ -450,8 +450,8 @@
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="87"/>
-        <source>ONLYOFFICE Form Document</source>
-        <translation>ONLYOFFICE PDF 양식</translation>
+        <source>WorkSuite Office Form Document</source>
+        <translation>WorkSuite Office PDF 양식</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="89"/>

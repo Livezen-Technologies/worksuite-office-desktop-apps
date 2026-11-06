@@ -59,7 +59,7 @@
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="496"/>
         <source>You must restart the application to finish addon installation.</source>
-        <translation>ONLYOFFICE AI Tools کی تنصیب مکمل کرنے کے لیے آپ کو ایپلیکیشن کو دوبارہ شروع کرنے کی ضرورت ہے۔ ابھی دوبارہ شروع کریں؟</translation>
+        <translation>WorkSuite Office AI Tools کی تنصیب مکمل کرنے کے لیے آپ کو ایپلیکیشن کو دوبارہ شروع کرنے کی ضرورت ہے۔ ابھی دوبارہ شروع کریں؟</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1728"/>
@@ -76,8 +76,8 @@
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="473"/>
-        <source>Are you sure you want to uninstall ONLYOFFICE AI Tools?</source>
-        <translation>کیا آپ واقعی ONLYOFFICE AI Tools کو ان انسٹال کرنا چاہتے ہیں؟</translation>
+        <source>Are you sure you want to uninstall WorkSuite Office AI Tools?</source>
+        <translation>کیا آپ واقعی WorkSuite Office AI Tools کو ان انسٹال کرنا چاہتے ہیں؟</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="478"/>
@@ -86,8 +86,8 @@
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1351"/>
-        <source>ONLYOFFICE AI Tools successfully uninstalled</source>
-        <translation>ONLYOFFICE AI Tools کامیابی سے ان انسٹال ہو گیا</translation>
+        <source>WorkSuite Office AI Tools successfully uninstalled</source>
+        <translation>WorkSuite Office AI Tools کامیابی سے ان انسٹال ہو گیا</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1353"/>
@@ -371,12 +371,12 @@
     </message>
     <message>
         <source>OFORM Document</source>
-        <translation type="vanished">ONLYOFFICE Fillable Online Form</translation>
+        <translation type="vanished">WorkSuite Office Fillable Online Form</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="88"/>
         <source>DOCXF Document</source>
-        <translation>ONLYOFFICE فارم ٹیمپلیٹ</translation>
+        <translation>WorkSuite Office فارم ٹیمپلیٹ</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="91"/>
@@ -437,8 +437,8 @@
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="87"/>
-        <source>ONLYOFFICE Form Document</source>
-        <translation>ONLYOFFICE پی ڈی ایف فارم</translation>
+        <source>WorkSuite Office Form Document</source>
+        <translation>WorkSuite Office پی ڈی ایف فارم</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="89"/>

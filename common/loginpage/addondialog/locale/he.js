@@ -1,6 +1,6 @@
 export default {
   addonTitle: "עברו את גבולות העריכה הרגילה עם כלי AI",
-  addonDescr: "חסכו זמן ועבדו בצורה חכמה יותר ב-ONLYOFFICE Docs עם שכבת AI אופציונלית למסמכים, גיליונות אלקטרוניים, מצגות וקבצי PDF.",
+  addonDescr: "חסכו זמן ועבדו בצורה חכמה יותר ב-WorkSuite Office עם שכבת AI אופציונלית למסמכים, גיליונות אלקטרוניים, מצגות וקבצי PDF.",
   addonSlide1: "עבדו מהר יותר בכל העורכים — השתמשו ב-AI במסמכים, גיליונות אלקטרוניים, מצגות וקבצי PDF עם ספקים מותאמים אישית, MCP וחיפוש באינטרנט.",
   addonSlide2: "צרו מסמכים וטפסים במאמץ מופחת — צרו תוכן, הוסיפו שדות באופן אוטומטי ובנו טפסים בתוך דקות.",
   addonSlide3: "שפרו את איכות התוכן — כתבו טקסט מחדש, תרגמו תוכן, סכמו מידע והתאימו את הניסוח לכל קהל.",
@@ -13,8 +13,8 @@ export default {
   addonLicenseLink: "הסכם הרישיון",
   addonBtnLater: "אולי מאוחר יותר",
   addonBtnInstall: "אישור והתקנה",
-  addonDontShow: "אל תציגו לי את ONLYOFFICE AI Tools",
-  addonInstallingTitle: "ONLYOFFICE AI Tools",
+  addonDontShow: "אל תציגו לי את WorkSuite Office AI Tools",
+  addonInstallingTitle: "WorkSuite Office AI Tools",
   addonInstalling: "מתקין...",
   addonDownloading: "מוריד...",
   addonInstalledTitle: "ההתקנה הושלמה בהצלחה",

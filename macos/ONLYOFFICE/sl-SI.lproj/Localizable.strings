@@ -23,7 +23,7 @@
 "Application needs to restart" = "Aplikacijo je treba znova zagnati";
 
 /* No comment provided by engineer. */
-"Are you sure you want to uninstall ONLYOFFICE AI Tools?" = "Ali ste prepričani, da želite odstraniti ONLYOFFICE AI Tools?";
+"Are you sure you want to uninstall WorkSuite Office AI Tools?" = "Ali ste prepričani, da želite odstraniti WorkSuite Office AI Tools?";
 
 /* No comment provided by engineer. */
 "Before signing the document, it must be saved." = "Pred podpisom mora biti dokument shranjen.";
@@ -182,16 +182,16 @@
 "OK" = "V redu";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE AI Tools successfully uninstalled" = "ONLYOFFICE AI Tools je bil uspešno odstranjen";
+"WorkSuite Office AI Tools successfully uninstalled" = "WorkSuite Office AI Tools je bil uspešno odstranjen";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Digital Signature file. Try opening another file." = "WorkSuite Office ne more odpreti datoteke Digitalni podpis. Poskusi odpreti drugo datoteko.";
+"WorkSuite Office can not open the Digital Signature file. Try opening another file." = "WorkSuite Office ne more odpreti datoteke Digitalni podpis. Poskusi odpreti drugo datoteko.";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Private Key. Try opening another file." = "WorkSuite Office ne more odpreti Zasebnega ključa.. Poskusi odpreti drugo datoteko.";
+"WorkSuite Office can not open the Private Key. Try opening another file." = "WorkSuite Office ne more odpreti Zasebnega ključa.. Poskusi odpreti drugo datoteko.";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE Form Document" = "PDF obrazec ONLYOFFICE";
+"WorkSuite Office Form Document" = "PDF obrazec WorkSuite Office";
 
 /* No comment provided by engineer. */
 "OpenDocument Document Template" = "OpenDocument predloga dokumenta";

@@ -1,6 +1,6 @@
 export default {
   addonTitle: "Πηγαίνετε πέρα από την τυπική επεξεργασία με τα AI Tools",
-  addonDescr: "Εξοικονομήστε χρόνο στο ONLYOFFICE Docs με ένα προαιρετικό επίπεδο AI για έγγραφα, φύλλα, παρουσιάσεις και PDF.",
+  addonDescr: "Εξοικονομήστε χρόνο στο WorkSuite Office με ένα προαιρετικό επίπεδο AI για έγγραφα, φύλλα, παρουσιάσεις και PDF.",
   addonSlide1: "Εργαστείτε γρηγορότερα σε όλους τους επεξεργαστές με AI για κάθε τύπο αρχείου, με προσαρμοσμένους παρόχους, MCP και διαδικτυακή αναζήτηση.",
   addonSlide2: "Δημιουργήστε έγγραφα και φόρμες με λιγότερη προσπάθεια — δημιουργήστε περιεχόμενο, προσθέστε πεδία αυτόματα και δομήστε φόρμες σε λίγα λεπτά.",
   addonSlide3: "Βελτιώστε την ποιότητα του περιεχομένου — ξαναγράψτε κείμενο, μεταφράστε περιεχόμενο, συνοψίστε πληροφορίες και προσαρμόστε τη διατύπωση για κάθε κοινό.",
@@ -13,8 +13,8 @@ export default {
   addonLicenseLink: "Άδεια Χρήσης",
   addonBtnLater: "Ίσως αργότερα",
   addonBtnInstall: "Αποδοχή & Εγκατάσταση",
-  addonDontShow: "Να μην εμφανίζονται τα ONLYOFFICE AI Tools",
-  addonInstallingTitle: "ONLYOFFICE AI Tools",
+  addonDontShow: "Να μην εμφανίζονται τα WorkSuite Office AI Tools",
+  addonInstallingTitle: "WorkSuite Office AI Tools",
   addonInstalling: "Εγκατάσταση...",
   addonDownloading: "Λήψη...",
   addonInstalledTitle: "Επιτυχής εγκατάσταση",

@@ -59,7 +59,7 @@
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="496"/>
         <source>You must restart the application to finish addon installation.</source>
-        <translation>Чтобы завершить установку ONLYOFFICE AI Tools, необходимо перезапустить приложение. Перезапустить сейчас?</translation>
+        <translation>Чтобы завершить установку WorkSuite Office AI Tools, необходимо перезапустить приложение. Перезапустить сейчас?</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1728"/>
@@ -84,8 +84,8 @@
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="473"/>
-        <source>Are you sure you want to uninstall ONLYOFFICE AI Tools?</source>
-        <translation>Вы уверены, что хотите удалить ONLYOFFICE AI Tools?</translation>
+        <source>Are you sure you want to uninstall WorkSuite Office AI Tools?</source>
+        <translation>Вы уверены, что хотите удалить WorkSuite Office AI Tools?</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="478"/>
@@ -94,8 +94,8 @@
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1351"/>
-        <source>ONLYOFFICE AI Tools successfully uninstalled</source>
-        <translation>ONLYOFFICE AI Tools успешно удалён</translation>
+        <source>WorkSuite Office AI Tools successfully uninstalled</source>
+        <translation>WorkSuite Office AI Tools успешно удалён</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1353"/>
@@ -399,12 +399,12 @@
     </message>
     <message>
         <source>OFORM Document</source>
-        <translation type="vanished">Заполняемая онлайн-форма ONLYOFFICE</translation>
+        <translation type="vanished">Заполняемая онлайн-форма WorkSuite Office</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="88"/>
         <source>DOCXF Document</source>
-        <translation>Шаблон формы ONLYOFFICE</translation>
+        <translation>Шаблон формы WorkSuite Office</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="91"/>
@@ -475,8 +475,8 @@
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="87"/>
-        <source>ONLYOFFICE Form Document</source>
-        <translation>PDF-форма ONLYOFFICE</translation>
+        <source>WorkSuite Office Form Document</source>
+        <translation>PDF-форма WorkSuite Office</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="89"/>

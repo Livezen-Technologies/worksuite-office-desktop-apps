@@ -1,6 +1,6 @@
 export default {
   addonTitle: "Lépjen túl a hagyományos szerkesztésen az AI Tools segítségével",
-  addonDescr: "Takarítson meg időt az ONLYOFFICE Docs használatakor egy extra réteggel dokumentumokhoz, táblázatokhoz, prezentációkhoz és PDF-ekhez.",
+  addonDescr: "Takarítson meg időt az WorkSuite Office használatakor egy extra réteggel dokumentumokhoz, táblázatokhoz, prezentációkhoz és PDF-ekhez.",
   addonSlide1: "Dolgozzon gyorsabban minden szerkesztőben, AI-t használva bármilyen típusú fájlhoz, egyéni szolgáltatókkal, MCP-vel és webes kereséssel.",
   addonSlide2: "Készítsen dokumentumokat és űrlapokat kevesebb erőfeszítéssel – generáljon tartalmat, adjon hozzá mezőket automatikusan, és strukturálja az űrlapokat percek alatt.",
   addonSlide3: "Javítsa a tartalom minőségét – írja át a szövegeket, fordítson tartalmat, foglalja össze az információkat, és igazítsa a megfogalmazást bármely közönséghez.",
@@ -13,8 +13,8 @@ export default {
   addonLicenseLink: "Licencszerződés",
   addonBtnLater: "Talán később",
   addonBtnInstall: "Elfogadás és telepítés",
-  addonDontShow: "Ne jelenjen meg többé az ONLYOFFICE AI Tools",
-  addonInstallingTitle: "ONLYOFFICE AI Tools",
+  addonDontShow: "Ne jelenjen meg többé az WorkSuite Office AI Tools",
+  addonInstallingTitle: "WorkSuite Office AI Tools",
   addonInstalling: "Telepítés...",
   addonDownloading: "Letöltés...",
   addonInstalledTitle: "Sikeres telepítés",

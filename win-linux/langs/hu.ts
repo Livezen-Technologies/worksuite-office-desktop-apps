@@ -59,7 +59,7 @@
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="496"/>
         <source>You must restart the application to finish addon installation.</source>
-        <translation>Az ONLYOFFICE AI Tools telepítésének befejezéséhez újra kell indítania az alkalmazást. Újraindítja most?</translation>
+        <translation>Az WorkSuite Office AI Tools telepítésének befejezéséhez újra kell indítania az alkalmazást. Újraindítja most?</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1728"/>
@@ -84,8 +84,8 @@
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="473"/>
-        <source>Are you sure you want to uninstall ONLYOFFICE AI Tools?</source>
-        <translation>Biztosan el szeretné távolítani az ONLYOFFICE AI Tools alkalmazást?</translation>
+        <source>Are you sure you want to uninstall WorkSuite Office AI Tools?</source>
+        <translation>Biztosan el szeretné távolítani az WorkSuite Office AI Tools alkalmazást?</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="478"/>
@@ -94,8 +94,8 @@
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1351"/>
-        <source>ONLYOFFICE AI Tools successfully uninstalled</source>
-        <translation>Az ONLYOFFICE AI Tools sikeresen eltávolítva</translation>
+        <source>WorkSuite Office AI Tools successfully uninstalled</source>
+        <translation>Az WorkSuite Office AI Tools sikeresen eltávolítva</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1353"/>
@@ -383,12 +383,12 @@
     </message>
     <message>
         <source>OFORM Document</source>
-        <translation type="vanished">ONLYOFFICE kitölthető online sablon</translation>
+        <translation type="vanished">WorkSuite Office kitölthető online sablon</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="88"/>
         <source>DOCXF Document</source>
-        <translation>ONLYOFFICE formátum-sablon</translation>
+        <translation>WorkSuite Office formátum-sablon</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="91"/>
@@ -454,8 +454,8 @@
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="87"/>
-        <source>ONLYOFFICE Form Document</source>
-        <translation>PDF űrlap ONLYOFFICE</translation>
+        <source>WorkSuite Office Form Document</source>
+        <translation>PDF űrlap WorkSuite Office</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="89"/>

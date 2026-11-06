@@ -627,7 +627,7 @@ bool CAscApplicationManagerWrapper::processCommonEvent(NSEditorApi::CAscCefMenuE
                 else if (param == L"uninstall")
                 {
                     CMessage msg(mainWindow());
-                    msg.setText(tr("Are you sure you want to uninstall ONLYOFFICE AI Tools?"));
+                    msg.setText(tr("Are you sure you want to uninstall WorkSuite Office AI Tools?"));
                     msg.setIcon(CMessage::Icon::Confirm);
                     msg.setButtons(CMessage::Buttons::YesNo);
                     msg.setDefaultButton(CMessage::DefaultButton::SecondButton);
@@ -785,8 +785,10 @@ bool CAscApplicationManagerWrapper::processCommonEvent(NSEditorApi::CAscCefMenuE
                 static QByteArray _json_to_open;
                 if ( _json_to_open.isEmpty() ) {
                     QString _templates_url{QString::fromStdWString(InputArgs::argument_value(L"--templates-url"))};
+                    // WorkSuite: no online template gallery by default (it was templates.onlyoffice.com);
+                    // --templates-url=<url> still opens one
                     if ( _templates_url.isEmpty() )
-                        _templates_url = "https://templates.onlyoffice.com/?desktop=true";
+                        return true;
 
                     QJsonObject _json_obj{
                         {"portal", _templates_url},
@@ -1532,7 +1534,7 @@ void CAscApplicationManagerWrapper::onDocumentReady(int uid)
                         m_pMainWindow->sendAddonStatusToStartPage();
                         // showUpgradeDialog(m_pMainWindow, UpgradeDialog::Page::Complete);
                         CMessage msg(m_pMainWindow);
-                        msg.setText(tr("ONLYOFFICE AI Tools successfully uninstalled"));
+                        msg.setText(tr("WorkSuite Office AI Tools successfully uninstalled"));
                         msg.setIcon(CMessage::Icon::Info);
                         msg.setButtons({tr("I'll do it later"), tr("Restart now")});
                         msg.setDefaultButton(CMessage::DefaultButton::SecondButton);

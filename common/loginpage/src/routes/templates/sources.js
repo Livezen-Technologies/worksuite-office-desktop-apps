@@ -1,6 +1,6 @@
 /*
  * Where templates come from, and the existing commands that turn one into a new document:
- * - the online gallery (templates.onlyoffice.com "oforms", as the 9.x start page read it) → sdk.openTemplate(url, name)
+ * - an online gallery ("oforms" catalog API; off unless localStorage.templatesdomain names one) → sdk.openTemplate(url, name)
  * - the local template folders (LocalFileTemplates → "onaddtemplates") → create:new {"template": {id, type, path}}
  * - WorkSuite organisation templates (GET /api/files/office/templates) → WorkSuite.createFromTemplate, then open
  */
@@ -14,7 +14,8 @@ const sdk = () => window.AscDesktopEditor;
 const WS = () => window.WorkSuite;
 
 function catalogDomain() {
-  try { return localStorage.templatesdomain || "https://templates.onlyoffice.com"; } catch { return "https://templates.onlyoffice.com"; }
+  // WorkSuite: no default gallery (it was templates.onlyoffice.com)
+  try { return localStorage.templatesdomain || ""; } catch { return ""; }
 }
 
 async function getJson(url, signal) {
@@ -41,6 +42,7 @@ export function loadCatalog(locale, onPage) {
   const ctl = new AbortController();
   const run = (async () => {
     let items = [];
+    if (!catalogDomain()) { onPage({ items, done: true }); return items; }
     for (let page = 1, count = 1; page <= count; page++) {
       const json = await getJson(catalogUrl(catalogDomain(), locale, page, CATALOG_PAGE), ctl.signal);
       const p = parseCatalogPage(json, locale);

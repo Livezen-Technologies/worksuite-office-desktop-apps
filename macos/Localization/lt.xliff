@@ -166,13 +166,13 @@
         <source>OK</source>
         <target>OK</target>
       </trans-unit>
-      <trans-unit id="ONLYOFFICE can not open the Digital Signature file. Try opening another file.">
-        <source>ONLYOFFICE can not open the Digital Signature file. Try opening another file.</source>
-        <target state="translated">ONLYOFFICE negali atidaryti skaitmeninio parašo failo. Bandykite atidaryti kitą failą.</target>
+      <trans-unit id="WorkSuite Office can not open the Digital Signature file. Try opening another file.">
+        <source>WorkSuite Office can not open the Digital Signature file. Try opening another file.</source>
+        <target state="translated">WorkSuite Office negali atidaryti skaitmeninio parašo failo. Bandykite atidaryti kitą failą.</target>
       </trans-unit>
-      <trans-unit id="ONLYOFFICE can not open the Private Key. Try opening another file.">
-        <source>ONLYOFFICE can not open the Private Key. Try opening another file.</source>
-        <target state="translated">ONLYOFFICE negali atidaryti privataus rakto. Bandykite atidaryti kitą failą.</target>
+      <trans-unit id="WorkSuite Office can not open the Private Key. Try opening another file.">
+        <source>WorkSuite Office can not open the Private Key. Try opening another file.</source>
+        <target state="translated">WorkSuite Office negali atidaryti privataus rakto. Bandykite atidaryti kitą failą.</target>
       </trans-unit>
       <trans-unit id="OpenDocument Document Template">
         <source>OpenDocument Document Template</source>
@@ -434,8 +434,8 @@ Bandomasis laikotarpis baigsis po %d dienų. Po šio laikotarpio jūs negalėsit
         <target>Redaguoti įrankių juostą…</target>
       </trans-unit>
       <trans-unit id="1Xt-HY-uBw.title">
-        <source>ONLYOFFICE</source>
-        <target>ONLYOFFICE</target>
+        <source>WorkSuite Office</source>
+        <target>WorkSuite Office</target>
       </trans-unit>
       <trans-unit id="1b7-l0-nxx.title">
         <source>Find</source>
@@ -474,8 +474,8 @@ Bandomasis laikotarpis baigsis po %d dienų. Po šio laikotarpio jūs negalėsit
         <target>Licenzijos Sutikimas</target>
       </trans-unit>
       <trans-unit id="4sb-4s-VLi.title">
-        <source>Quit ONLYOFFICE</source>
-        <target>Išeiti iš ONLYOFFICE</target>
+        <source>Quit WorkSuite Office</source>
+        <target>Išeiti iš WorkSuite Office</target>
       </trans-unit>
       <trans-unit id="5QF-Oa-p0T.title">
         <source>Edit</source>
@@ -486,8 +486,8 @@ Bandomasis laikotarpis baigsis po %d dienų. Po šio laikotarpio jūs negalėsit
         <target>Kopijuoti Stilių</target>
       </trans-unit>
       <trans-unit id="5kV-Vb-QxS.title">
-        <source>About ONLYOFFICE</source>
-        <target>Apie ONLYOFFICE</target>
+        <source>About WorkSuite Office</source>
+        <target>Apie WorkSuite Office</target>
       </trans-unit>
       <trans-unit id="6dh-zS-Vam.title">
         <source>Redo</source>
@@ -622,8 +622,8 @@ Bandomasis laikotarpis baigsis po %d dienų. Po šio laikotarpio jūs negalėsit
         <target>Atidaryti…</target>
       </trans-unit>
       <trans-unit id="IQv-IB-iLA.title">
-        <source>ONLYOFFICE</source>
-        <target>ONLYOFFICE</target>
+        <source>WorkSuite Office</source>
+        <target>WorkSuite Office</target>
       </trans-unit>
       <trans-unit id="J5U-5w-g23.title">
         <source>Justify</source>
@@ -674,8 +674,8 @@ Bandomasis laikotarpis baigsis po %d dienų. Po šio laikotarpio jūs negalėsit
         <target>Pradinis</target>
       </trans-unit>
       <trans-unit id="Olw-nP-bQN.title">
-        <source>Hide ONLYOFFICE</source>
-        <target>Slėpti ONLYOFFICE</target>
+        <source>Hide WorkSuite Office</source>
+        <target>Slėpti WorkSuite Office</target>
       </trans-unit>
       <trans-unit id="OwM-mh-QMV.title">
         <source>Find Previous</source>
@@ -902,8 +902,8 @@ Bandomasis laikotarpis baigsis po %d dienų. Po šio laikotarpio jūs negalėsit
         <target>Formatas</target>
       </trans-unit>
       <trans-unit id="kcg-El-49G.label">
-        <source>ONLYOFFICE</source>
-        <target>ONLYOFFICE</target>
+        <source>WorkSuite Office</source>
+        <target>WorkSuite Office</target>
       </trans-unit>
       <trans-unit id="m0C-e9-0oc.title">
         <source>Cancel</source>
@@ -970,8 +970,8 @@ Bandomasis laikotarpis baigsis po %d dienų. Po šio laikotarpio jūs negalėsit
         <target>Redaguoti tarpus</target>
       </trans-unit>
       <trans-unit id="uQy-DD-JDr.title">
-        <source>ONLYOFFICE</source>
-        <target>ONLYOFFICE</target>
+        <source>WorkSuite Office</source>
+        <target>WorkSuite Office</target>
       </trans-unit>
       <trans-unit id="uRl-iY-unG.title">
         <source>Cut</source>
@@ -1074,8 +1074,8 @@ Bandomasis laikotarpis baigsis po %d dienų. Po šio laikotarpio jūs negalėsit
         <target>Įspėjamasis Langas</target>
       </trans-unit>
       <trans-unit id="CFBundleName">
-        <source>ONLYOFFICE</source>
-        <target>ONLYOFFICE</target>
+        <source>WorkSuite Office</source>
+        <target>WorkSuite Office</target>
       </trans-unit>
       <trans-unit id="NSHumanReadableCopyright">
         <source>Copyright © 2026 Ascensio System SIA. All rights reserved.</source>

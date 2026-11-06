@@ -117,7 +117,7 @@
     switch (nCertValue) {
         case OPEN_SSL_WARNING_ERR: {
             [self showErrorWithTitle:NSLocalizedString(@"Cannot open file of Digital Signature", nil)
-                            subtitle:NSLocalizedString(@"ONLYOFFICE can not open the Digital Signature file. Try opening another file.", nil)];
+                            subtitle:NSLocalizedString(@"WorkSuite Office can not open the Digital Signature file. Try opening another file.", nil)];
             break;
         }
         case OPEN_SSL_WARNING_PASS: {
@@ -156,7 +156,7 @@
     switch (nCertValue) {
         case OPEN_SSL_WARNING_ERR: {
             [self showErrorWithTitle:NSLocalizedString(@"Cannot open file of Private Key", nil)
-                            subtitle:NSLocalizedString(@"ONLYOFFICE can not open the Private Key. Try opening another file.", nil)];
+                            subtitle:NSLocalizedString(@"WorkSuite Office can not open the Private Key. Try opening another file.", nil)];
             break;
         }
         case OPEN_SSL_WARNING_PASS: {

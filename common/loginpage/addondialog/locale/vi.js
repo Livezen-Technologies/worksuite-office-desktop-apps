@@ -1,6 +1,6 @@
 export default {
   addonTitle: "Vượt xa khả năng chỉnh sửa thông thường với AI Tools",
-  addonDescr: "Tiết kiệm thời gian và công sức khi làm việc trong ONLYOFFICE Docs với một lớp bổ sung cho tài liệu, bảng tính, bản trình bày và tệp PDF.",
+  addonDescr: "Tiết kiệm thời gian và công sức khi làm việc trong WorkSuite Office với một lớp bổ sung cho tài liệu, bảng tính, bản trình bày và tệp PDF.",
   addonSlide1: "Làm việc nhanh hơn trên mọi trình soạn thảo với AI, nhà cung cấp tùy chỉnh, MCP và tìm kiếm web.",
   addonSlide2: "Tạo tài liệu và biểu mẫu dễ dàng hơn — tạo nội dung, tự động thêm trường dữ liệu và xây dựng cấu trúc biểu mẫu chỉ trong vài phút.",
   addonSlide3: "Nâng cao chất lượng nội dung — viết lại văn bản, dịch nội dung, tóm tắt thông tin và điều chỉnh cách diễn đạt cho phù hợp với từng đối tượng.",
@@ -13,8 +13,8 @@ export default {
   addonLicenseLink: "Thỏa thuận cấp phép",
   addonBtnLater: "Có thể để sau",
   addonBtnInstall: "Đồng ý và cài đặt",
-  addonDontShow: "Không hiển thị ONLYOFFICE AI Tools nữa",
-  addonInstallingTitle: "ONLYOFFICE AI Tools",
+  addonDontShow: "Không hiển thị WorkSuite Office AI Tools nữa",
+  addonInstallingTitle: "WorkSuite Office AI Tools",
   addonInstalling: "Đang cài đặt...",
   addonDownloading: "Đang tải xuống...",
   addonInstalledTitle: "Đã cài đặt thành công",

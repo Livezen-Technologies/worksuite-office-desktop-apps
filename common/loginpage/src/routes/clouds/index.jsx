@@ -219,7 +219,7 @@ function ConnectDialog(props) {
             </div>
             <Show when={isOnlyoffice()}>
               <button type="button" class="connect-link" onClick={handleCreatePortal}>
-                {t("linkNoPortal", "Don't have an ONLYOFFICE cloud? Create one")}
+                {t("linkNoPortal", "Don't have a WorkSuite Cloud account? Create one")}
               </button>
             </Show>
           </div>

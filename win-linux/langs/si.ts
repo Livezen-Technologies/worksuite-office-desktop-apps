@@ -59,7 +59,7 @@
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="496"/>
         <source>You must restart the application to finish addon installation.</source>
-        <translation>ONLYOFFICE AI Tools ස්ථාපනය සම්පූර්ණ කිරීමට ඔබ යෙදුම නැවත ආරම්භ කළ යුතුය. දැන් නැවත ආරම්භ කරන්නද?</translation>
+        <translation>WorkSuite Office AI Tools ස්ථාපනය සම්පූර්ණ කිරීමට ඔබ යෙදුම නැවත ආරම්භ කළ යුතුය. දැන් නැවත ආරම්භ කරන්නද?</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1728"/>
@@ -80,8 +80,8 @@
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="473"/>
-        <source>Are you sure you want to uninstall ONLYOFFICE AI Tools?</source>
-        <translation>ඔබට ONLYOFFICE AI Tools අස්ථාපනය කිරීමට අවශ්‍ය බව ඔබ ස්ථිරද?</translation>
+        <source>Are you sure you want to uninstall WorkSuite Office AI Tools?</source>
+        <translation>ඔබට WorkSuite Office AI Tools අස්ථාපනය කිරීමට අවශ්‍ය බව ඔබ ස්ථිරද?</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="478"/>
@@ -90,8 +90,8 @@
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1351"/>
-        <source>ONLYOFFICE AI Tools successfully uninstalled</source>
-        <translation>ONLYOFFICE AI Tools සාර්ථකව අස්ථාපනය කරන ලදී</translation>
+        <source>WorkSuite Office AI Tools successfully uninstalled</source>
+        <translation>WorkSuite Office AI Tools සාර්ථකව අස්ථාපනය කරන ලදී</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1353"/>
@@ -471,8 +471,8 @@
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="87"/>
-        <source>ONLYOFFICE Form Document</source>
-        <translation>ONLYOFFICE PDF පෝරමය</translation>
+        <source>WorkSuite Office Form Document</source>
+        <translation>WorkSuite Office PDF පෝරමය</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="89"/>

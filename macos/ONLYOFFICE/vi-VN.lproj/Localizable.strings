@@ -23,7 +23,7 @@
 "Application needs to restart" = "Ứng dụng cần khởi động lại";
 
 /* No comment provided by engineer. */
-"Are you sure you want to uninstall ONLYOFFICE AI Tools?" = "Bạn có chắc chắn muốn gỡ cài đặt ONLYOFFICE AI Tools không?";
+"Are you sure you want to uninstall WorkSuite Office AI Tools?" = "Bạn có chắc chắn muốn gỡ cài đặt WorkSuite Office AI Tools không?";
 
 /* No comment provided by engineer. */
 "Before signing the document, it must be saved." = "Trước khi ký, tài liệu phải được lưu.";
@@ -185,16 +185,16 @@
 "OK" = "OK";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE AI Tools successfully uninstalled" = "ONLYOFFICE AI Tools đã được gỡ cài đặt thành công";
+"WorkSuite Office AI Tools successfully uninstalled" = "WorkSuite Office AI Tools đã được gỡ cài đặt thành công";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Digital Signature file. Try opening another file." = "WorkSuite Office không thể mở chữ ký điện tử. Hãy thử tập tin khác.";
+"WorkSuite Office can not open the Digital Signature file. Try opening another file." = "WorkSuite Office không thể mở chữ ký điện tử. Hãy thử tập tin khác.";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Private Key. Try opening another file." = "WorkSuite Office không thể mở mã khóa riêng. Hãy thử mở tập tin khác.";
+"WorkSuite Office can not open the Private Key. Try opening another file." = "WorkSuite Office không thể mở mã khóa riêng. Hãy thử mở tập tin khác.";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE Form Document" = "Mẫu PDF ONLYOFFICE";
+"WorkSuite Office Form Document" = "Mẫu PDF WorkSuite Office";
 
 /* No comment provided by engineer. */
 "OpenDocument Document Template" = "OpenDocument Mẫu văn bản";

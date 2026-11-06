@@ -1,6 +1,6 @@
 export default {
   addonTitle: "AI Tools ile standart düzenlemenin ötesine geçin",
-  addonDescr: "ONLYOFFICE Docs'ta belgeler, elektronik tablolar, sunumlar ve PDF dosyaları için ek bir katmanla çalışırken zaman ve emek tasarrufu yapın.",
+  addonDescr: "WorkSuite Office'ta belgeler, elektronik tablolar, sunumlar ve PDF dosyaları için ek bir katmanla çalışırken zaman ve emek tasarrufu yapın.",
   addonSlide1: "Özel sağlayıcılar, MCP ve web araması ile her tür dosyada yapay zeka kullanarak tüm editörlerde daha hızlı çalışın.",
   addonSlide2: "Belge ve formları daha az emekle oluşturun – içerik üretin, alanları otomatik olarak ekleyin ve formları dakikalar içinde yapılandırın.",
   addonSlide3: "İçerik kalitesini artırın – metni yeniden yazın, içeriği çevirin, bilgileri özetleyin ve ifadeleri her türlü hedef kitleye uyarlayın.",
@@ -13,8 +13,8 @@ export default {
   addonLicenseLink: "Lisans Sözleşmesi",
   addonBtnLater: "Belki sonra",
   addonBtnInstall: "Kabul Et ve Yükle",
-  addonDontShow: "Bana ONLYOFFICE AI Tools'u bir daha gösterme",
-  addonInstallingTitle: "ONLYOFFICE AI Tools",
+  addonDontShow: "Bana WorkSuite Office AI Tools'u bir daha gösterme",
+  addonInstallingTitle: "WorkSuite Office AI Tools",
   addonInstalling: "Yükleniyor...",
   addonDownloading: "İndiriliyor...",
   addonInstalledTitle: "Başarıyla yüklendi",

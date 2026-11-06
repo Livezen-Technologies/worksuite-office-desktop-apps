@@ -59,7 +59,7 @@
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="496"/>
         <source>You must restart the application to finish addon installation.</source>
-        <translation>Lai pabeigtu ONLYOFFICE AI Tools instalāciju, programma ir jārestartē. Vai restartēt tagad?</translation>
+        <translation>Lai pabeigtu WorkSuite Office AI Tools instalāciju, programma ir jārestartē. Vai restartēt tagad?</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1728"/>
@@ -84,8 +84,8 @@
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="473"/>
-        <source>Are you sure you want to uninstall ONLYOFFICE AI Tools?</source>
-        <translation>Vai esat pārliecināts, ka vēlaties atinstalēt ONLYOFFICE AI Tools?</translation>
+        <source>Are you sure you want to uninstall WorkSuite Office AI Tools?</source>
+        <translation>Vai esat pārliecināts, ka vēlaties atinstalēt WorkSuite Office AI Tools?</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="478"/>
@@ -94,8 +94,8 @@
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1351"/>
-        <source>ONLYOFFICE AI Tools successfully uninstalled</source>
-        <translation>ONLYOFFICE AI Tools veiksmīgi atinstalēts</translation>
+        <source>WorkSuite Office AI Tools successfully uninstalled</source>
+        <translation>WorkSuite Office AI Tools veiksmīgi atinstalēts</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1353"/>
@@ -383,12 +383,12 @@
     </message>
     <message>
         <source>OFORM Document</source>
-        <translation type="vanished">ONLYOFFICE aizpildāmā tiešsaistes veidlapa</translation>
+        <translation type="vanished">WorkSuite Office aizpildāmā tiešsaistes veidlapa</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="88"/>
         <source>DOCXF Document</source>
-        <translation>ONLYOFFICE veidlapas veidne</translation>
+        <translation>WorkSuite Office veidlapas veidne</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="91"/>
@@ -454,8 +454,8 @@
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="87"/>
-        <source>ONLYOFFICE Form Document</source>
-        <translation>ONLYOFFICE PDF veidlapa</translation>
+        <source>WorkSuite Office Form Document</source>
+        <translation>WorkSuite Office PDF veidlapa</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="89"/>

@@ -23,7 +23,7 @@
 "Application needs to restart" = "Toepassing moet opnieuw worden gestart";
 
 /* No comment provided by engineer. */
-"Are you sure you want to uninstall ONLYOFFICE AI Tools?" = "Weet u zeker dat u ONLYOFFICE AI Tools wilt verwijderen?";
+"Are you sure you want to uninstall WorkSuite Office AI Tools?" = "Weet u zeker dat u WorkSuite Office AI Tools wilt verwijderen?";
 
 /* No comment provided by engineer. */
 "Before signing the document, it must be saved." = "Voordat het document wordt ondertekend, moet het worden opgeslagen.";
@@ -185,16 +185,16 @@
 "OK" = "OK";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE AI Tools successfully uninstalled" = "ONLYOFFICE AI Tools is succesvol verwijderd";
+"WorkSuite Office AI Tools successfully uninstalled" = "WorkSuite Office AI Tools is succesvol verwijderd";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Digital Signature file. Try opening another file." = "WorkSuite Office kan het bestand met de Digitale Handtekening niet openen. Probeer een ander bestand te openen.";
+"WorkSuite Office can not open the Digital Signature file. Try opening another file." = "WorkSuite Office kan het bestand met de Digitale Handtekening niet openen. Probeer een ander bestand te openen.";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Private Key. Try opening another file." = "WorkSuite Office kan de Privésleutel niet openen. Probeer een ander bestand te openen.";
+"WorkSuite Office can not open the Private Key. Try opening another file." = "WorkSuite Office kan de Privésleutel niet openen. Probeer een ander bestand te openen.";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE Form Document" = "ONLYOFFICE PDF-formulier";
+"WorkSuite Office Form Document" = "WorkSuite Office PDF-formulier";
 
 /* No comment provided by engineer. */
 "OpenDocument Document Template" = "OpenDocument Document Sjabloon";

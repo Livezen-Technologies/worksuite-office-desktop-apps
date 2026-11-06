@@ -23,7 +23,7 @@
 "Application needs to restart" = "Η εφαρμογή χρειάζεται επανεκκίνηση";
 
 /* No comment provided by engineer. */
-"Are you sure you want to uninstall ONLYOFFICE AI Tools?" = "Είστε βέβαιοι ότι θέλετε να απεγκαταστήσετε το ONLYOFFICE AI Tools;";
+"Are you sure you want to uninstall WorkSuite Office AI Tools?" = "Είστε βέβαιοι ότι θέλετε να απεγκαταστήσετε το WorkSuite Office AI Tools;";
 
 /* No comment provided by engineer. */
 "Before signing the document, it must be saved." = "Πριν υπογράψετε το έγγραφο, πρέπει να αποθηκευτεί.";
@@ -185,16 +185,16 @@
 "OK" = "Εντάξει";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE AI Tools successfully uninstalled" = "Το ONLYOFFICE AI Tools απεγκαταστάθηκε επιτυχώς";
+"WorkSuite Office AI Tools successfully uninstalled" = "Το WorkSuite Office AI Tools απεγκαταστάθηκε επιτυχώς";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Digital Signature file. Try opening another file." = "Το ONLYOFFICE δεν μπορεί να ανοίξει το αρχείο ψηφιακής υπογραφής. Δοκιμάστε να ανοίξετε ένα άλλο αρχείο.";
+"WorkSuite Office can not open the Digital Signature file. Try opening another file." = "Το WorkSuite Office δεν μπορεί να ανοίξει το αρχείο ψηφιακής υπογραφής. Δοκιμάστε να ανοίξετε ένα άλλο αρχείο.";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Private Key. Try opening another file." = "Το ONLYOFFICE δεν μπορεί να ανοίξει το ιδιωτικό κλειδί. Δοκιμάστε να ανοίξετε ένα άλλο αρχείο.";
+"WorkSuite Office can not open the Private Key. Try opening another file." = "Το WorkSuite Office δεν μπορεί να ανοίξει το ιδιωτικό κλειδί. Δοκιμάστε να ανοίξετε ένα άλλο αρχείο.";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE Form Document" = "Φόρμα PDF ONLYOFFICE";
+"WorkSuite Office Form Document" = "Φόρμα PDF WorkSuite Office";
 
 /* No comment provided by engineer. */
 "OpenDocument Document Template" = "Πρότυπο εγγράφου OpenDocument";

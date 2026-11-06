@@ -59,7 +59,7 @@
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="496"/>
         <source>You must restart the application to finish addon installation.</source>
-        <translation>Norėdami užbaigti ONLYOFFICE AI Tools diegimą, turite iš naujo paleisti programą. Ar norite paleisti iš naujo dabar?</translation>
+        <translation>Norėdami užbaigti WorkSuite Office AI Tools diegimą, turite iš naujo paleisti programą. Ar norite paleisti iš naujo dabar?</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1728"/>
@@ -84,8 +84,8 @@
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="473"/>
-        <source>Are you sure you want to uninstall ONLYOFFICE AI Tools?</source>
-        <translation>Ar tikrai norite pašalinti ONLYOFFICE AI Tools?</translation>
+        <source>Are you sure you want to uninstall WorkSuite Office AI Tools?</source>
+        <translation>Ar tikrai norite pašalinti WorkSuite Office AI Tools?</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="478"/>
@@ -94,8 +94,8 @@
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1351"/>
-        <source>ONLYOFFICE AI Tools successfully uninstalled</source>
-        <translation>ONLYOFFICE AI Tools sėkmingai pašalintas</translation>
+        <source>WorkSuite Office AI Tools successfully uninstalled</source>
+        <translation>WorkSuite Office AI Tools sėkmingai pašalintas</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1353"/>
@@ -383,12 +383,12 @@
     </message>
     <message>
         <source>OFORM Document</source>
-        <translation type="vanished">ONLYOFFICE Užpildoma Internetinė Anketa</translation>
+        <translation type="vanished">WorkSuite Office Užpildoma Internetinė Anketa</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="88"/>
         <source>DOCXF Document</source>
-        <translation>ONLYOFFICE Anketos Šablonas</translation>
+        <translation>WorkSuite Office Anketos Šablonas</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="91"/>
@@ -454,8 +454,8 @@
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="87"/>
-        <source>ONLYOFFICE Form Document</source>
-        <translation>ONLYOFFICE PDF forma</translation>
+        <source>WorkSuite Office Form Document</source>
+        <translation>WorkSuite Office PDF forma</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="89"/>

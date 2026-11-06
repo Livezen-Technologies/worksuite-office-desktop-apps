@@ -67,7 +67,7 @@
   #include "../version.h"
 #endif
 
-#define AI_TOOLS_CAPTION "ONLYOFFICE AI Tools"
+#define AI_TOOLS_CAPTION "WorkSuite Office AI Tools"
 
 using namespace std::placeholders;
 using namespace NSEditorApi;

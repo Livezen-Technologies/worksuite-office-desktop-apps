@@ -59,7 +59,7 @@
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="496"/>
         <source>You must restart the application to finish addon installation.</source>
-        <translation>ທ່ານຕ້ອງເປີດແອັບພລິເຄຊັນຄືນໃໝ່ເພື່ອສຳເລັດການຕິດຕັ້ງ ONLYOFFICE AI Tools. ຕ້ອງການເປີດຄືນໃໝ່ດຽວນີ້ບໍ?</translation>
+        <translation>ທ່ານຕ້ອງເປີດແອັບພລິເຄຊັນຄືນໃໝ່ເພື່ອສຳເລັດການຕິດຕັ້ງ WorkSuite Office AI Tools. ຕ້ອງການເປີດຄືນໃໝ່ດຽວນີ້ບໍ?</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1728"/>
@@ -84,8 +84,8 @@
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="473"/>
-        <source>Are you sure you want to uninstall ONLYOFFICE AI Tools?</source>
-        <translation>ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການຖອດຖອນ ONLYOFFICE AI Tools?</translation>
+        <source>Are you sure you want to uninstall WorkSuite Office AI Tools?</source>
+        <translation>ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການຖອດຖອນ WorkSuite Office AI Tools?</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="478"/>
@@ -94,8 +94,8 @@
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1351"/>
-        <source>ONLYOFFICE AI Tools successfully uninstalled</source>
-        <translation>ONLYOFFICE AI Tools ຖືກຖອດຖອນສໍາເລັດແລ້ວ</translation>
+        <source>WorkSuite Office AI Tools successfully uninstalled</source>
+        <translation>WorkSuite Office AI Tools ຖືກຖອດຖອນສໍາເລັດແລ້ວ</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1353"/>
@@ -379,12 +379,12 @@
     </message>
     <message>
         <source>OFORM Document</source>
-        <translation type="vanished">ສາມາດຕື່ມແບບຟອມ ອອນລາຍ ໄດ້ ONLYOFFICE</translation>
+        <translation type="vanished">ສາມາດຕື່ມແບບຟອມ ອອນລາຍ ໄດ້ WorkSuite Office</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="88"/>
         <source>DOCXF Document</source>
-        <translation>ຮູບແບບຂອງ ONLYOFFICE</translation>
+        <translation>ຮູບແບບຂອງ WorkSuite Office</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="91"/>
@@ -455,8 +455,8 @@
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="87"/>
-        <source>ONLYOFFICE Form Document</source>
-        <translation>ONLYOFFICE ແບບຟອມ PDF</translation>
+        <source>WorkSuite Office Form Document</source>
+        <translation>WorkSuite Office ແບບຟອມ PDF</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="89"/>

@@ -8,9 +8,9 @@ COMPANY_NAME_LOW = $(shell echo $(COMPANY_NAME) | tr A-Z a-z)
 PRODUCT_NAME_LOW = $(shell echo $(PRODUCT_NAME_SHORT) | tr A-Z a-z)
 
 PUBLISHER_NAME ?= Ascensio System SIA
-PUBLISHER_URL ?= http://onlyoffice.com
-SUPPORT_URL ?= http://support.onlyoffice.com
-SUPPORT_MAIL ?= support@onlyoffice.com
+PUBLISHER_URL ?= https://worksuitecloud.com
+SUPPORT_URL ?= https://worksuitecloud.com/support
+SUPPORT_MAIL ?= support@worksuitecloud.com
 SCHEME_HANDLER ?= oo-office
 
 PRODUCT_VERSION ?= 0.0.0

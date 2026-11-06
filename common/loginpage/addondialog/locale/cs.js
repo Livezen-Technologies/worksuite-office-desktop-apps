@@ -1,6 +1,6 @@
 export default {
   addonTitle: "Posuňte úpravy dokumentů na novou úroveň s AI Tools",
-  addonDescr: "Ušetřete čas a úsilí při práci v ONLYOFFICE Docs s další vrstvou pro dokumenty, tabulky, prezentace a soubory PDF.",
+  addonDescr: "Ušetřete čas a úsilí při práci v WorkSuite Office s další vrstvou pro dokumenty, tabulky, prezentace a soubory PDF.",
   addonSlide1: "Pracujte rychleji ve všech editorech pomocí AI v souborech jakéhokoli typu, s vlastními poskytovateli, MCP a webovým vyhledáváním.",
   addonSlide2: "Vytvářejte dokumenty a formuláře s menší námahou — generujte obsah, automaticky přidávejte pole a strukturujte formuláře během několika minut.",
   addonSlide3: "Zlepšete kvalitu obsahu — přepisujte text, překládejte obsah, shrnujte informace a upravujte formulace pro jakékoli publikum.",
@@ -13,8 +13,8 @@ export default {
   addonLicenseLink: "Licenční smlouvou",
   addonBtnLater: "Možná později",
   addonBtnInstall: "Přijmout a nainstalovat",
-  addonDontShow: "Nezobrazovat mi ONLYOFFICE AI Tools",
-  addonInstallingTitle: "ONLYOFFICE AI Tools",
+  addonDontShow: "Nezobrazovat mi WorkSuite Office AI Tools",
+  addonInstallingTitle: "WorkSuite Office AI Tools",
   addonInstalling: "Instalace...",
   addonDownloading: "Stahování...",
   addonInstalledTitle: "Úspěšně nainstalováno",

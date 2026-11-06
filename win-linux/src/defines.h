@@ -72,7 +72,7 @@
 
 #define URL_SITE                "https://worksuitecloud.com"
 #define URL_SOURCE_CODE         "https://github.com/Livezen-Technologies/worksuite-office"
-#define URL_SIGNUP              "https://onlyoffice.com/registration.aspx?desktop=true"
+#define URL_SIGNUP              "https://worksuitecloud.com/?desktop=true"
 
 #define GET_REGISTRY_USER(variable) \
     QSettings variable(QSettings::NativeFormat, QSettings::UserScope, REG_GROUP_KEY, REG_APP_NAME);
@@ -86,8 +86,8 @@
 #define ACTIONPANEL_ACTIVATE    ACTIONPANEL_CONNECT + 1
 
 #define URL_AGPL "https://www.gnu.org/licenses/agpl-3.0.en.html"
-#define DOWNLOAD_PAGE "https://www.onlyoffice.com/en/download-desktop.aspx"
-#define RELEASE_NOTES "https://github.com/ONLYOFFICE/DesktopEditors/blob/master/CHANGELOG.md"
+#define DOWNLOAD_PAGE "https://download.worksuitecloud.com"
+#define RELEASE_NOTES "https://github.com/Livezen-Technologies/worksuite-office/blob/main/CHANGELOG.md"
 
 // Enterprise addon (Business Source License)
 #define URL_BSL_LICENSE         "https://docspace.onlyoffice.com/s/b_rVPpqtF-pqKBr"

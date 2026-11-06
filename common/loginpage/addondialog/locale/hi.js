@@ -1,6 +1,6 @@
 export default {
   addonTitle: "AI टूल्स के साथ मानक एडिटिंग से आगे बढ़ें",
-  addonDescr: "ONLYOFFICE Docs में दस्तावेज़, स्प्रेडशीट, प्रस्तुतियों और PDF के लिए AI लेयर के साथ समय बचाएं।",
+  addonDescr: "WorkSuite Office में दस्तावेज़, स्प्रेडशीट, प्रस्तुतियों और PDF के लिए AI लेयर के साथ समय बचाएं।",
   addonSlide1: "सभी एडिटर में तेज़ी से काम करें — कस्टम प्रोवाइडर, MCP और वेब सर्च के साथ दस्तावेज़ों, स्प्रेडशीट, प्रस्तुतियों और PDF में AI का उपयोग करें।",
   addonSlide2: "कम प्रयास में दस्तावेज़ और फ़ॉर्म बनाएं — कंटेंट जनरेट करें, फ़ील्ड स्वचालित रूप से जोड़ें, और मिनटों में फ़ॉर्म तैयार करें।",
   addonSlide3: "कंटेंट की गुणवत्ता सुधारें — टेक्स्ट फिर से लिखें, कंटेंट का अनुवाद करें, जानकारी को संक्षेप में प्रस्तुत करें, और किसी भी दर्शक के लिए भाषा को अनुकूलित करें।",
@@ -13,8 +13,8 @@ export default {
   addonLicenseLink: "लाइसेंस अनुबंध",
   addonBtnLater: "शायद बाद में",
   addonBtnInstall: "स्वीकार करें और इंस्टॉल करें",
-  addonDontShow: "मुझे ONLYOFFICE AI Tools न दिखाएं",
-  addonInstallingTitle: "ONLYOFFICE AI Tools",
+  addonDontShow: "मुझे WorkSuite Office AI Tools न दिखाएं",
+  addonInstallingTitle: "WorkSuite Office AI Tools",
   addonInstalling: "इंस्टॉल हो रहा है...",
   addonDownloading: "डाउनलोड हो रहा है...",
   addonInstalledTitle: "सफलतापूर्वक इंस्टॉल हुआ",

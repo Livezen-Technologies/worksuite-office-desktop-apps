@@ -1,6 +1,6 @@
 export default {
   addonTitle: "ກ້າວໄປໄກກວ່າການແກ້ໄຂແບບມາດຕະຖານດ້ວຍ AI Tools",
-  addonDescr: "ປະຢັດເວລາ ແລະ ເຮັດວຽກຢ່າງສະຫຼາດຂຶ້ນໃນ ONLYOFFICE Docs ດ້ວຍ AI ທີ່ເປັນຕົວເລືອກສຳລັບເອກະສານ, ຕາຕະລາງ, ການນຳສະເໜີ ແລະ PDF.",
+  addonDescr: "ປະຢັດເວລາ ແລະ ເຮັດວຽກຢ່າງສະຫຼາດຂຶ້ນໃນ WorkSuite Office ດ້ວຍ AI ທີ່ເປັນຕົວເລືອກສຳລັບເອກະສານ, ຕາຕະລາງ, ການນຳສະເໜີ ແລະ PDF.",
   addonSlide1: "ເຮັດວຽກໄວຂຶ້ນໃນທຸກຕົວແກ້ໄຂໂດຍໃຊ້ AI ໃນໄຟລ໌ທຸກປະເພດ, ດ້ວຍຜູ້ໃຫ້ບໍລິການທີ່ກຳນົດເອງ, MCP ແລະ ການຄົ້ນຫາເວັບ.",
   addonSlide2: "ສ້າງເອກະສານ ແລະ ແບບຟອມໄດ້ງ່າຍຂຶ້ນ — ສ້າງເນື້ອຫາ, ເພີ່ມຊ່ອງຂໍ້ມູນອັດຕະໂນມັດ ແລະ ຈັດໂຄງສ້າງແບບຟອມພາຍໃນສອງສາມນາທີ.",
   addonSlide3: "ປັບປຸງຄຸນນະພາບຂອງເນື້ອຫາ — ຂຽນຂໍ້ຄວາມໃໝ່, ແປເນື້ອຫາ, ສະຫຼຸບຂໍ້ມູນ ແລະ ປັບຄຳສັບໃຫ້ເໝາະສົມກັບຜູ້ອ່ານທຸກກຸ່ມ.",
@@ -13,8 +13,8 @@ export default {
   addonLicenseLink: "ຂໍ້ຕົກລົງອະນຸຍາດ",
   addonBtnLater: "ອາດຈະໄວ້ພາຍຫຼັງ",
   addonBtnInstall: "ຍອມຮັບ ແລະ ຕິດຕັ້ງ",
-  addonDontShow: "ບໍ່ຕ້ອງສະແດງ ONLYOFFICE AI Tools ໃຫ້ຂ້ອຍເບິ່ງອີກ",
-  addonInstallingTitle: "ONLYOFFICE AI Tools",
+  addonDontShow: "ບໍ່ຕ້ອງສະແດງ WorkSuite Office AI Tools ໃຫ້ຂ້ອຍເບິ່ງອີກ",
+  addonInstallingTitle: "WorkSuite Office AI Tools",
   addonInstalling: "ກຳລັງຕິດຕັ້ງ...",
   addonDownloading: "ກຳລັງດາວໂຫລດ...",
   addonInstalledTitle: "ຕິດຕັ້ງສຳເລັດແລ້ວ",

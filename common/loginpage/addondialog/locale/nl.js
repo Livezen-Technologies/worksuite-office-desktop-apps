@@ -1,6 +1,6 @@
 export default {
   addonTitle: "Ga verder dan standaard bewerken met AI Tools",
-  addonDescr: "Bespaar tijd en werk slimmer in ONLYOFFICE Docs met een optionele AI-laag voor documenten, spreadsheets, presentaties en PDF's.",
+  addonDescr: "Bespaar tijd en werk slimmer in WorkSuite Office met een optionele AI-laag voor documenten, spreadsheets, presentaties en PDF's.",
   addonSlide1: "Werk sneller in alle editors door AI te gebruiken in bestanden van elk type, met aangepaste providers, MCP en zoeken op het web.",
   addonSlide2: "Maak documenten en formulieren met minder moeite — genereer inhoud, voeg automatisch velden toe en structureer formulieren in enkele minuten.",
   addonSlide3: "Verbeter de kwaliteit van inhoud — herschrijf tekst, vertaal inhoud, vat informatie samen en pas de formulering aan voor elke doelgroep.",
@@ -13,8 +13,8 @@ export default {
   addonLicenseLink: "Licentieovereenkomst",
   addonBtnLater: "Misschien later",
   addonBtnInstall: "Accepteren en installeren",
-  addonDontShow: "Toon mij ONLYOFFICE AI Tools niet meer",
-  addonInstallingTitle: "ONLYOFFICE AI Tools",
+  addonDontShow: "Toon mij WorkSuite Office AI Tools niet meer",
+  addonInstallingTitle: "WorkSuite Office AI Tools",
   addonInstalling: "Installeren...",
   addonDownloading: "Downloaden...",
   addonInstalledTitle: "Installatie voltooid",

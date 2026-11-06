@@ -23,7 +23,7 @@
 "Application needs to restart" = "Հավելվածը պետք է վերագործարկվի";
 
 /* No comment provided by engineer. */
-"Are you sure you want to uninstall ONLYOFFICE AI Tools?" = "Վստա՞հ եք, որ ցանկանում եք տեղահանել ONLYOFFICE AI Tools-ը:";
+"Are you sure you want to uninstall WorkSuite Office AI Tools?" = "Վստա՞հ եք, որ ցանկանում եք տեղահանել WorkSuite Office AI Tools-ը:";
 
 /* No comment provided by engineer. */
 "Before signing the document, it must be saved." = "Այս փաստաթուղթը ստորագրելուց առաջ այն պետք է պահպանվի։";
@@ -182,16 +182,16 @@
 "OK" = "Լավ";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE AI Tools successfully uninstalled" = "ONLYOFFICE AI Tools-ը հաջողությամբ տեղահանվեց";
+"WorkSuite Office AI Tools successfully uninstalled" = "WorkSuite Office AI Tools-ը հաջողությամբ տեղահանվեց";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Digital Signature file. Try opening another file." = "WorkSuite Office-ը չի կարող բացել Թվային ստորագրության ֆայլը։ Փորձեք բացել այլ ֆայլ։";
+"WorkSuite Office can not open the Digital Signature file. Try opening another file." = "WorkSuite Office-ը չի կարող բացել Թվային ստորագրության ֆայլը։ Փորձեք բացել այլ ֆայլ։";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Private Key. Try opening another file." = "WorkSuite Office-ի չի կարող բացել Գաղտնի բանալին։ Փորձեք բացել այլ ֆայլ։";
+"WorkSuite Office can not open the Private Key. Try opening another file." = "WorkSuite Office-ի չի կարող բացել Գաղտնի բանալին։ Փորձեք բացել այլ ֆայլ։";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE Form Document" = "ONLYOFFICE PDF Ֆորմ";
+"WorkSuite Office Form Document" = "WorkSuite Office PDF Ֆորմ";
 
 /* No comment provided by engineer. */
 "OpenDocument Document Template" = "OpenDocument փաստաթղթի ձևանմուշ";

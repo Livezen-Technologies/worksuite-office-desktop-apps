@@ -23,7 +23,7 @@
 "Application needs to restart" = "एप्लिकेशन को पुनः आरंभ करना आवश्यक है";
 
 /* No comment provided by engineer. */
-"Are you sure you want to uninstall ONLYOFFICE AI Tools?" = "क्या आप सुनिश्चित हैं कि आप ONLYOFFICE AI Tools को अनइंस्टॉल करना चाहते हैं?";
+"Are you sure you want to uninstall WorkSuite Office AI Tools?" = "क्या आप सुनिश्चित हैं कि आप WorkSuite Office AI Tools को अनइंस्टॉल करना चाहते हैं?";
 
 /* No comment provided by engineer. */
 "Before signing the document, it must be saved." = "इस दस्तावेज़ पर हस्ताक्षर करने से पहले, इसे सहेजा जाना चाहिए।";
@@ -182,16 +182,16 @@
 "OK" = "ठीक है";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE AI Tools successfully uninstalled" = "ONLYOFFICE AI Tools सफलतापूर्वक अनइंस्टॉल हो गया";
+"WorkSuite Office AI Tools successfully uninstalled" = "WorkSuite Office AI Tools सफलतापूर्वक अनइंस्टॉल हो गया";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Digital Signature file. Try opening another file." = "ओनलीऑफिस डिजिटल हस्ताक्षर की फ़ाइल को नहीं खोल सकता है। किसी अन्य फ़ाइल को खोलने का प्रयास करें।";
+"WorkSuite Office can not open the Digital Signature file. Try opening another file." = "ओनलीऑफिस डिजिटल हस्ताक्षर की फ़ाइल को नहीं खोल सकता है। किसी अन्य फ़ाइल को खोलने का प्रयास करें।";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE can not open the Private Key. Try opening another file." = "ओनलीऑफिस निजी कुंजी को नहीं खोल सकता है। किसी अन्य फ़ाइल को खोलने का प्रयास करें।";
+"WorkSuite Office can not open the Private Key. Try opening another file." = "ओनलीऑफिस निजी कुंजी को नहीं खोल सकता है। किसी अन्य फ़ाइल को खोलने का प्रयास करें।";
 
 /* No comment provided by engineer. */
-"ONLYOFFICE Form Document" = "पीडीएफ फॉर्म ONLYOFFICE";
+"WorkSuite Office Form Document" = "पीडीएफ फॉर्म WorkSuite Office";
 
 /* No comment provided by engineer. */
 "OpenDocument Document Template" = "ओपनडॉक्यूमेंट दस्तावेज़ टेम्पलेट";

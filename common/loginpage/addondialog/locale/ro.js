@@ -1,7 +1,7 @@
 export default {
   addonTitle: "Mergeți dincolo de editarea standard cu AI Tools",
   addonDescr:
-    "Economisiți timp și efort lucrând în ONLYOFFICE Docs cu un nivel suplimentar pentru documente, foi de calcul, prezentări și fișiere PDF.",
+    "Economisiți timp și efort lucrând în WorkSuite Office cu un nivel suplimentar pentru documente, foi de calcul, prezentări și fișiere PDF.",
   addonSlide1:
     "Lucrați mai rapid în toate editorele folosind AI în fișiere de orice tip, cu furnizori personalizați, MCP și căutare pe web.",
   addonSlide2:
@@ -20,8 +20,8 @@ export default {
   addonLicenseLink: "Acordul de licență",
   addonBtnLater: "Poate mai târziu",
   addonBtnInstall: "Accept și instalează",
-  addonDontShow: "Nu mă mai afișa ONLYOFFICE AI Tools",
-  addonInstallingTitle: "ONLYOFFICE AI Tools",
+  addonDontShow: "Nu mă mai afișa WorkSuite Office AI Tools",
+  addonInstallingTitle: "WorkSuite Office AI Tools",
   addonInstalling: "Se instalează...",
   addonDownloading: "Se descarcă...",
   addonInstalledTitle: "Instalat cu succes",

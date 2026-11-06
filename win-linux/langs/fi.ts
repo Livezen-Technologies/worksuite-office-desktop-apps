@@ -59,7 +59,7 @@
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="496"/>
         <source>You must restart the application to finish addon installation.</source>
-        <translation>Sinun täytyy käynnistää sovellus uudelleen, jotta ONLYOFFICE AI Tools -asennus valmistuu. Käynnistetäänkö uudelleen nyt?</translation>
+        <translation>Sinun täytyy käynnistää sovellus uudelleen, jotta WorkSuite Office AI Tools -asennus valmistuu. Käynnistetäänkö uudelleen nyt?</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1728"/>
@@ -84,8 +84,8 @@
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="473"/>
-        <source>Are you sure you want to uninstall ONLYOFFICE AI Tools?</source>
-        <translation>Haluatko varmasti poistaa ONLYOFFICE AI Tools -ohjelman asennuksen?</translation>
+        <source>Are you sure you want to uninstall WorkSuite Office AI Tools?</source>
+        <translation>Haluatko varmasti poistaa WorkSuite Office AI Tools -ohjelman asennuksen?</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="478"/>
@@ -94,8 +94,8 @@
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1351"/>
-        <source>ONLYOFFICE AI Tools successfully uninstalled</source>
-        <translation>ONLYOFFICE AI Tools poistettiin onnistuneesti</translation>
+        <source>WorkSuite Office AI Tools successfully uninstalled</source>
+        <translation>WorkSuite Office AI Tools poistettiin onnistuneesti</translation>
     </message>
     <message>
         <location filename="../src/cascapplicationmanagerwrapper.cpp" line="1353"/>
@@ -383,12 +383,12 @@
     </message>
     <message>
         <source>OFORM Document</source>
-        <translation type="vanished">ONLYOFFICE täytettävä online-lomake</translation>
+        <translation type="vanished">WorkSuite Office täytettävä online-lomake</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="88"/>
         <source>DOCXF Document</source>
-        <translation>ONLYOFFICE-asiakirjalomakemalli</translation>
+        <translation>WorkSuite Office-asiakirjalomakemalli</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="91"/>
@@ -454,8 +454,8 @@
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="87"/>
-        <source>ONLYOFFICE Form Document</source>
-        <translation>ONLYOFFICE PDF-lomake</translation>
+        <source>WorkSuite Office Form Document</source>
+        <translation>WorkSuite Office PDF-lomake</translation>
     </message>
     <message>
         <location filename="../src/components/cfiledialog.cpp" line="89"/>

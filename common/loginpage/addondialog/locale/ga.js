@@ -1,6 +1,6 @@
 export default {
   addonTitle: "Téigh níos faide ná an eagarthóireacht chaighdeánach le Uirlisí AI",
-  addonDescr: "Sábháil am agus iarracht agus tú ag obair in ONLYOFFICE Docs le ciseal breise do dhoiciméid, scarbhileoga, láithriúcháin agus comhaid PDF.",
+  addonDescr: "Sábháil am agus iarracht agus tú ag obair in WorkSuite Office le ciseal breise do dhoiciméid, scarbhileoga, láithriúcháin agus comhaid PDF.",
   addonSlide1: "Oibrigh níos tapúla i ngach eagarthóir trí AI a úsáid i gcomhaid de chineál ar bith, le soláthraithe saincheaptha, MCP agus cuardach gréasáin.",
   addonSlide2: "Cruthaigh doiciméid agus foirmeacha le níos lú iarrachta — gin ábhar, cuir réimsí leis go huathoibríoch, agus struchtúraigh foirmeacha i gceann nóiméad.",
   addonSlide3: "Feabhsaigh cáilíocht an ábhair — athscríobh téacs, aistrigh ábhar, achoimrigh faisnéis, agus cuir an friotal in oiriúint do lucht éisteachta ar bith.",
@@ -13,8 +13,8 @@ export default {
   addonLicenseLink: "Comhaontú Ceadúnais",
   addonBtnLater: "B'fhéidir níos déanaí",
   addonBtnInstall: "Glac Leis agus Suiteáil",
-  addonDontShow: "Ná taispeáin ONLYOFFICE AI Tools dom níos mó",
-  addonInstallingTitle: "ONLYOFFICE AI Tools",
+  addonDontShow: "Ná taispeáin WorkSuite Office AI Tools dom níos mó",
+  addonInstallingTitle: "WorkSuite Office AI Tools",
   addonInstalling: "Ag suiteáil...",
   addonDownloading: "Ag íoslódáil...",
   addonInstalledTitle: "Suiteáladh go rathúil",

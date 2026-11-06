@@ -1,6 +1,6 @@
 export default {
   addonTitle: "Надхвърлете стандартното редактиране с AI Tools",
-  addonDescr: "Спестете време и усилия при работа в ONLYOFFICE Docs с допълнителен слой за документи, таблици, презентации и PDF файлове.",
+  addonDescr: "Спестете време и усилия при работа в WorkSuite Office с допълнителен слой за документи, таблици, презентации и PDF файлове.",
   addonSlide1: "Работете по-бързо във всички редактори, използвайки ИИ за файлове от всякакъв тип, с персонализирани доставчици, MCP и уеб търсене.",
   addonSlide2: "Създавайте документи и формуляри с по-малко усилия — генерирайте съдържание, добавяйте полета автоматично и структурирайте формуляри за минути.",
   addonSlide3: "Подобрете качеството на съдържанието — преработвайте текст, превеждайте съдържание, обобщавайте информация и адаптирайте формулировките за всяка аудитория.",
@@ -13,8 +13,8 @@ export default {
   addonLicenseLink: "Лицензионно споразумение",
   addonBtnLater: "Може по-късно",
   addonBtnInstall: "Приемам и инсталирам",
-  addonDontShow: "Не ми показвай ONLYOFFICE AI Tools",
-  addonInstallingTitle: "ONLYOFFICE AI Tools",
+  addonDontShow: "Не ми показвай WorkSuite Office AI Tools",
+  addonInstallingTitle: "WorkSuite Office AI Tools",
   addonInstalling: "Инсталиране...",
   addonDownloading: "Изтегляне...",
   addonInstalledTitle: "Инсталирано успешно",
