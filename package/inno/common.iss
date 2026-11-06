@@ -126,7 +126,9 @@ WizardSmallImageFileDynamicDark={#BRANDING_DIR}\res\WizSmallImage-Dark-*.png
 #if PACKAGE_EDITION == "Enterprise"
 LicenseFile={#BRANDING_DIR}\..\common\license\commercial\LICENSE.rtf
 #else
-LicenseFile={#BRANDING_DIR}\..\common\license\opensource\LICENSE.rtf
+;WorkSuite: the WorkSuite Office Terms of Use followed by the complete AGPL-3.0
+;(package/common/license/worksuite/build.py builds it from TERMS.txt and opensource/LICENSE.txt)
+LicenseFile={#BRANDING_DIR}\..\common\license\worksuite\LICENSE.rtf
 #endif
 
 SolidCompression=yes
@@ -138,8 +140,9 @@ LZMAUseSeparateProcess=yes
 Name: en; MessagesFile: compiler:Default.isl;
 Name: ru; MessagesFile: compiler:Languages\Russian.isl;
 #else
-Name: ru; MessagesFile: compiler:Languages\Russian.isl;
+;WorkSuite: English first, so it is the fallback when the Windows UI language has no translation
 Name: en; MessagesFile: compiler:Default.isl;
+Name: ru; MessagesFile: compiler:Languages\Russian.isl;
 #endif
 Name: bg; MessagesFile: compiler:Languages\Bulgarian.isl;
 Name: ca; MessagesFile: compiler:Languages\Catalan.isl;
@@ -224,6 +227,7 @@ Source: "{#PACKAGE_CONFIG}"; DestDir: {app}\converter;
 Source: "{#BRANDING_DIR}\..\common\license\commercial\LICENSE.txt"; DestDir: {app}; DestName: "EULA.txt";
 #else
 Source: "{#BRANDING_DIR}\..\common\license\opensource\LICENSE.txt"; DestDir: {app};
+Source: "{#BRANDING_DIR}\..\common\license\worksuite\TERMS.txt"; DestDir: {app};
 #endif
 Source: "{#BRANDING_DIR}\..\common\license\3dparty\3DPARTYLICENSE"; DestDir: {app}; DestName: "3DPARTYLICENSE.txt";
 
@@ -240,6 +244,10 @@ Name: desktopicon; Description: {cm:CreateDesktopIcon,{#sAppName}}; GroupDescrip
 ;Name: {commondesktop}\{#sAppName}; FileName: {app}\{#NAME_EXE_OUT}; WorkingDir: {app}; Tasks: desktopicon;
 Name: {commondesktop}\{#sAppIconName}; FileName: {app}\{#iconsExe}; WorkingDir: {app}; Tasks: desktopicon; IconFilename: {app}\app.ico; AppUserModelID: {#APP_USER_MODEL_ID};
 Name: {group}\{#sAppIconName};         Filename: {app}\{#iconsExe}; WorkingDir: {app}; IconFilename: {app}\app.ico; AppUserModelID: {#APP_USER_MODEL_ID};
+#if PACKAGE_EDITION != "Enterprise"
+;WorkSuite: the Terms of Use, online and as installed with the app
+Name: "{group}\{cm:TermsOfUse}"; Filename: "{#sAppTermsURL}";
+#endif
 Name: {group}\{cm:Uninstall}; IconFilename: {app}\{#iconsExe}; IconIndex: 25; Filename: {uninstallexe}; WorkingDir: {app};
 Name: "{group}\{cm:jumpDOCX}"; IconFilename: "{app}\{#iconsExe}"; IconIndex: 14; Filename: "{app}\{#iconsExe}"; Parameters: "--new:word";
 Name: "{group}\{cm:jumpXLSX}"; IconFilename: "{app}\{#iconsExe}"; IconIndex: 15; Filename: "{app}\{#iconsExe}"; Parameters: "--new:cell";
@@ -253,7 +261,6 @@ Name: "{group}\{cm:jumpDOCXF}"; IconFilename: "{app}\{#iconsExe}"; IconIndex: 17
 Filename: {app}\{#iconsExe}; Description: {cm:Launch,{#sAppName}}; Flags: postinstall nowait skipifsilent runasoriginaluser;
 ;WorkSuite (UPD-04): "Restart to update" passes /WSRELAUNCH=1, so the app opens again after a silent update
 Filename: {app}\{#iconsExe}; Flags: nowait runasoriginaluser; Check: wsRelaunchAfterUpdate
-;Filename: http://www.onlyoffice.com/remove-portal-feedback-form.aspx; Description: Visit website; Flags: postinstall shellexec nowait
 ;Filename: ms-settings:defaultapps; Description: {cm:runOpenDefaultApps}; Flags:postinstall shellexec nowait unchecked; MinVersion: 10.0.10240;
 #sub LoopRunAssoc
 #define iExt FA_ARR[i]
