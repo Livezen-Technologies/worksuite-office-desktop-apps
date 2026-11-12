@@ -277,6 +277,14 @@ public:
 
                             return true;
                         }
+
+                        if ( opts.id < 0 ) {
+                            // a file the recent list does not know (the PDF Editor's tools open their results so):
+                            // open it as a local file, it is not a URL to load
+                            opts.srctype = etLocalFile;
+                            opts.wurl = _info.absoluteFilePath().toStdWString();
+                            opts.url = _info.absoluteFilePath();
+                        }
                     }
 
                     openDocument(opts);
