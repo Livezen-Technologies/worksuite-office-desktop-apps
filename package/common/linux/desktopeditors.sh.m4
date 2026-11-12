@@ -302,8 +302,9 @@ copy_templates() {
   esac
   SOURCE_DIR="/opt/M4_DESKTOPEDITORS_PREFIX/converter/empty/$TEMPLATE_LANG"
 
-  if command -v xdg-user-dir &> /dev/null; then
+  if command -v xdg-user-dir > /dev/null 2>&1; then
     XDG_TEMPLATES_DIR=$(xdg-user-dir TEMPLATES)
+    [ -n "$XDG_TEMPLATES_DIR" ] || { echo "xdg-user-dir has no templates folder"; exit 1; }
   else
     echo "xdg-user-dir not installed"
     exit 1
