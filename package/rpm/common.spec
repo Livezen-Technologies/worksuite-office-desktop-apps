@@ -102,8 +102,8 @@ rm -rf "%{buildroot}"
 %attr(-, root, root) %{_bindir}/desktopeditors
 %exclude /opt/%{_desktopeditors_prefix}/editors/web-apps/apps/*/main/resources/help
 %else
-%attr(755, root, root) %{_bindir}/%{_imageviewer_exec}
-%attr(755, root, root) %{_bindir}/%{_videoplayer_exec}
+# WorkSuite: no ImageViewer or VideoPlayer launcher is built (the Makefile defines neither
+# _imageviewer_exec nor _videoplayer_exec, and rpmbuild stopped on them: no rpm was made)
 %attr(-, root, root) %{_bindir}/%{_package_name}
 %attr(777, root, root) %{_sysconfdir}/%{_package_name}
 %endif
