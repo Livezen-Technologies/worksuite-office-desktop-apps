@@ -90,6 +90,9 @@ int main(int argc, const char * argv[]) {
     
     // setup Converter directory
     appManager->m_oSettings.file_converter_path = [[resourcePath stringByAppendingPathComponent:@"converter"] stdwstring];
+    // The name the converter writes into every saved file (docProps/app.xml, the ODF generator, PDF
+    // Creator and Producer); desktop-sdk's default is "ONLYOFFICE".
+    appManager->m_oSettings.converter_application_name = "WorkSuite Office";
     appManager->m_oSettings.system_templates_path = [[resourcePath stringByAppendingPathComponent:@"converter/templates"] stdwstring];
     
     // setup editor fonts directory
