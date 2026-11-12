@@ -1,8 +1,12 @@
-<svg width="15px" height="15px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid" class="lds-rolling" style="animation-play-state: running; animation-delay: 0s; background: none;">
-	<circle id="dark" cx="50" cy="50" fill="none" stroke="#444" stroke-width="10" r="35" stroke-dasharray="164.93361431346415 56.97787143782138" transform="rotate(234 50 50)" style="animation-play-state: running; animation-delay: 0s;">
-		<animateTransform attributeName="transform" type="rotate" calcMode="linear" values="0 50 50;360 50 50" keyTimes="0;1" dur="1s" begin="0s" repeatCount="indefinite" style="animation-play-state: running; animation-delay: 0s;"></animateTransform>
-	</circle>
-	<circle id="light" cx="50" cy="50" fill="none" stroke="#fff" stroke-width="10" r="35" stroke-dasharray="164.93361431346415 56.97787143782138" transform="rotate(234 50 50)" style="animation-play-state: running; animation-delay: 0s;">
-		<animateTransform attributeName="transform" type="rotate" calcMode="linear" values="0 50 50;360 50 50" keyTimes="0;1" dur="1s" begin="0s" repeatCount="indefinite" style="animation-play-state: running; animation-delay: 0s;"></animateTransform>
-	</circle>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="15px" height="15px">
+  <!-- WorkSuite logo, quarter turns with a pause ("spin"), in SMIL: Qt's QSvgRenderer does not run CSS animations -->
+  <g>
+    <animateTransform attributeName="transform" type="rotate" calcMode="linear" dur="3.2s" repeatCount="indefinite"
+      values="0 64 64;90 64 64;90 64 64;180 64 64;180 64 64;270 64 64;270 64 64;360 64 64;360 64 64"
+      keyTimes="0;0.2;0.25;0.45;0.5;0.7;0.75;0.95;1"/>
+    <rect x="16" y="48" width="32" height="32" fill="#00daf2"/>
+    <rect x="48" y="80" width="32" height="32" fill="#00daf2"/>
+    <rect x="48" y="16" width="64" height="64" fill="#0a6cff"/>
+    <rect x="48" y="48" width="32" height="32" fill="#001842"/>
+  </g>
 </svg>
