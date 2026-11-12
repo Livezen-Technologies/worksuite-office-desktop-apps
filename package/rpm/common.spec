@@ -38,12 +38,21 @@ Enhances: %{_package_opensource}
 This package contains offline help files.
 %endif
 
+# worksuite-ai (the Local AI service) is a Node single executable: its app is a blob injected into the
+# ELF, and strip destroys it (it segfaults at start, even with --version). brp-strip strips every ELF
+# file whatever its mode, so strip goes through a wrapper that leaves worksuite-ai alone (written in
+# %%install) and strips everything else as before.
+%global __strip %{_builddir}/worksuite-strip
+
 %prep
 rm -rf "%{buildroot}"
 
 %build
 
 %install
+mkdir -p "%{_builddir}"
+printf '%%s\n' '#!/bin/sh' 'for a in "$@"; do f="$a"; done' 'case "$f" in */worksuite-ai) exit 0 ;; esac' 'exec /usr/bin/strip "$@"' > "%{_builddir}/worksuite-strip"
+chmod 755 "%{_builddir}/worksuite-strip"
 BUILD_DIR=../../../build
 BIN_DIR=%{buildroot}%{_bindir}
 DATA_DIR=%{buildroot}%{_datadir}
