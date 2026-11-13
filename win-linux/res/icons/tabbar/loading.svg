@@ -1,12 +1,25 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="15px" height="15px">
-  <!-- WorkSuite logo, quarter turns with a pause ("spin"), in SMIL: Qt's QSvgRenderer does not run CSS animations -->
-  <g>
-    <animateTransform attributeName="transform" type="rotate" calcMode="linear" dur="3.2s" repeatCount="indefinite"
-      values="0 64 64;90 64 64;90 64 64;180 64 64;180 64 64;270 64 64;270 64 64;360 64 64;360 64 64"
-      keyTimes="0;0.2;0.25;0.45;0.5;0.7;0.75;0.95;1"/>
-    <rect x="16" y="48" width="32" height="32" fill="#00daf2"/>
-    <rect x="48" y="80" width="32" height="32" fill="#00daf2"/>
-    <rect x="48" y="16" width="64" height="64" fill="#0a6cff"/>
-    <rect x="48" y="48" width="32" height="32" fill="#001842"/>
-  </g>
+  <!-- WorkSuite logo, "assemble" (the squares build up, hold, then come apart), in SMIL: Qt's QSvgRenderer
+       runs neither CSS animations nor keyTimes/opacity, so each cell scales about its anchor, sampled every 2%.
+       The start page uses the CSS original (common/loginpage/src/components/loader/worksuite-loader.svg). -->
+  <g transform="translate(32 64)"><g>
+    <animateTransform attributeName="transform" type="scale" calcMode="linear" dur="2.4s" repeatCount="indefinite"
+      values="0.0001 0.0001;0.1429 0.1429;0.2857 0.2857;0.4286 0.4286;0.5714 0.5714;0.7143 0.7143;0.8571 0.8571;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;0.875 0.875;0.75 0.75;0.625 0.625;0.5 0.5;0.375 0.375;0.25 0.25;0.125 0.125;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001"/>
+    <rect x="-16" y="-16" width="32" height="32" fill="#00daf2"/>
+  </g></g>
+  <g transform="translate(64 96)"><g>
+    <animateTransform attributeName="transform" type="scale" calcMode="linear" dur="2.4s" repeatCount="indefinite"
+      values="0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.1429 0.1429;0.2857 0.2857;0.4286 0.4286;0.5714 0.5714;0.7143 0.7143;0.8571 0.8571;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;0.875 0.875;0.75 0.75;0.625 0.625;0.5 0.5;0.375 0.375;0.25 0.25;0.125 0.125;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001"/>
+    <rect x="-16" y="-16" width="32" height="32" fill="#00daf2"/>
+  </g></g>
+  <g transform="translate(112 16)"><g>
+    <animateTransform attributeName="transform" type="scale" calcMode="linear" dur="2.4s" repeatCount="indefinite"
+      values="0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.1325 0.1325;0.265 0.265;0.3975 0.3975;0.53 0.53;0.6625 0.6625;0.795 0.795;0.9275 0.9275;1.06 1.06;1.04 1.04;1.02 1.02;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;0.875 0.875;0.75 0.75;0.625 0.625;0.5 0.5;0.375 0.375;0.25 0.25;0.125 0.125;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001"/>
+    <rect x="-64" y="0" width="64" height="64" fill="#0a6cff"/>
+  </g></g>
+  <g transform="translate(64 64)"><g>
+    <animateTransform attributeName="transform" type="scale" calcMode="linear" dur="2.4s" repeatCount="indefinite"
+      values="0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.2 0.2;0.4 0.4;0.6 0.6;0.8 0.8;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;1 1;0.8 0.8;0.6 0.6;0.4 0.4;0.2 0.2;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001;0.0001 0.0001"/>
+    <rect x="-16" y="-16" width="32" height="32" fill="#001842"/>
+  </g></g>
 </svg>
