@@ -316,9 +316,25 @@ static void WSInstallSinhalaFonts(void) {
             } else
             if ( [strLink hasPrefix:actionInstallPlugin] ) {
                 NSString * pluginName = [strLink substringFromIndex:actionInstallPlugin.length];
+                if ( [pluginName hasSuffix:@"/"] ) pluginName = [pluginName substringToIndex:pluginName.length - 1];
 
-                CAscApplicationManager * appManager = [NSAscApplicationWorker getAppManager];
-                appManager->InstallPluginFromStore([pluginName stdwstring]);
+                // WorkSuite: a web page can open this link. The name goes into the store's download URL as a path,
+                // and "../" took it out of the store to any GitHub repository: a plain name only, and the user
+                // says whether to install it.
+                NSRegularExpression * rePluginName = [NSRegularExpression regularExpressionWithPattern:@"^[A-Za-z0-9][A-Za-z0-9_.-]{0,99}$" options:0 error:nil];
+                BOOL plainName = pluginName.length > 0 && ![pluginName containsString:@".."] &&
+                    [rePluginName numberOfMatchesInString:pluginName options:0 range:NSMakeRange(0, pluginName.length)] == 1;
+                if ( plainName ) {
+                    NSAlert * alert = [[NSAlert alloc] init];
+                    [alert addButtonWithTitle:NSLocalizedString(@"Cancel", nil)]; // Return: a page's request is not installed by Enter
+                    [alert addButtonWithTitle:NSLocalizedString(@"Install", nil)];
+                    [alert setMessageText:[NSString stringWithFormat:NSLocalizedString(@"A link asks to install the plugin \"%@\" from the plugin store. Install it?", nil), pluginName]];
+                    [alert setAlertStyle:NSAlertStyleWarning];
+                    if ( [alert runModal] == NSAlertSecondButtonReturn ) {
+                        CAscApplicationManager * appManager = [NSAscApplicationWorker getAppManager];
+                        appManager->InstallPluginFromStore([pluginName stdwstring]);
+                    }
+                }
             } else
             if ( [strLink hasPrefix:appCommand] ) {
                 NSString * cmd = [strLink substringFromIndex:appCommand.length];
