@@ -38,12 +38,21 @@ Enhances: %{_package_opensource}
 This package contains offline help files.
 %endif
 
+# worksuite-ai (the Local AI service) is a Node single executable: its app is a blob injected into the
+# ELF, and strip destroys it (it segfaults at start, even with --version). brp-strip strips every ELF
+# file whatever its mode, so strip goes through a wrapper that leaves worksuite-ai alone (written in
+# %%install) and strips everything else as before.
+%global __strip %{_builddir}/worksuite-strip
+
 %prep
 rm -rf "%{buildroot}"
 
 %build
 
 %install
+mkdir -p "%{_builddir}"
+printf '%%s\n' '#!/bin/sh' 'for a in "$@"; do f="$a"; done' 'case "$f" in */worksuite-ai) exit 0 ;; esac' 'exec /usr/bin/strip "$@"' > "%{_builddir}/worksuite-strip"
+chmod 755 "%{_builddir}/worksuite-strip"
 BUILD_DIR=../../../build
 BIN_DIR=%{buildroot}%{_bindir}
 DATA_DIR=%{buildroot}%{_datadir}
@@ -93,8 +102,8 @@ rm -rf "%{buildroot}"
 %attr(-, root, root) %{_bindir}/desktopeditors
 %exclude /opt/%{_desktopeditors_prefix}/editors/web-apps/apps/*/main/resources/help
 %else
-%attr(755, root, root) %{_bindir}/%{_imageviewer_exec}
-%attr(755, root, root) %{_bindir}/%{_videoplayer_exec}
+# WorkSuite: no ImageViewer or VideoPlayer launcher is built (the Makefile defines neither
+# _imageviewer_exec nor _videoplayer_exec, and rpmbuild stopped on them: no rpm was made)
 %attr(-, root, root) %{_bindir}/%{_package_name}
 %attr(777, root, root) %{_sysconfdir}/%{_package_name}
 %endif

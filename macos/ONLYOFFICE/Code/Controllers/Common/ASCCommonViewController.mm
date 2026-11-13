@@ -2134,8 +2134,16 @@ static NSMutableDictionary<NSString *, NSURLSessionTask *> * workSuiteDownloads 
                     [cefView openRecentFileWithId:docId];
                 else {
                     NSString * filePath = tab.params[@"path"];
-                    if ( filePath && filePath.length )
-                        [cefView loadWithUrl:filePath];
+                    if ( filePath && filePath.length ) {
+                        // a file the recent list does not know (the PDF Editor's tools open their results so) is
+                        // opened as a local file; loading its path as a URL shows the "no connection" page
+                        int fileFormatType = [[NSFileManager defaultManager] fileExistsAtPath:filePath] ?
+                                                CCefViewEditor::GetFileFormat([filePath stdwstring]) : 0;
+                        if ( fileFormatType != 0 )
+                            [cefView openFileWithName:filePath type:fileFormatType];
+                        else
+                            [cefView loadWithUrl:filePath];
+                    }
                 }
                 
                 [[AnalyticsHelper sharedInstance] recordCachedEventWithCategory:ASCAnalyticsCategoryApplication

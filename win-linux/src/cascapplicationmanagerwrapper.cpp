@@ -47,6 +47,7 @@
 #include <QJsonArray>
 #include <QProcess>
 #include <QScreen>
+#include <QRegularExpression>
 #include <algorithm>
 #include <functional>
 
@@ -1316,7 +1317,15 @@ void CAscApplicationManagerWrapper::handleInputCmd(const std::vector<wstring>& v
 
             if ( argScheme.rfind(app_action_plugin, 0) == 0 ) {
                 std::wstring _plugin_name = argScheme.substr(app_action_plugin.size() + 1);
-                if ( !_plugin_name.empty() ) {
+                // WorkSuite: a web page can open this link. The name goes into the store's download URL as a
+                // path, and "../" took it out of the store to any GitHub repository (curl removes dot segments):
+                // a plain name only, and the user says whether to install it.
+                static const QRegularExpression rePluginName(QStringLiteral("^[A-Za-z0-9][A-Za-z0-9_.-]{0,99}$"));
+                const QString qPluginName = QString::fromStdWString(_plugin_name);
+                if ( !_plugin_name.empty() && rePluginName.match(qPluginName).hasMatch() && !qPluginName.contains(QStringLiteral("..")) &&
+                        CMessage::showMessage(mainWindow(),
+                            QObject::tr("A link asks to install the plugin \"%1\" from the plugin store. Install it?").arg(qPluginName.toHtmlEscaped()),
+                            CMessage::Icon::Confirm, CMessage::Buttons::YesDefNo) == CMessage::Result::Yes ) {
                     _app.InstallPluginFromStore(_plugin_name);
                 }
             } else {

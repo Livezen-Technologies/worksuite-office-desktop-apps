@@ -33,7 +33,7 @@ export default {
     textThrough: 'through',
     linkForgotPass: 'Forgot password?',
     linkCreatePortal: 'Create an WorkSuite cloud',
-    linkNoPortal: 'Don\'t have an WorkSuite cloud? Create one',
+    linkNoPortal: 'Don\'t have a WorkSuite cloud? Create one',
     linkResend: 'Send the code again',
     linkChangePhone: 'Change phone number',
     dlgConnectToTitle: 'Connect to $1',

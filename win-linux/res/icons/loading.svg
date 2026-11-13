@@ -1,3 +1,12 @@
-<svg width="28" height="28" fill="none" version="1.1" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
- <path d="M10.524 3.3A11.25 11.25 0 0 1 25.25 14h-1.5a9.75 9.75 0 1 0-6.737 9.273l.463 1.426a11.25 11.25 0 0 1-6.952-21.398Z" fill="#3a83db"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="28" height="28">
+  <!-- WorkSuite logo, quarter turns with a pause ("spin"), in SMIL: Qt's QSvgRenderer does not run CSS animations -->
+  <g>
+    <animateTransform attributeName="transform" type="rotate" calcMode="linear" dur="3.2s" repeatCount="indefinite"
+      values="0 64 64;90 64 64;90 64 64;180 64 64;180 64 64;270 64 64;270 64 64;360 64 64;360 64 64"
+      keyTimes="0;0.2;0.25;0.45;0.5;0.7;0.75;0.95;1"/>
+    <rect x="16" y="48" width="32" height="32" fill="#00daf2"/>
+    <rect x="48" y="80" width="32" height="32" fill="#00daf2"/>
+    <rect x="48" y="16" width="64" height="64" fill="#0a6cff"/>
+    <rect x="48" y="48" width="32" height="32" fill="#001842"/>
+  </g>
 </svg>

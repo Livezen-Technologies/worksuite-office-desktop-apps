@@ -176,6 +176,9 @@ int main( int argc, char *argv[] )
     manager.m_oSettings.additional_fonts_folder.push_back(app_path + L"/fonts");
     manager.m_oSettings.country = Utils::systemLocationCode().toStdString();
     manager.m_oSettings.connection_error_path      = app_path + L"/editors/webext/noconnect.html";
+    // The name the converter writes into every saved file (docProps/app.xml, the ODF generator, PDF
+    // Creator and Producer); desktop-sdk's default is "ONLYOFFICE".
+    manager.m_oSettings.converter_application_name = "WorkSuite Office";
 
     application_cef->Init_CEF(&manager, cef_argc, cef_argv.data());
     /* ********************** */
