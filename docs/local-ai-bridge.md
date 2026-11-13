@@ -123,6 +123,21 @@ permission handler): accept `CEF_PERMISSION_TYPE_MIC_STREAM` in `OnShowPermissio
 that, Windows also needs `command_line->AppendSwitch("--enable-media-stream")` in
 `CAscClientAppBrowser::OnBeforeCommandLineProcessing` (`cefwrapper/client_app.h`).
 
+### `worksuite:open-url`
+
+When the microphone is denied, the voice-typing dock links to the system's microphone privacy settings.
+The plugin asks the shell to open them:
+
+```js
+window.AscDesktopEditor.execCommand("worksuite:open-url", JSON.stringify({ url: "ms-settings:privacy-microphone" }));
+```
+
+There is no answer. The shell accepts it from the start page or an editor tab only (never a web page in a
+tab), and opens only `ms-settings:privacy-microphone`,
+`x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone` or a plain `https://` page
+with a host and no user info (`CWorkSuiteAi::isOpenableUrl` in `win-linux/src/cworksuiteai.cpp`,
+`onWorkSuiteOpenUrl:` in `macos/.../ASCCommonViewController.mm`). Anything else is ignored.
+
 ## Managed configuration
 
 The AI keys are listed in [managed-configuration.md](managed-configuration.md#local-ai). The app reads

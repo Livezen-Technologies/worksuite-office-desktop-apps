@@ -456,6 +456,19 @@ bool CAscApplicationManagerWrapper::processCommonEvent(NSEditorApi::CAscCefMenuE
             }
             return true;
         } else
+        if ( cmd.compare(L"worksuite:open-url") == 0 ) {
+            // Local AI plugin, {"url":"…"}: the microphone privacy settings or an https page, in the system's
+            // handler; for the start page and editor tabs only, and only what CWorkSuiteAi::isOpenableUrl allows
+            const int sid = event->get_SenderId();
+            CCefView * sender = GetViewById(sid);
+            if ( (m_pMainWindow && sid == m_pMainWindow->startPanelId()) || (sender && sender->GetType() == cvwtEditor) ) {
+                const QString url = QJsonDocument::fromJson(QString::fromStdWString(pData->get_Param()).toUtf8())
+                                        .object().value(QStringLiteral("url")).toString();
+                if ( CWorkSuiteAi::isOpenableUrl(url) )
+                    Utils::openUrl(url);
+            }
+            return true;
+        } else
         if ( cmd.compare(L"ws-mcp") == 0 ) {
             // Settings › AI & MCP Connectors: MCP transports, provider checks and their secrets, for the start page only
             if ( m_pMainWindow && event->get_SenderId() == m_pMainWindow->startPanelId() )

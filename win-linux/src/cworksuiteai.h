@@ -53,6 +53,10 @@ namespace CWorkSuiteAi
 
     /* on app exit: stops the service when this app started it and it has nothing queued (GET /v1/health) */
     void stopIfIdle();
+
+    /* "worksuite:open-url" from the Local AI plugin: only the system's microphone privacy settings (to grant
+       voice typing the microphone) and plain https pages, never a file, a custom scheme or a command */
+    bool isOpenableUrl(const QString& url);
 }
 
 #endif // CWORKSUITEAI_H

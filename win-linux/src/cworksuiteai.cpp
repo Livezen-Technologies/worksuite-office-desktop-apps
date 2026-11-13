@@ -306,3 +306,15 @@ void CWorkSuiteAi::stopIfIdle()
 #endif
     s_launchedPid = 0;
 }
+
+bool CWorkSuiteAi::isOpenableUrl(const QString& url)
+{
+    static const QStringList settings = {
+        QStringLiteral("ms-settings:privacy-microphone"),
+        QStringLiteral("x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone"),
+    };
+    if ( settings.contains(url) )
+        return true;
+    const QUrl u(url, QUrl::StrictMode);
+    return u.isValid() && u.scheme() == QLatin1String("https") && !u.host().isEmpty() && u.userInfo().isEmpty();
+}

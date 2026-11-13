@@ -1555,6 +1555,32 @@ static NSDictionary * workSuiteAiLiveEndpoint() {
     return out;
 }
 
+/// "worksuite:open-url" from the Local AI plugin, {"url": "…"}: only the microphone privacy settings (to grant voice
+/// typing the microphone) or a plain https page, opened by the system; from the start page or an editor tab only.
+- (void)onWorkSuiteOpenUrl:(NSDictionary *)info {
+    NSInteger viewId = [info[@"viewId"] integerValue];
+    BOOL fromStart = self.cefStartPageView && viewId == self.cefStartPageView.uuid;
+    CAscApplicationManager * appManager = [NSAscApplicationWorker getAppManager];
+    CCefView * sender = appManager ? appManager->GetViewById((int)viewId) : NULL;
+    if (!fromStart && !(sender && sender->GetType() == cvwtEditor))
+        return;
+    NSData * data = [info[@"param"] isKindOfClass:[NSString class]] ? [info[@"param"] dataUsingEncoding:NSUTF8StringEncoding] : nil;
+    NSDictionary * json = data ? [NSJSONSerialization JSONObjectWithData:data options:0 error:nil] : nil;
+    NSString * text = [json isKindOfClass:[NSDictionary class]] && [json[@"url"] isKindOfClass:[NSString class]] ? json[@"url"] : nil;
+    if (!text)
+        return;
+    NSURL * url = nil;
+    if ([text isEqualToString:@"x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone"]) {
+        url = [NSURL URLWithString:text];
+    } else {
+        NSURLComponents * c = [NSURLComponents componentsWithString:text];
+        if (c && [c.scheme isEqualToString:@"https"] && c.host.length > 0 && !c.user && !c.password)
+            url = c.URL;
+    }
+    if (url)
+        [[NSWorkspace sharedWorkspace] openURL:url];
+}
+
 /// "ws-ai:endpoint" from the start page or an editor tab: {port, token} of worksuite-ai, starting it when asked
 - (void)onWorkSuiteAiEndpoint:(NSDictionary *)info {
     NSInteger viewId = [info[@"viewId"] integerValue];
@@ -1778,6 +1804,10 @@ static NSMutableDictionary<NSString *, NSURLSessionTask *> * workSuiteDownloads 
     }
     if (info && [info[@"command"] isEqualToString:@"worksuite:share"]) {
         [self onWorkSuiteShare:info];
+        return;
+    }
+    if (info && [info[@"command"] isEqualToString:@"worksuite:open-url"]) {
+        [self onWorkSuiteOpenUrl:info];
         return;
     }
     if (!info || !self.cefStartPageView || [info[@"viewId"] integerValue] != self.cefStartPageView.uuid)
