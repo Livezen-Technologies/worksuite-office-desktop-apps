@@ -40,6 +40,9 @@
 #include <QMutexLocker>
 #include <QTimer>
 #include <QDir>
+#include <QFileInfo>
+#include <QCoreApplication>
+#include <QUrl>
 #include <QDateTime>
 #include <qtcomp/qdesktopwidget.h>
 #include <QJsonDocument>
@@ -94,6 +97,26 @@
 using namespace NSEditorApi;
 using namespace std;
 using namespace std::placeholders;
+
+namespace {
+/* "open:license": the About and Settings link to the licence the app itself names in its version info - the
+   GNU AGPL page (or another plain https page), or EULA.txt / LICENSE.txt next to the app. Never another
+   local file, a custom scheme or a command: the URL goes straight to the system's handler (xdg-open). */
+bool isLicenseUrl(const QString& url)
+{
+    const QUrl u(url, QUrl::StrictMode);
+    if ( !u.isValid() )
+        return false;
+    if ( u.scheme() == QLatin1String("https") )
+        return !u.host().isEmpty() && u.userInfo().isEmpty();
+    if ( !u.isLocalFile() )
+        return false;
+    const QFileInfo file(u.toLocalFile());
+    const QString name = file.fileName().toLower();
+    return (name == QLatin1String("eula.txt") || name == QLatin1String("license.txt")) && file.isFile() &&
+           file.canonicalPath() == QFileInfo(QCoreApplication::applicationDirPath()).canonicalFilePath();
+}
+}
 
 
 bool CAscApplicationManagerWrapper::m_rtlEnabled = false;
@@ -456,6 +479,19 @@ bool CAscApplicationManagerWrapper::processCommonEvent(NSEditorApi::CAscCefMenuE
             }
             return true;
         } else
+        if ( cmd.compare(L"worksuite:open-url") == 0 ) {
+            // Local AI plugin, {"url":"…"}: the microphone privacy settings or an https page, in the system's
+            // handler; for the start page and editor tabs only, and only what CWorkSuiteAi::isOpenableUrl allows
+            const int sid = event->get_SenderId();
+            CCefView * sender = GetViewById(sid);
+            if ( (m_pMainWindow && sid == m_pMainWindow->startPanelId()) || (sender && sender->GetType() == cvwtEditor) ) {
+                const QString url = QJsonDocument::fromJson(QString::fromStdWString(pData->get_Param()).toUtf8())
+                                        .object().value(QStringLiteral("url")).toString();
+                if ( CWorkSuiteAi::isOpenableUrl(url) )
+                    Utils::openUrl(url);
+            }
+            return true;
+        } else
         if ( cmd.compare(L"ws-mcp") == 0 ) {
             // Settings › AI & MCP Connectors: MCP transports, provider checks and their secrets, for the start page only
             if ( m_pMainWindow && event->get_SenderId() == m_pMainWindow->startPanelId() )
@@ -787,8 +823,12 @@ bool CAscApplicationManagerWrapper::processCommonEvent(NSEditorApi::CAscCefMenuE
             return true;
         } else
         if ( !(cmd.find(L"open:license") == std::wstring::npos) ) {
-            if ( !pData->get_Param().empty() )
-                Utils::openUrl(QString::fromStdWString(pData->get_Param()));
+            const int sid = event->get_SenderId();
+            CCefView * sender = GetViewById(sid);
+            const QString url = QString::fromStdWString(pData->get_Param());
+            if ( ((m_pMainWindow && sid == m_pMainWindow->startPanelId()) || (sender && sender->GetType() == cvwtEditor)) &&
+                    isLicenseUrl(url) )
+                Utils::openUrl(url);
         } else
         if ( !(cmd.find(L"open:template") == std::wstring::npos) ) {
             if ( pData->get_Param() == L"external" ) {
