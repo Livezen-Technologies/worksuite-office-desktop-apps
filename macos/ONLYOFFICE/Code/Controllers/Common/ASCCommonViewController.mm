@@ -1184,6 +1184,8 @@ static BOOL workSuiteKeychainDelete(NSString * key) {
         [self.cefStartPageView apply:pEvent];
     }
 
+    [self sendAppVersionToStartPage];
+
     pCommand->put_Command(L"app:ready");
     pCommand->put_Param(L"");
 
@@ -1555,6 +1557,54 @@ static NSDictionary * workSuiteAiLiveEndpoint() {
     return out;
 }
 
+/// "app:version" for the start page (its About dialog and Settings › WorkSuite › About), as the Windows and Linux
+/// shells send it: the version, the licence link (the GNU AGPL page, opened through "open:license") and the site.
+- (void)sendAppVersionToStartPage {
+    NSDictionary * info = [[NSBundle mainBundle] infoDictionary];
+    NSString * edition = [NSString stringWithFormat:
+        @"%@ &lt;a class=\"link\" onclick=\"window.open('https://www.gnu.org/licenses/agpl-3.0.en.html')\" draggable=\"false\" href=\"#\"&gt;GNU AGPL v3&lt;/a&gt;",
+        NSLocalizedString(@"Licensed under", nil)];
+    NSMutableDictionary * json = [@{
+        @"version": info[@"CFBundleShortVersionString"] ?: @"",
+        @"edition": edition,
+        @"appname": @"WorkSuite Office",
+        @"rights": info[@"NSHumanReadableCopyright"] ?: @"",
+        @"link": @"https://worksuitecloud.com",
+    } mutableCopy];
+#if defined(__arm64__) || defined(__aarch64__)
+    json[@"arch"] = @"arm64";
+#elif defined(__x86_64__)
+    json[@"arch"] = @"x64";
+#endif
+    [self sendToStartPage:@"app:version" param:[json jsonString]];
+}
+
+/// "open:license" from the start page or an editor tab: only the licence the app names - a plain https page (the
+/// GNU AGPL page) or a licence file in the app's own Resources/license folder. Never another file or scheme.
+- (void)onOpenLicense:(NSDictionary *)info {
+    NSInteger viewId = [info[@"viewId"] integerValue];
+    BOOL fromStart = self.cefStartPageView && viewId == self.cefStartPageView.uuid;
+    CAscApplicationManager * appManager = [NSAscApplicationWorker getAppManager];
+    CCefView * sender = appManager ? appManager->GetViewById((int)viewId) : NULL;
+    if (!fromStart && !(sender && sender->GetType() == cvwtEditor))
+        return;
+    NSString * text = [info[@"param"] isKindOfClass:[NSString class]] ? info[@"param"] : nil;
+    NSURLComponents * c = text.length ? [NSURLComponents componentsWithString:text] : nil;
+    NSURL * url = nil;
+    if (c && [c.scheme isEqualToString:@"https"] && c.host.length > 0 && !c.user && !c.password) {
+        url = c.URL;
+    } else if (c && [c.scheme isEqualToString:@"file"] && c.URL.isFileURL) {
+        NSString * path = [[c.URL.path stringByStandardizingPath] stringByResolvingSymlinksInPath];
+        NSString * dir = [[[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"license"] stringByResolvingSymlinksInPath];
+        BOOL isDir = NO;
+        if ([[path stringByDeletingLastPathComponent] isEqualToString:dir] &&
+            [[NSFileManager defaultManager] fileExistsAtPath:path isDirectory:&isDir] && !isDir)
+            url = [NSURL fileURLWithPath:path];
+    }
+    if (url)
+        [[NSWorkspace sharedWorkspace] openURL:url];
+}
+
 /// "worksuite:open-url" from the Local AI plugin, {"url": "…"}: only the microphone privacy settings (to grant voice
 /// typing the microphone) or a plain https page, opened by the system; from the start page or an editor tab only.
 - (void)onWorkSuiteOpenUrl:(NSDictionary *)info {
@@ -1808,6 +1858,10 @@ static NSMutableDictionary<NSString *, NSURLSessionTask *> * workSuiteDownloads 
     }
     if (info && [info[@"command"] isEqualToString:@"worksuite:open-url"]) {
         [self onWorkSuiteOpenUrl:info];
+        return;
+    }
+    if (info && [info[@"command"] isEqualToString:@"open:license"]) {
+        [self onOpenLicense:info];
         return;
     }
     if (!info || !self.cefStartPageView || [info[@"viewId"] integerValue] != self.cefStartPageView.uuid)
