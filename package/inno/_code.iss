@@ -631,10 +631,11 @@ begin
     GetWindowsVersionEx(version);
     if (version.Major > 6) or ((version.Major = 6) and (version.Minor >= 1)) then begin
       Exec(ExpandConstant('{app}\{#iconsExe}'), '--create-jump-list', '', SW_SHOWNORMAL, ewWaitUntilTerminated, ErrorCode);
-      if CheckCommandlineParam('/noupdates') then begin
+      // WorkSuite: updates come through WinSparkle in the app; the upstream update service (updatesvc,
+      // a SYSTEM service on a localhost socket) is not used, so it is not installed. PrepareToInstall and
+      // the uninstaller still delete one an older version installed.
+      if CheckCommandlineParam('/noupdates') then
         RegWriteDWordValue(HKEY_LOCAL_MACHINE, ExpandConstant('{#APP_REG_PATH}'), 'CheckForUpdates', 0);
-      end else
-        Exec(ExpandConstant('{app}\updatesvc.exe'), '--install "' + ExpandConstant('{cm:UpdateService}') + '."', '', SW_HIDE, ewWaitUntilTerminated, ErrorCode);
     end;
 
     paramStore := GetCommandlineParam('/store');
