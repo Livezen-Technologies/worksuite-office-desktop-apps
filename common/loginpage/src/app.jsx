@@ -110,6 +110,8 @@ const routes = [
       { path: "/ai-models", component: lazy(() => import("./settings/ai-models/AiModelsPage.jsx")) },
       /* Settings › AI & MCP Connectors (src/settings/ai-connectors) */
       { path: "/ai-connectors", component: lazy(() => import("./settings/ai-connectors/ConnectorsPage.jsx")) },
+      /* Settings › WorkSuite Office Pro (license activation, src/settings/license) */
+      { path: "/license", component: lazy(() => import("./settings/license/LicensePage.jsx")) },
       { path: "/plugin/:pluginId/:section", component: lazy(() => import("./routes/settings/plugin/index.jsx")) },
     ],
   },

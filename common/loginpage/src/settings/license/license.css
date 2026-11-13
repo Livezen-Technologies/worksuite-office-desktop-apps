@@ -1,0 +1,181 @@
+/* Settings › WorkSuite Office Pro. Colours come from the design tokens (src/styles/tokens.css); the
+ * --lic-* names are the page's own, matching the AI Models screen so the settings redesign can re-point
+ * them in one place. */
+.lic-page {
+  --lic-bg: var(--background-action-panel, #fff);
+  --lic-surface: var(--background-normal-element-light, #f9f9f9);
+  --lic-border: var(--border-divider, #dfdfdf);
+  --lic-control-border: var(--border-regular-control, #c0c0c0);
+  --lic-focus: var(--background-accent-button, #3483db);
+  --lic-text: var(--text-normal, #000c);
+  --lic-muted: var(--text-secondary, #0009);
+  --lic-accent: var(--background-accent-button, #3483db);
+  --lic-accent-text: var(--text-inverse, #fff);
+  --lic-hover: var(--highlight-button-hover, #e0e0e0);
+  --lic-ok-bg: #e5f4e8;
+  --lic-ok-text: #1e6b2f;
+  --lic-bad-bg: #fde7e7;
+  --lic-bad-text: #9b1c1c;
+  --lic-pro-bg: #ece6fb;
+  --lic-pro-text: #5a37b8;
+  --lic-chip-bg: #ececf3;
+  --lic-chip-text: #3e3e5c;
+  --lic-radius: 8px;
+
+  container-type: inline-size;
+  color: var(--lic-text);
+  background: var(--lic-bg);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0 0 32px;
+  max-width: 1100px;
+  font-size: 13px;
+}
+
+:is(.theme-type-dark, .theme-dark, .theme-dark-modern, .theme-contrast-dark, .theme-night) .lic-page {
+  --lic-ok-bg: #1f3a26;
+  --lic-ok-text: #9fe0ad;
+  --lic-bad-bg: #432222;
+  --lic-bad-text: #f5a3a3;
+  --lic-pro-bg: #2e2447;
+  --lic-pro-text: #cbb8f5;
+  --lic-chip-bg: #34344a;
+  --lic-chip-text: #cfcfe8;
+}
+
+.lic-intro { margin: 0; }
+.lic-muted { color: var(--lic-muted); margin: 0; }
+.lic-small { font-size: 12px; }
+.lic-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+.lic-section {
+  border: 1px solid var(--lic-border);
+  border-radius: var(--lic-radius);
+  background: var(--lic-surface);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.lic-center {
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+}
+.lic-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.lic-h2 { font-size: 15px; font-weight: 600; margin: 0; }
+
+.lic-plan { display: flex; align-items: flex-start; gap: 12px; }
+.lic-plan-text { margin: 2px 0 0; color: var(--lic-muted); }
+
+.lic-badge {
+  flex: none;
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 1;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--lic-chip-bg);
+  color: var(--lic-chip-text);
+}
+.lic-badge-pro { background: var(--lic-pro-bg); color: var(--lic-pro-text); }
+.lic-badge-free { background: var(--lic-chip-bg); color: var(--lic-chip-text); }
+.lic-badge-bad { background: var(--lic-bad-bg); color: var(--lic-bad-text); }
+
+.lic-details { display: flex; flex-direction: column; gap: 8px; margin: 0; }
+.lic-row { display: flex; gap: 12px; }
+.lic-row dt { flex: none; width: 160px; color: var(--lic-muted); margin: 0; }
+.lic-row dd { margin: 0; word-break: break-all; }
+
+.lic-features { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.lic-feature {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 2px;
+  border-bottom: 1px solid var(--lic-border);
+}
+.lic-feature:last-child { border-bottom: none; }
+.lic-feature-name { font-weight: 500; }
+
+.lic-chip {
+  flex: none;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 5px 10px;
+  border-radius: 999px;
+}
+.lic-chip-on { background: var(--lic-ok-bg); color: var(--lic-ok-text); }
+.lic-chip-off { background: var(--lic-chip-bg); color: var(--lic-chip-text); }
+
+.lic-entry { display: flex; flex-direction: column; gap: 10px; }
+.lic-key {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  min-height: 64px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  color: var(--lic-text);
+  background: var(--lic-bg);
+  border: 1px solid var(--lic-control-border);
+  border-radius: var(--lic-radius);
+  padding: 10px 12px;
+}
+.lic-key:focus-visible { outline: 2px solid var(--lic-focus); outline-offset: 1px; border-color: var(--lic-focus); }
+
+.lic-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.lic-actions-foot { margin-top: 4px; }
+
+.lic-btn {
+  appearance: none;
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: var(--lic-radius);
+  border: 1px solid var(--lic-control-border);
+  background: var(--lic-bg);
+  color: var(--lic-text);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+.lic-btn:hover:not(:disabled) { background: var(--lic-hover); }
+.lic-btn:focus-visible { outline: 2px solid var(--lic-focus); outline-offset: 1px; }
+.lic-btn:disabled { opacity: 0.5; cursor: default; }
+.lic-btn-accent { background: var(--lic-accent); color: var(--lic-accent-text); border-color: transparent; }
+.lic-btn-accent:hover:not(:disabled) { filter: brightness(0.95); background: var(--lic-accent); }
+.lic-btn-link { border-color: transparent; background: transparent; color: var(--lic-accent); }
+.lic-btn-link:hover:not(:disabled) { background: transparent; text-decoration: underline; }
+.lic-btn-danger { color: var(--lic-bad-text); border-color: var(--lic-bad-text); }
+.lic-btn-danger:hover:not(:disabled) { background: var(--lic-bad-bg); }
+
+.lic-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  background: var(--lic-text);
+  color: var(--lic-bg);
+  padding: 10px 16px;
+  border-radius: var(--lic-radius);
+  font-size: 13px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  z-index: 50;
+  max-width: 90vw;
+}
+
+@container (max-width: 520px) {
+  .lic-row { flex-direction: column; gap: 2px; }
+  .lic-row dt { width: auto; }
+}
