@@ -23,7 +23,10 @@
   padding: var(--wsx-space-2) var(--wsx-space-3); min-height: 56px; box-sizing: border-box;
   border: var(--wsx-border-w) solid var(--wsx-line); border-radius: var(--wsx-radius-lg); background: var(--wsx-surface);
 }
-.wsh-account.is-expired { border-color: var(--wsx-warning); background: var(--wsx-warning-bg); }
+/* expired: the theme's surface with a soft warning edge; the icon and the presence dot carry the colour, the text stays ink */
+.wsh-account.is-expired {
+  border-color: color-mix(in srgb, var(--wsx-warning) 40%, var(--wsx-line));
+}
 .wsh-account-trigger {
   display: flex; align-items: center; gap: var(--wsx-space-3); min-width: 0; max-width: 340px;
   padding: var(--wsx-space-1) var(--wsx-space-2); border: var(--wsx-border-w) solid transparent; border-radius: var(--wsx-radius-md);
@@ -43,6 +46,7 @@
 .wsh-org-one { display: inline-flex; align-items: center; gap: var(--wsx-space-2); }
 .wsh-account-spacer { flex: 1 1 0; }
 .wsh-expired { flex: 1 1 220px; min-width: 0; .wsx-msg { margin: 0; } }
+.wsh-expired .wsx-msg.wsx-tone-warning { color: var(--wsx-ink-2); .wsx-icon { color: var(--wsx-warning); } }
 .wsh-account-menu { min-width: 280px; max-width: 360px; }
 .wsh-menu-head { display: flex; align-items: center; gap: var(--wsx-space-2); padding: var(--wsx-space-2) var(--wsx-space-3); }
 .wsh-menu-label { padding: var(--wsx-space-2) var(--wsx-space-3) var(--wsx-space-1); font-size: var(--wsx-font-xs); font-weight: var(--wsx-weight-strong);
