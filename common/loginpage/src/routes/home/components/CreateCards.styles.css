@@ -1,7 +1,7 @@
-/* Quick actions: New Document, Spreadsheet, Presentation, Open file and From template; neutral cards with monochrome icons, one row when there is room */
+/* Quick actions: New Document, Spreadsheet, Presentation, Project, Diagram, Open file and From template; neutral cards with monochrome icons, four to a row when there is room */
 .wsh-create-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--wsx-space-3);
 }
 .wsh-create { container-type: inline-size; min-width: 0; }

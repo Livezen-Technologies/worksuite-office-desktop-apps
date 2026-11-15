@@ -1,0 +1,23 @@
+/* WorkSuite Project / Diagram pages: what is there today and the stages */
+.wsa-page > * { max-width: 760px; }
+.wsa-page { padding: var(--wsx-space-6); overflow-y: auto; height: 100%; box-sizing: border-box; }
+.wsa-head { display: flex; align-items: center; gap: var(--wsx-space-3); }
+.wsa-title { margin: 0; font-size: var(--wsx-font-xl, 20px); font-weight: var(--wsx-weight-strong); }
+.wsa-badge {
+  display: inline-block; margin-top: 2px; padding: 1px 8px; border-radius: 999px;
+  font-size: var(--wsx-font-xs); color: var(--muted-foreground); background: var(--muted);
+}
+.wsa-intro { color: var(--muted-foreground); margin: var(--wsx-space-4) 0; }
+.wsa-actions { display: flex; flex-wrap: wrap; gap: var(--wsx-space-2); margin-bottom: var(--wsx-space-6); }
+.wsa-stages { list-style: none; margin: var(--wsx-space-2) 0 0; padding: 0; display: grid; gap: var(--wsx-space-3); }
+.wsa-stage {
+  border: var(--wsx-border-w) solid var(--border); border-radius: var(--wsx-radius-lg);
+  background: var(--card); padding: var(--wsx-space-3) var(--wsx-space-4);
+  ul { margin: var(--wsx-space-2) 0 0; padding-inline-start: 1.2em; color: var(--card-foreground); }
+  li + li { margin-top: 2px; }
+}
+.wsa-stage.is-now { border-color: var(--ring); }
+.wsa-stage-head { display: flex; align-items: baseline; gap: var(--wsx-space-2); flex-wrap: wrap; }
+.wsa-stage-num { font-size: var(--wsx-font-xs); color: var(--muted-foreground); }
+.wsa-stage-title { font-weight: var(--wsx-weight-strong); }
+.wsa-stage-status { margin-inline-start: auto; font-size: var(--wsx-font-xs); color: var(--muted-foreground); }
