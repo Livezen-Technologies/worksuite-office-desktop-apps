@@ -3,14 +3,17 @@ import { useNavigate } from "@solidjs/router";
 import { createDocument, openLocal } from "@/sdk";
 import { L } from "@/worksuite/lang.js";
 import { Icon } from "@/worksuite/ui/components.jsx";
+import { NEW_APPS, appRoute } from "@/worksuite/new-apps.js";
 import "./CreateCards.styles.css";
 
-/* Quick actions: the native create commands ("create:new" word | cell | slide) and Open file, the native Open
+/* Quick actions: the native create commands, WorkSuite Project and Diagram, ("create:new" word | cell | slide) and Open file, the native Open
    dialog ("open:folder"), which also opens PDFs in the PDF editor (there is no blank PDF to create) */
 const KINDS = () => [
   { id: "word", label: L.wshDocument, ext: "DOCX", icon: "file-text" },
   { id: "cell", label: L.wshSpreadsheet, ext: "XLSX", icon: "file-sheet" },
   { id: "slide", label: L.wshPresentation, ext: "PPTX", icon: "presentation" },
+  /* WorkSuite Project and Diagram: their pages, until the apps can create files (src/worksuite/new-apps.js) */
+  ...NEW_APPS.map((a) => ({ id: a.id, label: L[a.label], ext: L[a.hint], icon: a.icon, page: appRoute(a.id) })),
   { id: "open", label: L.wshOpenFileCard, ext: L.wshOpenFileHint, icon: "folder", open: true },
 ];
 
@@ -39,7 +42,7 @@ export function CreateCards(props) {
         <For each={KINDS()}>
           {(k, i) => (
             <div role="listitem">
-              <button type="button" class={"wsh-create-card wsh-type-" + k.id} tabindex={i() === 0 ? 0 : -1} title={k.open ? k.ext : k.label + " (" + k.ext + ")"} onClick={() => (k.open ? openLocal() : create(k.id))}>
+              <button type="button" class={"wsh-create-card wsh-type-" + k.id} tabindex={i() === 0 ? 0 : -1} title={k.open || k.page ? k.label + ": " + k.ext : k.label + " (" + k.ext + ")"} onClick={() => (k.open ? openLocal() : k.page ? navigate(k.page) : create(k.id))}>
                 <span class="wsh-create-tile" aria-hidden="true"><Icon name={k.icon} /></span>
                 <span class="wsh-create-text">
                   <span class="wsh-create-name">{k.label}</span>

@@ -99,6 +99,8 @@ const routes = [
   { path: "/plugin/:pluginId", component: lazy(() => import("./routes/plugin/index.jsx")) },
   { path: "/open", component: lazy(() => import("./routes/open/index.jsx")) },
   { path: "/templates", component: () => null },
+  /* WorkSuite Project and WorkSuite Diagram (src/worksuite/new-apps.js) */
+  { path: "/apps/:id", component: lazy(() => import("./routes/apps/index.jsx")) },
   { path: "/clouds/*", component: lazy(() => import("./routes/clouds/index.jsx")) },
   {
     path: "/settings",
