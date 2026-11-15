@@ -152,8 +152,9 @@ export function AccountPanel(props) {
       <Show when={expired()} fallback={
         <Show when={!props.noRefresh}><IconButton icon="refresh" label={L.wshRefresh} busy={props.refreshing} onClick={props.onRefresh} /></Show>
       }>
-        <StatusBadge status={status()} />
-        <WsButton variant="warning" small icon="refresh" busy={props.reconnecting} onClick={props.onReconnect}>{L.wshReconnect}</WsButton>
+        {/* the account line already says "Session expired": no badge; Reconnect is the panel's one action */}
+        <Show when={props.reconnecting}><StatusBadge status={status()} /></Show>
+        <WsButton variant="accent" small icon="refresh" busy={props.reconnecting} onClick={props.onReconnect}>{L.wshReconnect}</WsButton>
       </Show>
     </div>
   );
