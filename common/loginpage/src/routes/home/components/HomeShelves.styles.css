@@ -7,9 +7,10 @@
 .wsh-shelf-head { display: flex; align-items: center; gap: var(--wsx-space-2); flex-wrap: wrap; min-height: var(--wsx-control-h); }
 .wsh-shelf-head .wsh-eyebrow { margin: 0; }
 .wsh-shelf-tools { display: flex; align-items: center; gap: var(--wsx-space-2); flex-wrap: wrap; margin-inline-start: auto; }
-.wsh-shelf-tools .wsx-icon { width: 14px; height: 14px; }
+.wsh-shelf-tools .wsx-btn { display: inline-flex; align-items: center; gap: 6px; }
+.wsh-shelf-tools .wsx-icon { width: 14px; height: 14px; flex: none; }
 .wsh-shelf-search { width: 220px; max-width: 100%; }
-.wsh-shelf .wsx-empty { padding: var(--wsx-space-4); border: var(--wsx-border-w) dashed var(--border); border-radius: var(--wsx-radius-lg); }
+.wsh-shelf .wsx-empty { flex: 1; padding: var(--wsx-space-4); border: var(--wsx-border-w) dashed var(--border); border-radius: var(--wsx-radius-lg); }
 
 .wsh-tiles {
   list-style: none; margin: 0; padding: 0;

@@ -1,4 +1,4 @@
-/* Quick actions: New Document, Spreadsheet, Presentation, Project, Diagram, Open file and From template; neutral cards with monochrome icons, four to a row when there is room */
+/* Quick actions: New Document, Spreadsheet, Presentation, PDF editor, Project, Diagram, Open file and From template; neutral cards with monochrome icons, four to a row when there is room */
 .wsh-create-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

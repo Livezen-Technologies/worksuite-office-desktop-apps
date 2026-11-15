@@ -80,10 +80,10 @@ export function LocalShelf(props) {
   return (
     <section class="wsh-shelf" aria-labelledby="wsh-local-title">
       <ShelfHead id="wsh-local-title" title={L.wshLocalFiles}>
-        <WsButton variant="secondary" small onClick={openLocal}><Icon name="folder" />{L.wshBrowse}</WsButton>
+        <WsButton variant="secondary" small icon="folder" onClick={openLocal}>{L.wshBrowse}</WsButton>
       </ShelfHead>
       <Show when={dirs().length} fallback={<EmptyState icon="computer" title={L.wshLocalEmpty} text={L.wshLocalEmptyHint}
-                                                        action={<WsButton variant="primary" onClick={openLocal}>{L.wshOpenFile}</WsButton>} />}>
+                                                        action={<WsButton variant="secondary" small onClick={openLocal}>{L.wshOpenFile}</WsButton>} />}>
         <ul class="wsh-tiles wsh-tiles-folders" role="list">
           <For each={view().shown}>
             {(d) => (
@@ -125,12 +125,12 @@ export function CloudShelf(props) {
   return (
     <section class="wsh-shelf" aria-labelledby="wsh-clouds-title">
       <ShelfHead id="wsh-clouds-title" title={L.wshClouds}>
-        <WsButton variant="secondary" small onClick={() => navigate("/clouds")}>
-          <Icon name={list().length ? "settings" : "plus"} />{list().length ? L.wshManageClouds : L.wshConnectCloud}
+        <WsButton variant="secondary" small icon={list().length ? "settings" : "plus"} onClick={() => navigate("/clouds")}>
+          {list().length ? L.wshManageClouds : L.wshConnectCloud}
         </WsButton>
       </ShelfHead>
       <Show when={list().length} fallback={<EmptyState icon="cloud" title={L.wshCloudsEmpty} text={L.wshCloudsEmptyHint}
-                                                        action={<WsButton variant="primary" onClick={() => navigate("/clouds")}>{L.wshConnectCloud}</WsButton>} />}>
+                                                        action={<WsButton variant="secondary" small onClick={() => navigate("/clouds")}>{L.wshConnectCloud}</WsButton>} />}>
         <ul class="wsh-tiles" role="list">
           <For each={list()}>
             {(c) => (

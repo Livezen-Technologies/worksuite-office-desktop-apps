@@ -12,6 +12,8 @@ const KINDS = () => [
   { id: "word", label: L.wshDocument, ext: "DOCX", icon: "file-text" },
   { id: "cell", label: L.wshSpreadsheet, ext: "XLSX", icon: "file-sheet" },
   { id: "slide", label: L.wshPresentation, ext: "PPTX", icon: "presentation" },
+  /* the PDF editor: there is no blank PDF to create, so it opens one through the native Open dialog */
+  { id: "pdf", label: L.wshPdfEditor, ext: L.wshPdfEditorHint, icon: "pdf", open: true },
   /* WorkSuite Project and Diagram: their pages, until the apps can create files (src/worksuite/new-apps.js) */
   ...NEW_APPS.map((a) => ({ id: a.id, label: L[a.label], ext: L[a.hint], icon: a.icon, page: appRoute(a.id) })),
   { id: "open", label: L.wshOpenFileCard, ext: L.wshOpenFileHint, icon: "folder", open: true },

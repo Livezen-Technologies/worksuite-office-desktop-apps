@@ -43,3 +43,9 @@ test("Home's quick actions show both apps and open their pages", () => {
   const app = readFileSync(new URL("../app.jsx", import.meta.url), "utf-8");
   assert.match(app, /path: "\/apps\/:id"/);
 });
+
+test("Home keeps the PDF editor card, opening a PDF through the Open dialog", () => {
+  const cards = readFileSync(new URL("../routes/home/components/CreateCards.jsx", import.meta.url), "utf-8");
+  assert.match(cards, /\{ id: "pdf", label: L\.wshPdfEditor, ext: L\.wshPdfEditorHint, icon: "pdf", open: true \}/);
+  assert.ok(existsSync(svg("pdf")));
+});
