@@ -1631,13 +1631,38 @@ static NSDictionary * workSuiteAiLiveEndpoint() {
         [[NSWorkspace sharedWorkspace] openURL:url];
 }
 
+/// WorkSuite Project and WorkSuite Diagram (worksuite-office build/apps, #72): web apps shipped in the bundle's
+/// Resources/apps, opened in an app tab by "worksuite:open-app" from the start page. Only these two pages, only from there.
+static NSString * workSuiteAppsDir(void) {
+    return [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"apps"];
+}
+
+static NSURL * workSuiteAppPage(NSString * app) {
+    if (![app isKindOfClass:[NSString class]] || !([app isEqualToString:@"project"] || [app isEqualToString:@"diagram"]))
+        return nil;
+    NSString * page = [[workSuiteAppsDir() stringByAppendingPathComponent:app] stringByAppendingPathComponent:@"editor/index.html"];
+    return [[NSFileManager defaultManager] fileExistsAtPath:page] ? [NSURL fileURLWithPath:page] : nil;
+}
+
+/// a tab showing one of those apps: it may ask for the local AI service, which answers the licence check (#73)
+static BOOL isWorkSuiteAppView(CCefView * view) {
+    if (!view)
+        return NO;
+    NSURL * url = [NSURL URLWithString:[NSString stringWithstdwstring:view->GetUrl()]];
+    if (!url.isFileURL)
+        return NO;
+    NSString * root = [[workSuiteAppsDir() stringByResolvingSymlinksInPath] stringByStandardizingPath];
+    NSString * file = [[url.path stringByResolvingSymlinksInPath] stringByStandardizingPath];
+    return root.length > 0 && [file hasPrefix:[root stringByAppendingString:@"/"]];
+}
+
 /// "ws-ai:endpoint" from the start page or an editor tab: {port, token} of worksuite-ai, starting it when asked
 - (void)onWorkSuiteAiEndpoint:(NSDictionary *)info {
     NSInteger viewId = [info[@"viewId"] integerValue];
     BOOL fromStart = self.cefStartPageView && viewId == self.cefStartPageView.uuid;
     CAscApplicationManager * appManager = [NSAscApplicationWorker getAppManager];
     CCefView * sender = appManager ? appManager->GetViewById((int)viewId) : NULL;
-    if (!fromStart && !(sender && sender->GetType() == cvwtEditor))
+    if (!fromStart && !(sender && sender->GetType() == cvwtEditor) && !isWorkSuiteAppView(sender))
         return;
 
     NSDictionary * json = [info[@"param"] dictionary];
@@ -1866,6 +1891,23 @@ static NSMutableDictionary<NSString *, NSURLSessionTask *> * workSuiteDownloads 
     }
     if (!info || !self.cefStartPageView || [info[@"viewId"] integerValue] != self.cefStartPageView.uuid)
         return;
+
+    if ([info[@"command"] isEqualToString:@"worksuite:open-app"]) {
+        // Home's Project and Diagram tiles, {"app":"project"|"diagram"}: the app's page in an app tab
+        NSString * app = [info[@"param"] dictionary][@"app"];
+        if (NSURL * page = workSuiteAppPage(app)) {
+            [[NSNotificationCenter defaultCenter] postNotificationName:CEFEventNameCreateTab
+                                                                object:nil
+                                                              userInfo:@{
+                                                                         @"action"  : @(ASCTabActionOpenPortal),
+                                                                         @"url"     : page.absoluteString,
+                                                                         @"provider": @"worksuite-app",
+                                                                         @"title"   : [app isEqualToString:@"project"] ? @"WorkSuite Project" : @"WorkSuite Diagram",
+                                                                         @"active"  : @(YES)
+                                                                         }];
+        }
+        return;
+    }
 
     if ([info[@"command"] isEqualToString:@"worksuite:desktop"]) {
         [self sendToStartPage:@"worksuite:desktop" param:[self workSuiteDesktopAccounts]];

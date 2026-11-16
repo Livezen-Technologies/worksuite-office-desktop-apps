@@ -41,6 +41,12 @@ export const appRoute = (id) => {
   return "/apps/" + id;
 };
 
+/** Opens an app's editor in an app tab: the desktop shell's "worksuite:open-app" (#72). */
+export function openApp(id, command) {
+  if (!appById(id)) throw new Error("unknown app " + id);
+  command("worksuite:open-app", JSON.stringify({ app: id }));
+}
+
 /* every text key the apps' pages use, for the English table check */
 export const appTextKeys = () =>
   NEW_APPS.flatMap((a) => [a.label, a.hint, ...a.stages.flatMap((s) => [s.title, ...s.items])]);

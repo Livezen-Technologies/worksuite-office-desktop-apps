@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
-import { NEW_APPS, appById, appRoute, appTextKeys } from "./new-apps.js";
+import { NEW_APPS, appById, appRoute, appTextKeys, openApp } from "./new-apps.js";
 
 const lang = readFileSync(new URL("./lang.js", import.meta.url), "utf-8");
 const svg = (name) => new URL(`../../res/img/common-svg/ws-${name}.svg`, import.meta.url);
@@ -36,10 +36,14 @@ test("every text has English and every icon a symbol", () => {
   for (const a of NEW_APPS) assert.ok(existsSync(svg(a.icon)), a.icon);
 });
 
-test("Home's quick actions show both apps and open their pages", () => {
+test("Home's quick actions show both apps and open their editors through the shell", () => {
   const cards = readFileSync(new URL("../routes/home/components/CreateCards.jsx", import.meta.url), "utf-8");
   assert.match(cards, /NEW_APPS\.map/);
-  assert.match(cards, /navigate\(k\.page\)/);
+  assert.match(cards, /openApp\(k\.id, command\)/);
+  const sent = [];
+  openApp("diagram", (cmd, param) => sent.push([cmd, JSON.parse(param)]));
+  assert.deepEqual(sent, [["worksuite:open-app", { app: "diagram" }]]);
+  assert.throws(() => openApp("../../etc", () => {}), /unknown app/);
   const app = readFileSync(new URL("../app.jsx", import.meta.url), "utf-8");
   assert.match(app, /path: "\/apps\/:id"/);
 });
