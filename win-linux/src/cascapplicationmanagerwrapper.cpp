@@ -116,6 +116,35 @@ bool isLicenseUrl(const QString& url)
     return (name == QLatin1String("eula.txt") || name == QLatin1String("license.txt")) && file.isFile() &&
            file.canonicalPath() == QFileInfo(QCoreApplication::applicationDirPath()).canonicalFilePath();
 }
+
+/* WorkSuite Project and WorkSuite Diagram (worksuite-office build/apps, #72): web apps shipped in <app dir>/apps,
+   opened in an app tab by "worksuite:open-app" from the start page. Only these two pages, only from that folder. */
+QString worksuiteAppsDir()
+{
+    return QDir(QCoreApplication::applicationDirPath()).absoluteFilePath(QStringLiteral("apps"));
+}
+
+QString worksuiteAppPage(const QString& app)
+{
+    if ( app != QLatin1String("project") && app != QLatin1String("diagram") )
+        return QString();
+    const QFileInfo page(QDir(worksuiteAppsDir()).absoluteFilePath(app + QStringLiteral("/editor/index.html")));
+    // fully encoded: plain ASCII, as CMainWindow::onPortalOpen reads its JSON as Latin-1 (a Sinhala user name in the path)
+    return page.isFile() ? QUrl::fromLocalFile(page.absoluteFilePath()).toString(QUrl::FullyEncoded) : QString();
+}
+
+/* a tab showing one of those apps: it may ask for the local AI service, which answers the licence check (#73) */
+bool isWorkSuiteAppView(CCefView * view)
+{
+    if ( !view )
+        return false;
+    const QUrl url(QString::fromStdWString(view->GetUrl()));
+    if ( !url.isLocalFile() )
+        return false;
+    const QString root = QFileInfo(worksuiteAppsDir()).canonicalFilePath(),
+                  file = QFileInfo(url.toLocalFile()).canonicalFilePath();
+    return !root.isEmpty() && !file.isEmpty() && file.startsWith(root + QLatin1Char('/'));
+}
 }
 
 
@@ -468,7 +497,7 @@ bool CAscApplicationManagerWrapper::processCommonEvent(NSEditorApi::CAscCefMenuE
             const int sid = event->get_SenderId();
             const bool from_start = m_pMainWindow && sid == m_pMainWindow->startPanelId();
             CCefView * sender = GetViewById(sid);
-            if ( from_start || (sender && sender->GetType() == cvwtEditor) ) {
+            if ( from_start || (sender && sender->GetType() == cvwtEditor) || isWorkSuiteAppView(sender) ) {
                 CWorkSuiteAi::endpoint(QString::fromStdWString(pData->get_Param()), [sid, from_start](const QString& answer) {
                     if ( from_start )
                         sendCommandTo(SEND_TO_ALL_START_PAGE, L"ws-ai:endpoint", answer.toStdWString());
@@ -489,6 +518,21 @@ bool CAscApplicationManagerWrapper::processCommonEvent(NSEditorApi::CAscCefMenuE
                                         .object().value(QStringLiteral("url")).toString();
                 if ( CWorkSuiteAi::isOpenableUrl(url) )
                     Utils::openUrl(url);
+            }
+            return true;
+        } else
+        if ( cmd.compare(L"worksuite:open-app") == 0 ) {
+            // Home's Project and Diagram tiles, {"app":"project"|"diagram"}: the app's page in an app tab
+            if ( m_pMainWindow && event->get_SenderId() == m_pMainWindow->startPanelId() ) {
+                const QString app = QJsonDocument::fromJson(QString::fromStdWString(pData->get_Param()).toUtf8())
+                                        .object().value(QStringLiteral("app")).toString();
+                const QString page = worksuiteAppPage(app);
+                if ( !page.isEmpty() ) {
+                    QJsonObject open{{"portal", page}, {"provider", "worksuite-app"},
+                                     {"title", app == QLatin1String("project") ? "WorkSuite Project" : "WorkSuite Diagram"}};
+                    QMetaObject::invokeMethod(m_pMainWindow, "onPortalOpen", Qt::QueuedConnection,
+                                              Q_ARG(QString, QString::fromUtf8(QJsonDocument(open).toJson(QJsonDocument::Compact))));
+                }
             }
             return true;
         } else

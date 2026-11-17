@@ -3,7 +3,8 @@ import { useNavigate } from "@solidjs/router";
 import { createDocument, openLocal } from "@/sdk";
 import { L } from "@/worksuite/lang.js";
 import { Icon } from "@/worksuite/ui/components.jsx";
-import { NEW_APPS, appRoute } from "@/worksuite/new-apps.js";
+import { command } from "@/sdk/bridge.js";
+import { NEW_APPS, openApp } from "@/worksuite/new-apps.js";
 import "./CreateCards.styles.css";
 
 /* Quick actions: the native create commands, WorkSuite Project and Diagram, ("create:new" word | cell | slide) and Open file, the native Open
@@ -14,8 +15,8 @@ const KINDS = () => [
   { id: "slide", label: L.wshPresentation, ext: "PPTX", icon: "presentation" },
   /* the PDF editor: there is no blank PDF to create, so it opens one through the native Open dialog */
   { id: "pdf", label: L.wshPdfEditor, ext: L.wshPdfEditorHint, icon: "pdf", open: true },
-  /* WorkSuite Project and Diagram: their pages, until the apps can create files (src/worksuite/new-apps.js) */
-  ...NEW_APPS.map((a) => ({ id: a.id, label: L[a.label], ext: L[a.hint], icon: a.icon, page: appRoute(a.id) })),
+  /* WorkSuite Project and Diagram: their editors, in an app tab (src/worksuite/new-apps.js, #72) */
+  ...NEW_APPS.map((a) => ({ id: a.id, label: L[a.label], ext: L[a.hint], icon: a.icon, app: true })),
   { id: "open", label: L.wshOpenFileCard, ext: L.wshOpenFileHint, icon: "folder", open: true },
 ];
 
@@ -44,7 +45,7 @@ export function CreateCards(props) {
         <For each={KINDS()}>
           {(k, i) => (
             <div role="listitem">
-              <button type="button" class={"wsh-create-card wsh-type-" + k.id} tabindex={i() === 0 ? 0 : -1} title={k.open || k.page ? k.label + ": " + k.ext : k.label + " (" + k.ext + ")"} onClick={() => (k.open ? openLocal() : k.page ? navigate(k.page) : create(k.id))}>
+              <button type="button" class={"wsh-create-card wsh-type-" + k.id} tabindex={i() === 0 ? 0 : -1} title={k.open || k.app ? k.label + ": " + k.ext : k.label + " (" + k.ext + ")"} onClick={() => (k.open ? openLocal() : k.app ? openApp(k.id, command) : create(k.id))}>
                 <span class="wsh-create-tile" aria-hidden="true"><Icon name={k.icon} /></span>
                 <span class="wsh-create-text">
                   <span class="wsh-create-name">{k.label}</span>
