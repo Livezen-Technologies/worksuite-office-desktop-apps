@@ -53,7 +53,7 @@ const utils = { Lang: L, defines: { FileFormat } };
  * and every save is a new version of the same Drive file.
  */
 
-import { driveCacheKey } from './clouds-logic.js';
+import { WEB_OPEN, driveCacheKey } from './clouds-logic.js';
 import {
     CLOUD, META_TTL, activeOrg, authorizeUrl, checkIdToken, checkMetadata, cloudConfig, cloudSecretKey, cloudState, gatewayHandoff,
     gatewayOf, orgsOf, readCallback, tokenForm, tokensOf, workspaceSignInUrl,
@@ -84,8 +84,9 @@ import {
         cell:  ['xlsx', 'xls', 'xlsm', 'xlsb', 'xltx', 'xltm', 'ods', 'ots', 'fods', 'csv'],
         slide: ['pptx', 'ppt', 'pptm', 'ppsx', 'ppsm', 'potx', 'potm', 'odp', 'otp', 'fodp'],
         pdf:   ['pdf'],
+        web:   Object.keys(WEB_OPEN), // WorkSuite's own files that open in WorkSuite on the web (.wsdiagram)
     };
-    const OFFICE_EXT = [].concat(TYPES.word, TYPES.cell, TYPES.slide, TYPES.pdf);
+    const OFFICE_EXT = [].concat(TYPES.word, TYPES.cell, TYPES.slide, TYPES.pdf, TYPES.web);
 
     /* ------------------------------------------------------------------ *
      * small helpers
@@ -1536,6 +1537,11 @@ import {
      */
     async function open(account, file, extra) {
         extra = extra || {};
+        const webOpen = WEB_OPEN[String(file.ext || extOf(file.name) || '').toLowerCase()];
+        if (webOpen && !extra.version && !file.src) {
+            openInBrowser(account, webOpen(file.id));
+            return;
+        }
         // oda-shell (SHL-08): Settings › WorkSuite › "Open WorkSuite Drive documents in" the browser
         if (!extra.version && !file.src && readJson(localStorage, 'ws:pref:openIn', 'office') === 'browser') {
             openInBrowser(account, '/editor/' + encodeURIComponent(file.id));

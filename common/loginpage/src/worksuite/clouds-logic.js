@@ -78,6 +78,13 @@ export function capsOf(item) {
   return view.concat(["edit", "rename", "add_files", "share", "move", "delete", "restore"]);
 }
 
+/*
+ * WorkSuite's own files that open in WorkSuite on the web rather than in an editor tab: a WorkSuite Office
+ * diagram (.wsdiagram) opens in the Diagram app there, which reads it, keeps it as one Drive file and lets
+ * people edit it together (worksuite Diagram 1.4.0). The address is the server's, for the file's id.
+ */
+export const WEB_OPEN = Object.freeze({ wsdiagram: (id) => "/diagrams?file=" + encodeURIComponent(id) });
+
 const OFFICE_OPEN = ["docx", "xlsx", "pptx", "pdf", "doc", "xls", "ppt", "odt", "ods", "odp", "rtf", "txt", "csv", "docm", "xlsm", "pptm", "ppsx", "dotx", "xltx", "potx", "md"];
 
 /*
@@ -97,7 +104,8 @@ export function itemActions(item, ctx) {
     return out;
   }
   const folder = item.kind === "folder";
-  const office = !folder && OFFICE_OPEN.includes(String(item.ext || "").toLowerCase());
+  const ext = String(item.ext || "").toLowerCase();
+  const office = !folder && (OFFICE_OPEN.includes(ext) || Object.hasOwn(WEB_OPEN, ext));
   if (folder || (office && can("open"))) out.push("open");
   if (ctx.online === false) return out.concat(folder ? [] : ["details"]);
   if (!folder && item.ext === "pdf" && can("preview")) out.push("preview");

@@ -78,3 +78,22 @@ test("company scoping: chosen company, unknown company kept, All", () => {
   WS.setCompany(account, null);
   assert.ok(WS.inCompany(null, { org: 9 }));
 });
+
+test("a WorkSuite Office diagram from the Drive opens in Diagram on the web, not in an editor tab", async () => {
+  const opened = [];
+  const before = window.open;
+  window.open = (url) => opened.push(url);
+  const commands = [];
+  window.sdk = { command: (c) => commands.push(c) };
+  try {
+    calls.length = 0;
+    await WS.open(account, { id: 42, name: "Leave approval.wsdiagram", ext: "wsdiagram" });
+    assert.deepEqual(opened, ["https://app.worksuite.lk/diagrams?file=42"]);
+    assert.deepEqual(commands, [], "no editor tab");
+    assert.equal(calls.length, 0, "no one-time code asked for");
+  } finally {
+    window.open = before;
+    delete window.sdk;
+  }
+});
+
