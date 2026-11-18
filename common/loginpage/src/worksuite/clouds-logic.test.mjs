@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   browserState, breadcrumbs, driveCacheKey, isKeyOf, capsOf, itemActions, canAddTo, commonActions, canDropOn, patchRows,
-  sharingOf, formatBytes, resizeColumn, readWidths, uploadStep, nextUploads, uploadSummary, chunksOf,
+  sharingOf, formatBytes, resizeColumn, readWidths, uploadStep, nextUploads, uploadSummary, chunksOf, WEB_OPEN,
 } from "./clouds-logic.js";
 
 const labels = { drive: "My Drive", trash: "Trash", recent: "Recent" };
@@ -171,4 +171,12 @@ test("browserState", () => {
   assert.equal(browserState({ ...a }), "loading");
   assert.equal(browserState({ ...a, hasData: true, empty: true }), "empty");
   assert.equal(browserState({ ...a, hasData: true }), "list");
+});
+
+test("a WorkSuite Office diagram opens, in Diagram on the web", () => {
+  const file = (ext) => ({ kind: "file", ext, access: { capabilities: ["open", "download"] } });
+  assert.ok(itemActions(file("wsdiagram"), { online: true }).includes("open"));
+  assert.ok(!itemActions(file("zip"), { online: true }).includes("open"));
+  assert.equal(WEB_OPEN.wsdiagram(42), "/diagrams?file=42");
+  assert.equal(WEB_OPEN.wsdiagram("a b"), "/diagrams?file=a%20b");
 });
