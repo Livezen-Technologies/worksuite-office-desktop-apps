@@ -179,3 +179,18 @@
   .lic-row { flex-direction: column; gap: 2px; }
   .lic-row dt { width: auto; }
 }
+
+/* the activation wizard */
+.lic-wizard { display: flex; flex-direction: column; gap: 12px; }
+.lic-steps { display: flex; gap: 6px; list-style: none; margin: 0 0 4px; padding: 0; flex-wrap: wrap; }
+.lic-step { display: flex; align-items: center; gap: 6px; color: var(--lic-muted); font-size: 12px; padding-inline-end: 10px; }
+.lic-step + .lic-step::before { content: ""; width: 24px; height: 1px; background: var(--lic-border); margin-inline-end: 4px; }
+.lic-step-num { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--lic-control-border); font-size: 11px; }
+.lic-step.is-current { color: var(--lic-text); font-weight: 600; }
+.lic-step.is-current .lic-step-num { background: var(--lic-accent); color: var(--lic-accent-text); border-color: transparent; }
+.lic-step.is-done .lic-step-num { background: var(--lic-chip-bg); color: var(--lic-chip-text); border-color: transparent; }
+.lic-key-wizard { min-height: 0; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 15px; letter-spacing: .06em; text-align: center; }
+.lic-warn { margin: 0; padding: 8px 10px; border-radius: var(--lic-radius); background: var(--lic-bad-bg); color: var(--lic-bad-text); }
+.lic-spinner { display: inline-block; width: 28px; height: 28px; border-radius: 50%; border: 3px solid var(--lic-border); border-top-color: var(--lic-accent); animation: lic-spin .9s linear infinite; margin-bottom: 8px; }
+@keyframes lic-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .lic-spinner { animation: none; } }

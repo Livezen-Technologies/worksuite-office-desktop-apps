@@ -9,10 +9,11 @@
  */
 
 export class LicenseError extends Error {
-  constructor(code, message, status) {
+  constructor(code, message, status, detail) {
     super(message || code);
     this.code = code;
     this.status = status;
+    this.detail = detail || null;
   }
 }
 
@@ -38,7 +39,7 @@ export function createLicenseClient(endpoint, deps) {
     try { json = text ? JSON.parse(text) : null; } catch { json = null; }
     if (!res.ok) {
       const e = json && json.error;
-      throw new LicenseError((e && e.code) || "internal", e && e.message, res.status);
+      throw new LicenseError((e && e.code) || "internal", e && e.message, res.status, e && e.detail);
     }
     return json;
   }

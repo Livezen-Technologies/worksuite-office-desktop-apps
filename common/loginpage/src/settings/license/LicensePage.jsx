@@ -1,15 +1,17 @@
 /*
- * Settings › WorkSuite Office Pro: check, enter and remove the Pro license, and show which features Pro
- * unlocks. Talks to the local AI service (worksuite-ai) through the same ws-ai:endpoint bridge the AI
- * Models screen uses (../ai-models/endpoint.js); all logic is in logic.js and strings in strings.js.
- * Styling is CSS variables only (license.css), so the page follows the design tokens and both themes.
+ * Settings › WorkSuite Office Pro: the activation wizard (Welcome → Your key → Activating → Done) while Pro is not
+ * active, and the licence, its features, Check again and Deactivate once it is. Talks to the local AI service
+ * (worksuite-ai) through the ws-ai:endpoint bridge the AI Models screen uses (../ai-models/endpoint.js); the
+ * service redeems a WSO-… key at the WorkSuite licence server (download.worksuitecloud.com) and keeps the signed
+ * licence. Activating starts the service when it is not running, so nobody has to press "Start AI service" first.
+ * Logic is in logic.js, text in strings.js, styling in license.css (theme variables only).
  */
 import { For, Show, createMemo, createSignal, onMount } from "solid-js";
 import { createStore } from "solid-js/store";
 import { requestEndpoint } from "../ai-models/endpoint.js";
 import { createLicenseClient } from "./api.js";
 import { S, UPGRADE_URL } from "./strings.js";
-import { cleanKey, featureRows, formatDate, planState, reasonKey } from "./logic.js";
+import { WIZARD_STEPS, cleanKey, failureKey, featureRows, formatDate, formatKeyInput, planState, readyToActivate, reasonKey } from "./logic.js";
 import "./license.css";
 
 export default function LicensePage() {
@@ -17,9 +19,12 @@ export default function LicensePage() {
     phase: "loading", // loading | ready | down | unavailable | error
     reason: "",
     status: null,
-    starting: false,
-    busy: "", // "activate" | "deactivate" | "refresh" while a call is in flight
+    busy: "", // "deactivate" | "refresh" while a call is in flight
     toast: "",
+    step: "welcome", // the wizard: welcome | key | activating | done | failed
+    progress: "", // while activating: "starting" | "contacting"
+    failure: "", // strings-table key, or "" to show failText
+    failText: "",
   });
   const [key, setKey] = createSignal("");
   let client = null;
@@ -32,25 +37,20 @@ export default function LicensePage() {
   };
 
   async function connect(start) {
-    set({ phase: "loading", starting: !!start });
     const ep = await requestEndpoint(start);
-    set("starting", false);
     if (!ep || !ep.ok) {
       const reason = (ep && ep.reason) || "start-failed";
       const down = reason === "not-running" || reason === "start-failed" || reason === "timeout";
       set({ phase: down ? "down" : "unavailable", reason });
-      return;
+      return false;
     }
     client = createLicenseClient(ep);
-    await load();
-  }
-
-  async function load() {
     try {
-      const status = await client.get();
-      set({ phase: "ready", status });
+      set({ phase: "ready", status: await client.get() });
+      return true;
     } catch (e) {
       set({ phase: e && e.code === "unreachable" ? "down" : "error", reason: (e && e.code) || "" });
+      return false;
     }
   }
 
@@ -59,21 +59,32 @@ export default function LicensePage() {
   const state = createMemo(() => planState(st.status));
   const rows = createMemo(() => featureRows(st.status));
   const rsKey = createMemo(() => reasonKey(st.status));
+  const showWizard = createMemo(() => st.phase === "down" || (st.phase === "ready" && state() !== "pro") || st.step === "done");
+  const stepIndex = createMemo(() => WIZARD_STEPS.indexOf(st.step === "failed" ? "activating" : st.step));
 
   async function activate() {
     const k = cleanKey(key());
-    if (!k || st.busy) return;
-    set("busy", "activate");
+    if (!readyToActivate(k)) return;
+    set({ step: "activating", failure: "", failText: "" });
+    if (!client) {
+      set("progress", "starting");
+      if (!(await connect(true))) {
+        set({ step: "failed", failure: st.phase === "unavailable" ? (st.reason === "not-installed" ? "notInstalled" : "noDesktop") : "failService" });
+        return;
+      }
+    }
+    set("progress", "contacting");
     try {
       const status = await client.activate(k);
       set("status", status);
-      setKey("");
-      toast(S.activated);
+      if (planState(status) === "pro") {
+        setKey("");
+        set("step", "done");
+      } else {
+        set({ step: "failed", failure: reasonKey(status) || "reasonGeneric" });
+      }
     } catch (e) {
-      if (e && e.status === 400) toast(e.message ? S.fmt("verifyFailed", e.message) : S.badKey);
-      else toast(S.fmt("actionFailed", (e && (e.message || e.code)) || "?"));
-    } finally {
-      set("busy", "");
+      set({ step: "failed", failure: failureKey(e), failText: (e && e.message) || "" });
     }
   }
 
@@ -81,8 +92,7 @@ export default function LicensePage() {
     if (st.busy) return;
     set("busy", "deactivate");
     try {
-      const status = await client.deactivate();
-      set("status", status);
+      set({ status: await client.deactivate(), step: "welcome" });
       toast(S.deactivated);
     } catch (e) {
       toast(S.fmt("actionFailed", (e && (e.message || e.code)) || "?"));
@@ -95,8 +105,7 @@ export default function LicensePage() {
     if (st.busy) return;
     set("busy", "refresh");
     try {
-      const status = await client.refresh();
-      set("status", status);
+      set("status", await client.refresh());
       toast(S.refreshed);
     } catch (e) {
       toast(S.fmt("actionFailed", (e && (e.message || e.code)) || "?"));
@@ -105,25 +114,17 @@ export default function LicensePage() {
     }
   }
 
+  const stepLabels = [S.wizStepWelcome, S.wizStepKey, S.wizStepActivating, S.wizStepDone];
+
   return (
     <div class="lic-page">
       <p class="lic-intro">{S.intro}</p>
 
       <Show when={st.phase === "loading"}>
-        <div class="lic-center lic-muted">{st.starting ? S.starting : S.loading}</div>
+        <div class="lic-center lic-muted">{S.loading}</div>
       </Show>
 
-      <Show when={st.phase === "down"}>
-        <section class="lic-section lic-center">
-          <h2 class="lic-h2">{S.downTitle}</h2>
-          <p class="lic-muted">{S.downText}</p>
-          <button type="button" class="lic-btn lic-btn-accent" disabled={st.starting} onClick={() => connect(true)}>
-            {st.starting ? S.starting : S.start}
-          </button>
-        </section>
-      </Show>
-
-      <Show when={st.phase === "unavailable"}>
+      <Show when={st.phase === "unavailable" && st.step !== "failed"}>
         <section class="lic-section lic-center">
           <p class="lic-muted">{st.reason === "not-installed" ? S.notInstalled : S.noDesktop}</p>
         </section>
@@ -136,37 +137,113 @@ export default function LicensePage() {
         </section>
       </Show>
 
-      <Show when={st.phase === "ready"}>
-        <section class="lic-section">
-          <div class="lic-plan">
-            <span class={"lic-badge lic-badge-" + (state() === "pro" ? "pro" : state() === "lapsed" ? "bad" : "free")}>
-              {state() === "pro" ? S.planProTitle : state() === "lapsed" ? S.planLapsedTitle : S.planFreeTitle}
-            </span>
-            <p class="lic-plan-text">
-              {state() === "pro" ? S.planProActive : state() === "lapsed" ? S[rsKey()] : S.planFreeText}
-            </p>
-          </div>
+      <Show when={showWizard()}>
+        <section class="lic-section lic-wizard" aria-live="polite">
+          <ol class="lic-steps">
+            <For each={stepLabels}>
+              {(label, i) => (
+                <li classList={{ "lic-step": true, "is-done": i() < stepIndex(), "is-current": i() === stepIndex() }}>
+                  <span class="lic-step-num">{i() + 1}</span>
+                  <span class="lic-step-label">{label}</span>
+                </li>
+              )}
+            </For>
+          </ol>
 
-          <Show when={state() === "pro"}>
-            <dl class="lic-details">
-              <Show when={st.status?.issuedTo}>
-                <div class="lic-row"><dt>{S.licensedTo}</dt><dd>{st.status.issuedTo}</dd></div>
-              </Show>
-              <Show when={st.status?.licenseId}>
-                <div class="lic-row"><dt>{S.licenseId}</dt><dd class="lic-mono">{st.status.licenseId}</dd></div>
-              </Show>
-              <div class="lic-row">
-                <dt>{S.expires}</dt>
-                <dd>{st.status?.expiresAt ? formatDate(st.status.expiresAt) : S.perpetual}</dd>
-              </div>
-              <div class="lic-row">
-                <dt>{S.lastChecked}</dt>
-                <dd>{st.status?.lastOnlineOk ? formatDate(st.status.lastOnlineOk) : S.never}</dd>
-              </div>
-            </dl>
+          <Show when={st.step === "welcome"}>
+            <h2 class="lic-h2">{S.wizWelcomeTitle}</h2>
+            <Show when={state() === "lapsed"}>
+              <p class="lic-warn">{S[rsKey()]}</p>
+            </Show>
+            <p class="lic-muted">{S.wizWelcomeText}</p>
+            <div class="lic-actions">
+              <button type="button" class="lic-btn lic-btn-accent" onClick={() => set("step", "key")}>{S.wizHaveKey}</button>
+              <a class="lic-btn" href={UPGRADE_URL} target="_blank" rel="noreferrer">{S.wizBuy}</a>
+            </div>
+          </Show>
+
+          <Show when={st.step === "key"}>
+            <h2 class="lic-h2">{S.wizKeyTitle}</h2>
+            <p class="lic-muted">{S.wizKeyText}</p>
+            <textarea
+              class="lic-key lic-key-wizard"
+              rows="2"
+              spellcheck={false}
+              autocomplete="off"
+              aria-label={S.wizKeyTitle}
+              placeholder={S.wizKeyPlaceholder}
+              value={key()}
+              onInput={(e) => setKey(formatKeyInput(e.currentTarget.value))}
+              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); activate(); } }}
+            />
+            <div class="lic-actions">
+              <button type="button" class="lic-btn" onClick={() => set("step", "welcome")}>{S.wizBack}</button>
+              <button type="button" class="lic-btn lic-btn-accent" disabled={!readyToActivate(key())} onClick={activate}>{S.wizActivate}</button>
+            </div>
+          </Show>
+
+          <Show when={st.step === "activating"}>
+            <div class="lic-center">
+              <span class="lic-spinner" aria-hidden="true" />
+              <p class="lic-muted">{st.progress === "starting" ? S.wizStarting : S.wizContacting}</p>
+            </div>
+          </Show>
+
+          <Show when={st.step === "failed"}>
+            <h2 class="lic-h2">{S.wizFailTitle}</h2>
+            <p class="lic-warn">{st.failure ? S[st.failure] : S.fmt("actionFailed", st.failText || "?")}</p>
+            <div class="lic-actions">
+              <button type="button" class="lic-btn" onClick={() => set("step", "key")}>{S.wizChangeKey}</button>
+              <button type="button" class="lic-btn lic-btn-accent" onClick={activate}>{S.wizTryAgain}</button>
+            </div>
+          </Show>
+
+          <Show when={st.step === "done"}>
+            <h2 class="lic-h2">{S.wizDoneTitle}</h2>
+            <p class="lic-muted">{S.wizDoneText}</p>
+            <ul class="lic-features">
+              <For each={rows().filter((r) => r.granted)}>
+                {(r) => (
+                  <li class="lic-feature">
+                    <span class="lic-feature-name">{S["feat_" + r.key] ?? S.fmt("featFallback", r.key)}</span>
+                    <span class="lic-chip lic-chip-on">{S.featIncluded}</span>
+                  </li>
+                )}
+              </For>
+            </ul>
+            <div class="lic-actions">
+              <button type="button" class="lic-btn lic-btn-accent" onClick={() => set("step", "welcome")}>{S.wizFinish}</button>
+            </div>
           </Show>
         </section>
+      </Show>
 
+      <Show when={st.phase === "ready" && state() === "pro" && st.step !== "done"}>
+        <section class="lic-section">
+          <div class="lic-plan">
+            <span class="lic-badge lic-badge-pro">{S.planProTitle}</span>
+            <p class="lic-plan-text">{S.planProActive}</p>
+          </div>
+          <dl class="lic-details">
+            <Show when={st.status?.issuedTo}>
+              <div class="lic-row"><dt>{S.licensedTo}</dt><dd>{st.status.issuedTo}</dd></div>
+            </Show>
+            <Show when={st.status?.licenseId}>
+              <div class="lic-row"><dt>{S.licenseId}</dt><dd class="lic-mono">{st.status.licenseId}</dd></div>
+            </Show>
+            <div class="lic-row">
+              <dt>{S.expires}</dt>
+              <dd>{st.status?.expiresAt ? formatDate(st.status.expiresAt) : S.perpetual}</dd>
+            </div>
+            <div class="lic-row">
+              <dt>{S.lastChecked}</dt>
+              <dd>{st.status?.lastOnlineOk ? formatDate(st.status.lastOnlineOk) : S.never}</dd>
+            </div>
+          </dl>
+        </section>
+      </Show>
+
+      <Show when={st.phase === "ready" && st.step !== "done"}>
         <section class="lic-section">
           <div class="lic-section-head">
             <h2 class="lic-h2">{S.featuresTitle}</h2>
@@ -179,43 +256,11 @@ export default function LicensePage() {
               {(r) => (
                 <li class="lic-feature">
                   <span class="lic-feature-name">{S["feat_" + r.key] ?? S.fmt("featFallback", r.key)}</span>
-                  <span class={"lic-chip lic-chip-" + (r.granted ? "on" : "off")}>
-                    {r.granted ? S.featIncluded : S.featLocked}
-                  </span>
+                  <span class={"lic-chip lic-chip-" + (r.granted ? "on" : "off")}>{r.granted ? S.featIncluded : S.featLocked}</span>
                 </li>
               )}
             </For>
           </ul>
-        </section>
-
-        <section class="lic-section">
-          <Show when={state() !== "pro"}>
-            <h2 class="lic-h2">{S.enterTitle}</h2>
-            <p class="lic-muted">{S.enterText}</p>
-            <div class="lic-entry">
-              <textarea
-                class="lic-key"
-                rows="3"
-                spellcheck={false}
-                autocomplete="off"
-                placeholder={S.keyPlaceholder}
-                value={key()}
-                onInput={(e) => setKey(e.currentTarget.value)}
-              />
-              <div class="lic-actions">
-                <button
-                  type="button"
-                  class="lic-btn lic-btn-accent"
-                  disabled={!cleanKey(key()) || !!st.busy}
-                  onClick={activate}
-                >
-                  {st.busy === "activate" ? S.activating : S.activate}
-                </button>
-                <a class="lic-btn lic-btn-link" href={UPGRADE_URL} target="_blank" rel="noreferrer">{S.upgrade}</a>
-              </div>
-            </div>
-          </Show>
-
           <div class="lic-actions lic-actions-foot">
             <button type="button" class="lic-btn" disabled={!!st.busy} onClick={refresh}>
               {st.busy === "refresh" ? S.refreshing : S.refresh}
