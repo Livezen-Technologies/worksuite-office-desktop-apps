@@ -79,3 +79,26 @@ test("cleanKey: trims; empty when nothing usable", () => {
 test("FEATURE_ORDER lists the shipped Pro keys", () => {
   for (const k of PRO) assert.ok(FEATURE_ORDER.includes(k), `${k} ordered`);
 });
+
+test("the wizard: keys typed any way, pasted licences kept, failures named", async () => {
+  const { looksLikeKey, formatKeyInput, readyToActivate, failureKey } = await import("./logic.js");
+  assert.equal(formatKeyInput("wso7h2kqenxnx"), "WSO-7H2KQ-ENXNX");
+  assert.equal(formatKeyInput("7h2kq enxnx qn54k zcp9j"), "WSO-7H2KQ-ENXNX-QN54K-ZCP9J");
+  assert.equal(formatKeyInput("WSO-7H2KQ-ENXNX-QN54K-ZCP9J-EXTRA"), "WSO-7H2KQ-ENXNX-QN54K-ZCP9J");
+  assert.equal(formatKeyInput(""), "");
+  // typed a letter at a time, as the box sees it
+  let box = "";
+  for (const ch of "wso 7h2kq enxnx qn54k zcp9j") box = formatKeyInput(box + ch);
+  assert.equal(box, "WSO-7H2KQ-ENXNX-QN54K-ZCP9J");
+  const file = "-----BEGIN WORKSUITE LICENSE-----\nabc\n-----END WORKSUITE LICENSE-----";
+  assert.equal(formatKeyInput(file), file, "a pasted licence file is left alone");
+  assert.equal(looksLikeKey("WSO-7H2KQ-ENXNX-QN54K-ZCP9J"), true);
+  assert.equal(readyToActivate("WSO-7H2KQ-ENXNX"), false);
+  assert.equal(readyToActivate("WSO-7H2KQ-ENXNX-QN54K-ZCP9J"), true);
+  assert.equal(readyToActivate(file), true);
+  assert.equal(failureKey({ detail: { reason: "LICENSE_SEATS_FULL" } }), "failSeats");
+  assert.equal(failureKey({ detail: { reason: "offline" } }), "failOffline");
+  assert.equal(failureKey({ code: "unreachable" }), "failService");
+  assert.equal(failureKey({ code: "bad_request", detail: { reason: "SOMETHING_NEW" } }), "");
+  assert.deepEqual(proFeatures({ proFeatures: ["diagram.edit", "project.edit", "ocr"] }), ["ocr", "project.edit", "diagram.edit"]);
+});

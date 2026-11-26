@@ -7,7 +7,7 @@
 
 /* Pro feature keys the service may report, in the order they are shown. Unknown keys still render,
  * labelled by the key itself, so a feature the service adds later is never hidden. */
-export const FEATURE_ORDER = ["assistant", "ocr", "pdf.sign", "convert"];
+export const FEATURE_ORDER = ["assistant", "ocr", "pdf.sign", "convert", "project.edit", "diagram.edit"];
 
 export function isPro(status) {
   return !!status && status.plan === "pro" && status.active === true;
@@ -69,3 +69,54 @@ export function formatDate(iso) {
 export function cleanKey(text) {
   return typeof text === "string" ? text.trim() : "";
 }
+
+/* ---- the activation wizard ---- */
+
+/** True for an activation key as typed: WSO and 20 letters and digits (spaces and dashes aside). */
+export function looksLikeKey(text) {
+  return /^\s*WS[O0][\s-]*([0-9A-Za-z][\s-]*){20}$/i.test(typeof text === "string" ? text : "");
+}
+
+/**
+ * What the key box shows as someone types: WSO-XXXXX-XXXXX-XXXXX-XXXXX, upper case, dashes added. Pasted licence text
+ * (a .wslicense file, or the signed JSON) is left as it is.
+ */
+export function formatKeyInput(raw) {
+  const t = typeof raw === "string" ? raw : "";
+  if (/[{}]|BEGIN WORKSUITE LICENSE/.test(t) || t.length > 64) return t;
+  const chars = t.toUpperCase().replace(/[^0-9A-Z]/g, "");
+  if (!chars) return "";
+  if ("WSO".startsWith(chars)) return chars; // still typing the prefix
+  const body = chars.startsWith("WSO") || chars.startsWith("WS0") ? chars.slice(3) : chars;
+  const groups = body.slice(0, 20).match(/.{1,5}/g) || [];
+  return ["WSO", ...groups].join("-");
+}
+
+/** True when the box holds something worth sending: a whole key, or pasted licence text. */
+export function readyToActivate(text) {
+  const t = cleanKey(text);
+  return looksLikeKey(t) || /[{}]|BEGIN WORKSUITE LICENSE/.test(t) || t.length > 100;
+}
+
+/**
+ * Why activation failed, as a strings-table key: the licence server's reason (detail.reason) first, then the kind of
+ * error. Unknown reasons show the server's own message.
+ */
+export function failureKey(err) {
+  const reason = err && err.detail && err.detail.reason;
+  switch (reason) {
+    case "LICENSE_KEY_INVALID": return "failInvalid";
+    case "LICENSE_KEY_UNKNOWN": return "failUnknown";
+    case "LICENSE_SEATS_FULL": return "failSeats";
+    case "LICENSE_REVOKED": case "revoked": return "failRevoked";
+    case "LICENSE_EXPIRED": case "expired": return "failExpired";
+    case "offline": return "failOffline";
+    case "wrong_device": return "reasonWrongDevice";
+    case "bad_signature": return "failSignature";
+  }
+  if (err && err.code === "unreachable") return "failService";
+  return "";
+}
+
+/** The wizard's steps, in order, for the step strip. */
+export const WIZARD_STEPS = ["welcome", "key", "activating", "done"];
